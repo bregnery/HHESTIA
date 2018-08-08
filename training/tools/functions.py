@@ -8,6 +8,7 @@
 import ROOT as root
 import matplotlib.pyplot as plt
 import copy
+import random
 
 # functions from modules
 from sklearn import svm, metrics, preprocessing
@@ -108,4 +109,44 @@ def appendTreeArray(array)
       a = list(entry)
       tmpArray.append(a)
    array = copy.copy(tmpArray)
-   return array 
+   return array
+
+#==================================================================================
+# Randomize Data //////////////////////////////////////////////////////////////////
+#----------------------------------------------------------------------------------
+# array is an array of TTree arrays ( [ tree1array, tree2array, ...] ) ////////////
+#----------------------------------------------------------------------------------
+
+def randomizeData(array)
+
+   trainData = []
+   targetData = []
+   nEvents = 0
+   for iArray in len(array) :
+      nEvents = nEvents + len(array[iArray])
+   while nEvents > 0:
+      rng = random.randomint(0,len(array) )
+      if (len(array[rng]) > 0):
+         trainData.append(array[rng].pop() )
+         targetData.append(rng)
+         nEvents = nEvents - 1
+   return trainData, targetData
+
+#==================================================================================
+# Plot Probabilities //////////////////////////////////////////////////////////////
+#----------------------------------------------------------------------------------
+# probs is an array of probabilites, labels, and colors ///////////////////////////
+#    [ [probArray, label, color], .. ] ////////////////////////////////////////////
+#----------------------------------------------------------------------------------
+
+def plotProbabilities(probs)
+
+   for iProb in len(probs) :
+      for jProb in len(probs) :
+         plt.figure()
+         plt.xlabel("Probability for " + probs[iProb][1] + " Classification")
+         plt.hist(probs[jProb][0].T[iProb], bins=20, range=(0,1), label=probs[jProb][1], color=probs[jProb][2], histtype='step', 
+                  normed=True, log = True)
+         plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, ncol=6, mode="expand", borderaxespad=0.)
+         plt.savefig("prob_" + probs[iProb][1] + ".pdf")
+         plt.close()
