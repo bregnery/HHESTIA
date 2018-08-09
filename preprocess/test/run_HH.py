@@ -22,7 +22,7 @@ process.source = cms.Source("PoolSource",
 )
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
-process.run = cms.EDAnalyzer('HHESTIAProducer')
+process.run = cms.EDProducer('HHESTIAProducer')
 
 process.TFileService = cms.Service("TFileService", fileName = cms.string("preprocess_HHESTIA_HH.root") )
 
