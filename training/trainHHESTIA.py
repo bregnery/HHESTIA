@@ -29,9 +29,11 @@ root.gROOT.SetBatch(True)
 
 # access the TFiles
 fileJJ = root.TFile("out_QCDall.root", "READ")
+fileHH4W = root.TFile("out_HH4Wall.root", "READ")
 
 # access the trees
 treeJJ = fileJJ.Get("jetTree")
+treeHH4W = fileHH4W.Get("jetTree")
 
 # get input variable names from branches
 vars = tools.getBranchNames(treeJJ)
@@ -44,8 +46,11 @@ sel = "tau32 < 9999. && et > 500. && et < 2500. && bDisc1 > -0.05 && SDmass < 40
 arrayJJ = tree2array(treeJJ, treeVars, sel)
 arrayJJ = appendTreeArray(arrayJJ)
 
+arrayHH4W = tree2array(treeHH4W, treeVars, sel)
+arrayHH4W = appendTreeArray(arrayHH4W)
+
 # make an array with all of the datasets
-arrayData = [arrayJJ]
+arrayData = [arrayJJ, arrayHH4W]
 
 #==================================================================================
 # Plot Input Variables ////////////////////////////////////////////////////////////
@@ -53,12 +58,13 @@ arrayData = [arrayJJ]
 
 # store the data in histograms
 histsJJ = numpy.array(arrayJJ).T
+histsHH4W = numpy.array(arrayHH4W).T
 
 # plot with python
 for index, hist in enumerate(histsJJ):
    plt.figure()
    plt.hist(hist, bins=100, color='b', label='QCD', histtype='step', normed=True)
-   #plt.hist(histHH4w[index], bins=100, color='m', label='HH->WWWWW', histtype='step', normed=True)
+   plt.hist(histHH4W[index], bins=100, color='m', label='HH->WWWWW', histtype='step', normed=True)
    plt.xlabel(vars[index])
    plt.legend()
    plt.savefig("Hist_" + vars[index] + ".pdf")
@@ -69,12 +75,13 @@ for index, hist in enumerate(histsJJ):
 #==================================================================================
 
 # randomize the datasets
-trainData, targetData = tools.randomizeData(arrayMC)
+trainData, targetData = tools.randomizeData(arrayData)
 
 # standardize the datasets
 scaler = preprocessing.StandardScaler().fit(trainData)
 trainData = scaler.transform(trainData)
 arrayJJ = scaler.transform(arrayJJ)
+arrayHH4W = scaler.transform(arrayHH4W)
 
 # number of events to train with
 numTrain = 500000
@@ -101,9 +108,11 @@ print "Training Score: " mlp.score(trainData[400000:], targetData[400000:])
 
 # get the probabilities
 probsJJ = mlp.predict_proba(arrayJJ)
+probsHH4W = mlp.predict_proba(arrayHH4W)
 
 # [ [probArray, label, color], .. ]
-probs = [ [probsJJ, 'QCD', 'b'] ]
+probs = [ [probsJJ, 'QCD', 'b'],
+          [probsHH4W, 'QCD', 'm'] ]
 
 # plot probability results
 tools.plotProbability(probs)

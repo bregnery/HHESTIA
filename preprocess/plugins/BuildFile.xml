@@ -1,0 +1,13 @@
+<use name="FWCore/Framework"/>
+<use name="FWCore/PluginManager"/>
+<use name="FWCore/ParameterSet"/>
+<use name="FWCore/ServiceRegistry"/>
+<use name="DataFormats/PatCandidates"/>
+<use name="PhysicsTools/UtilAlgos"/>
+<use name="PhysicsTools/CandUtils"/>
+
+<use name="fastjet"/>
+<use name="clhep"/>
+<use name="ROOT"/>
+
+<flags EDM_PLUGIN="1"/>
