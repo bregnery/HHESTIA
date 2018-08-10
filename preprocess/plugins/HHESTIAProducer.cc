@@ -272,6 +272,7 @@ HHESTIAProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    //------------------------------------------------------------------------------
 
    // Do process for signal events only
+   int iJetMatched = 0;
    if(nHiggs >= 2){
  
       // match jets to Higgs
@@ -280,19 +281,22 @@ HHESTIAProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
       // fill jet properties
       for(size_t iJet = 0; iJet < matchJetsHiggs.size(); iJet++){
          for(size_t iHiggs = 0; iHiggs < matchJetsHiggs[iJet].size(); iHiggs++){
-            if(treeVars["jet1AK8_phi"] == -999.99 && matchJetsHiggs[iJet][iHiggs] == true){
+            if(iJetMatched == 0 && matchJetsHiggs[iJet][iHiggs] == true){
                // AK8 jet properties
                treeVars["jet1AK8_phi"] = ak8Jets->at(iJet).phi();
                treeVars["jet1AK8_eta"] = ak8Jets->at(iJet).eta();
                treeVars["jet1AK8_mass"] = ak8Jets->at(iJet).mass();
                treeVars["jet1AK8_pt"] = ak8Jets->at(iJet).pt();
+               iJetMatched++;
             }
-            if(treeVars["jet1AK8_phi"] != -999.99 && treeVars["jet2AK8_phi"] == -999.99 && matchJetsHiggs[iJet][iHiggs] == true){
+            if(iJetMatched == 1 && matchJetsHiggs[iJet][iHiggs] == true){
                // AK8 jet properties
                treeVars["jet2AK8_phi"] = ak8Jets->at(iJet).phi();
                treeVars["jet2AK8_eta"] = ak8Jets->at(iJet).eta();
                treeVars["jet2AK8_mass"] = ak8Jets->at(iJet).mass();
                treeVars["jet2AK8_pt"] = ak8Jets->at(iJet).pt();
+               iJetMatched++;
+               break;
             }
          }
       }
@@ -312,6 +316,8 @@ HHESTIAProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
                treeVars["jet1AK8_eta"] = ijet->eta();
                treeVars["jet1AK8_mass"] = ijet->mass();
                treeVars["jet1AK8_pt"] = ijet->pt();
+               cout << "not Matched! jet1AK_pt: " << ijet->pt() << endl;
+
             }
             if(nJets == 2){
                // AK8 jet properties

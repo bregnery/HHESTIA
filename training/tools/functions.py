@@ -60,39 +60,19 @@ def plot_confusion_matrix(cm, classes,
 # tree is a TTree /////////////////////////////////////////////////////////////////
 #----------------------------------------------------------------------------------
 
-def getBranchNames(tree)
+def getBranchNames(tree ):
 
    # empty array to store names
    treeVars = []
 
    # loop over branches
-   for branch in tree.GetListOfBranches()
-   name = branch.GetName()
-   if 'Njets' in name:
-      continue
-   if 'target' in name:
-      continue
-   if 'NNout' in name:
-      continue
-   if 'sum' in name:
-      continue
-   if 'gen' in name:
-      continue
-   if 'flatten' in name:
-      continue
-   if 'dist' in name:
-      continue
-   if 'npv' in name:
-      continue
-   if 'sorting' in name:
-      continue
-   if name == 'mass':
-      continue
-   if name == 'minDist':
-      continue
-   if 'et' in name:
-      continue
-   treeVars.append(name)
+   for branch in tree.GetListOfBranches():
+      name = branch.GetName()
+      if 'nJets' in name:
+         continue
+      if 'gen' in name:
+         continue
+      treeVars.append(name)
 
    return treeVars
 
@@ -102,7 +82,7 @@ def getBranchNames(tree)
 # array is a numpy array made from a TTree ////////////////////////////////////////
 #----------------------------------------------------------------------------------
 
-def appendTreeArray(array)
+def appendTreeArray(array):
 
    tmpArray = []
    for entry in array[:] :
@@ -117,7 +97,7 @@ def appendTreeArray(array)
 # array is an array of TTree arrays ( [ tree1array, tree2array, ...] ) ////////////
 #----------------------------------------------------------------------------------
 
-def randomizeData(array)
+def randomizeData(array):
 
    trainData = []
    targetData = []
@@ -139,7 +119,7 @@ def randomizeData(array)
 #    [ [probArray, label, color], .. ] ////////////////////////////////////////////
 #----------------------------------------------------------------------------------
 
-def plotProbabilities(probs)
+def plotProbabilities(probs):
 
    for iProb in len(probs) :
       for jProb in len(probs) :
