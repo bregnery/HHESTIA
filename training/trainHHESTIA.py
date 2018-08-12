@@ -42,8 +42,8 @@ vars = tools.getBranchNames(treeJJ)
 treeVars = vars
 
 # create selection criteria
-sel = ""
-#sel = "jet1AK8_pt > 0 && jet2AK8_pt > 0"
+#sel = ""
+sel = "jet1AK8_pt > 0 && jet2AK8_pt > 0"
 #sel = "tau32 < 9999. && et > 500. && et < 2500. && bDisc1 > -0.05 && SDmass < 400"
 
 # make arrays from the trees
@@ -67,14 +67,14 @@ histsJJ = numpy.array(arrayJJ).T
 histsHH4W = numpy.array(arrayHH4W).T
 
 # plot with python
-for index, hist in enumerate(histsJJ):
-   plt.figure()
-   plt.hist(hist, bins=100, color='b', label='QCD', histtype='step', normed=True)
-   plt.hist(histsHH4W[index], bins=100, color='m', label='HH->WWWWW', histtype='step', normed=True)
-   plt.xlabel(vars[index])
-   plt.legend()
-   plt.savefig("Hist_" + vars[index] + ".pdf")
-   plt.close()
+#for index, hist in enumerate(histsJJ):
+#   plt.figure()
+#   plt.hist(hist, bins=100, color='b', label='QCD', histtype='step', normed=True)
+#   plt.hist(histsHH4W[index], bins=100, color='m', label='HH->WWWWW', histtype='step', normed=True)
+#   plt.xlabel(vars[index])
+#   plt.legend()
+#   plt.savefig("Hist_" + vars[index] + ".pdf")
+#   plt.close()
 
 print "Plotted each of the variables"
 
@@ -88,8 +88,8 @@ trainData, targetData = tools.randomizeData(arrayData)
 # standardize the datasets
 scaler = preprocessing.StandardScaler().fit(trainData)
 trainData = scaler.transform(trainData)
-arrayJJ = scaler.transform(arrayJJ)
-arrayHH4W = scaler.transform(arrayHH4W)
+#arrayJJ = scaler.transform(arrayJJ)
+#arrayHH4W = scaler.transform(arrayHH4W)
 
 # number of events to train with
 numTrain = 20000
@@ -106,15 +106,15 @@ print "Trained the neural network!"
 #==================================================================================
 
 # Confusion Matrix
-cm  + metrics.confusion_matrix(mlp.predict(trainData[400000:]), targetData[400000:])
+cm = metrics.confusion_matrix(mlp.predict(trainData[10000:]), targetData[10000:])
 plt.figure()
 targetNames = ['j', 'W', 'Z', 'H', 't', 'b']
-plot_confusion_matrix(cm.T, targetNames, normalize=True)
+tools.plot_confusion_matrix(cm.T, targetNames, normalize=True)
 plt.savefig('confusion_matrix.pdf')
 plt.close()
 
 # score
-print "Training Score: ", mlp.score(trainData[400000:], targetData[400000:])
+print "Training Score: ", mlp.score(trainData[10000:], targetData[10000:])
 
 # get the probabilities
 probsJJ = mlp.predict_proba(arrayJJ)

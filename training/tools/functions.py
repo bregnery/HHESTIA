@@ -6,12 +6,16 @@
 
 # modules
 import ROOT as root
+import numpy
 import matplotlib.pyplot as plt
 import copy
 import random
+import itertools
 
 # functions from modules
-from sklearn import svm, metrics, preprocessing
+from sklearn import svm, metrics, preprocessing, datasets
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import confusion_matrix
 
 #==================================================================================
 # Plot Confusion Matrix ///////////////////////////////////////////////////////////
@@ -29,7 +33,7 @@ def plot_confusion_matrix(cm, classes,
    Normalization can be applied by setting `normalize=True`.
    """
    if normalize:
-       cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+       cm = cm.astype('float') / cm.sum(axis=1)[:, numpy.newaxis]
        print("Normalized confusion matrix")
    else:
        print('Confusion matrix, without normalization')
@@ -39,7 +43,7 @@ def plot_confusion_matrix(cm, classes,
    plt.imshow(cm, interpolation='nearest', cmap=cmap)
    plt.title(title)
    plt.colorbar()
-   tick_marks = np.arange(len(classes))
+   tick_marks = numpy.arange(len(classes))
    plt.xticks(tick_marks, classes, rotation=45)
    plt.yticks(tick_marks, classes)
 
@@ -102,10 +106,10 @@ def randomizeData(array):
    trainData = []
    targetData = []
    nEvents = 0
-   for iArray in len(array) :
+   for iArray in range(len(array) ) :
       nEvents = nEvents + len(array[iArray])
    while nEvents > 0:
-      rng = random.randomint(0,len(array) )
+      rng = random.randint(0,len(array)-1 )
       if (len(array[rng]) > 0):
          trainData.append(array[rng].pop() )
          targetData.append(rng)
