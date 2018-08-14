@@ -60,6 +60,11 @@ arrayHH4W = tools.appendTreeArray(arrayHH4W)
 # make an array with all of the datasets
 arrayData = [arrayJJ, arrayHH4W]
 
+# copy the arrays so that copies of the arrays are not deleted in the randomize function
+# without this, deleting arrayData will delete all tree arrays
+arrayJJ = copy.copy(arrayJJ)
+arrayHH4W = copy.copy(arrayHH4W)
+
 print "Made arrays from the datasets"
 
 #==================================================================================
@@ -91,13 +96,6 @@ if plotInputVariables == False:
 
 # randomize the datasets
 trainData, targetData = tools.randomizeData(arrayData)
-
-# remake arrays from the trees because randomizing the data deletes them
-arrayJJ = tree2array(treeJJ, treeVars, sel)
-arrayJJ = tools.appendTreeArray(arrayJJ)
-
-arrayHH4W = tree2array(treeHH4W, treeVars, sel)
-arrayHH4W = tools.appendTreeArray(arrayHH4W)
 
 # standardize the datasets
 scaler = preprocessing.StandardScaler().fit(trainData)
