@@ -92,8 +92,8 @@ def appendTreeArray(array):
    for entry in array[:] :
       a = list(entry)
       tmpArray.append(a)
-   array = copy.copy(tmpArray)
-   return array
+   newArray = copy.copy(tmpArray)
+   return newArray
 
 #==================================================================================
 # Randomize Data //////////////////////////////////////////////////////////////////
@@ -125,8 +125,8 @@ def randomizeData(array):
 
 def plotProbabilities(probs):
 
-   for iProb in len(probs) :
-      for jProb in len(probs) :
+   for iProb in range(len(probs) ) :
+      for jProb in range(len(probs) ) :
          plt.figure()
          plt.xlabel("Probability for " + probs[iProb][1] + " Classification")
          plt.hist(probs[jProb][0].T[iProb], bins=20, range=(0,1), label=probs[jProb][1], color=probs[jProb][2], histtype='step', 

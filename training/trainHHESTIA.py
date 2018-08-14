@@ -23,6 +23,10 @@ from sklearn.externals import joblib
 # enter batch mode in root (so python can access displays)
 root.gROOT.SetBatch(True)
 
+# set options 
+plotInputVariables = False
+plotProbs = True 
+
 #==================================================================================
 # Load Monte Carlo ////////////////////////////////////////////////////////////////
 #==================================================================================
@@ -67,16 +71,19 @@ histsJJ = numpy.array(arrayJJ).T
 histsHH4W = numpy.array(arrayHH4W).T
 
 # plot with python
-#for index, hist in enumerate(histsJJ):
-#   plt.figure()
-#   plt.hist(hist, bins=100, color='b', label='QCD', histtype='step', normed=True)
-#   plt.hist(histsHH4W[index], bins=100, color='m', label='HH->WWWWW', histtype='step', normed=True)
-#   plt.xlabel(vars[index])
-#   plt.legend()
-#   plt.savefig("Hist_" + vars[index] + ".pdf")
-#   plt.close()
+if plotInputVariables == True:
+   for index, hist in enumerate(histsJJ):
+      plt.figure()
+      plt.hist(hist, bins=100, color='b', label='QCD', histtype='step', normed=True)
+      plt.hist(histsHH4W[index], bins=100, color='m', label='HH->WWWWW', histtype='step', normed=True)
+      plt.xlabel(vars[index])
+      plt.legend()
+      plt.savefig("Hist_" + vars[index] + ".pdf")
+      plt.close()
+   print "Plotted each of the variables"
 
-print "Plotted each of the variables"
+if plotInputVariables == False:
+   print "Input Variables will not be plotted. Change options at beginning of the program if this is incorrect."
 
 #==================================================================================
 # Train the Neural Network ////////////////////////////////////////////////////////
@@ -85,11 +92,18 @@ print "Plotted each of the variables"
 # randomize the datasets
 trainData, targetData = tools.randomizeData(arrayData)
 
+# remake arrays from the trees because randomizing the data deletes them
+arrayJJ = tree2array(treeJJ, treeVars, sel)
+arrayJJ = tools.appendTreeArray(arrayJJ)
+
+arrayHH4W = tree2array(treeHH4W, treeVars, sel)
+arrayHH4W = tools.appendTreeArray(arrayHH4W)
+
 # standardize the datasets
 scaler = preprocessing.StandardScaler().fit(trainData)
 trainData = scaler.transform(trainData)
-#arrayJJ = scaler.transform(arrayJJ)
-#arrayHH4W = scaler.transform(arrayHH4W)
+arrayJJ = scaler.transform(arrayJJ)
+arrayHH4W = scaler.transform(arrayHH4W)
 
 # number of events to train with
 numTrain = 20000
@@ -108,7 +122,7 @@ print "Trained the neural network!"
 # Confusion Matrix
 cm = metrics.confusion_matrix(mlp.predict(trainData[10000:]), targetData[10000:])
 plt.figure()
-targetNames = ['j', 'W', 'Z', 'H', 't', 'b']
+targetNames = ['QCD', 'HH->4W']
 tools.plot_confusion_matrix(cm.T, targetNames, normalize=True)
 plt.savefig('confusion_matrix.pdf')
 plt.close()
@@ -125,7 +139,11 @@ probs = [ [probsJJ, 'QCD', 'b'],
           [probsHH4W, 'QCD', 'm'] ]
 
 # plot probability results
-tools.plotProbability(probs)
+if plotProbs == True:
+   tools.plotProbabilities(probs)
+   print "plotted the HHESTIA probabilities"
+if plotProbs == False:
+   print "HHESTIA probabilities will not be plotted. This can be changed at the beginning of the program."
 
 # make file with probability results
 joblib.dump(mlp, "HHESTIA_mlp.pkl")
