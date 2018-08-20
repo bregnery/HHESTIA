@@ -7,7 +7,7 @@ The preprocessing program can be run locally or through CRAB.
 To run, use the cms environment to run a ``run_*.py`` file. For example: 
 
 ```bash
-cd BESTHHedmanalyzer/BESTHHedmanalyzer/test/
+cd HHESTIA/preprocess/test/
 cmsenv
 cmsRun run_HH.py
 ```
@@ -19,7 +19,7 @@ Be sure to update any file locations in the ``run_*.py`` files!!
 First, set up the CRAB environment and obtain a proxy
 
 ```bash
-cd BESTHHedmanalyzer/BESTHHedmanalyzer/test/
+cd HHESTIA/preprocess/test/
 cmsenv
 CRAB
 vprox
