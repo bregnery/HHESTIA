@@ -2,3 +2,5 @@
 *.pyc
 *.png
 *.pdf
+*crab_projects*
+*log*
