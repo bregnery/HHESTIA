@@ -24,7 +24,7 @@ from sklearn.externals import joblib
 root.gROOT.SetBatch(True)
 
 # set options 
-plotInputVariables = False
+plotInputVariables = True
 plotProbs = True 
 
 #==================================================================================
@@ -32,7 +32,7 @@ plotProbs = True
 #==================================================================================
 
 # access the TFiles
-fileJJ = root.TFile("preprocess_HHESTIA_QCD.root", "READ")
+fileJJ = root.TFile("preprocess_HHESTIA_QCD_ALL.root", "READ")
 fileHH4W = root.TFile("preprocess_HHESTIA_HH.root", "READ")
 
 # access the trees
@@ -83,7 +83,7 @@ if plotInputVariables == True:
       plt.hist(histsHH4W[index], bins=100, color='m', label='HH->WWWWW', histtype='step', normed=True)
       plt.xlabel(vars[index])
       plt.legend()
-      plt.savefig("Hist_" + vars[index] + ".pdf")
+      plt.savefig("plots/Hist_" + vars[index] + ".pdf")
       plt.close()
    print "Plotted each of the variables"
 
@@ -104,7 +104,7 @@ arrayJJ = scaler.transform(arrayJJ)
 arrayHH4W = scaler.transform(arrayHH4W)
 
 # number of events to train with
-numTrain = 20000
+numTrain = 100000
 
 # train the neural network
 mlp = neural_network.MLPClassifier(hidden_layer_sizes=(40,40,40), verbose=True, activation='relu')
@@ -122,7 +122,7 @@ cm = metrics.confusion_matrix(mlp.predict(trainData[10000:]), targetData[10000:]
 plt.figure()
 targetNames = ['QCD', 'HH->4W']
 tools.plot_confusion_matrix(cm.T, targetNames, normalize=True)
-plt.savefig('confusion_matrix.pdf')
+plt.savefig('plots/confusion_matrix.pdf')
 plt.close()
 
 # score
