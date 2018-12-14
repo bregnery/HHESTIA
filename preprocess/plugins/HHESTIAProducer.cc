@@ -85,6 +85,10 @@ class HHESTIAProducer : public edm::stream::EDProducer<> {
       // Member Data --------------------------------------------------------------
       //===========================================================================
 
+      // Input variables
+      std::string inputJetColl_;
+      bool isSignal_;
+
       // Tree variables
       TTree *jetTree;
       std::map<std::string, float> treeVars;
@@ -116,7 +120,9 @@ class HHESTIAProducer : public edm::stream::EDProducer<> {
 // Constructors -------------------------------------------------------------------
 ///////////////////////////////////////////////////////////////////////////////////
 
-HHESTIAProducer::HHESTIAProducer(const edm::ParameterSet& iConfig)
+HHESTIAProducer::HHESTIAProducer(const edm::ParameterSet& iConfig):
+   inputJetColl_ (iConfig.getParameter<std::string>("inputJetColl")),
+   isSignal_ (iConfig.getParameter<bool>("isSignal"))
 {
 
    //------------------------------------------------------------------------------
@@ -133,15 +139,11 @@ HHESTIAProducer::HHESTIAProducer(const edm::ParameterSet& iConfig)
    // AK8 jet variables
    listOfVars.push_back("nJets");
  
-   listOfVars.push_back("jet1AK8_phi");
-   listOfVars.push_back("jet1AK8_eta");
-   listOfVars.push_back("jet1AK8_mass");
-   listOfVars.push_back("jet1AK8_pt");
-
-   listOfVars.push_back("jet2AK8_phi");
-   listOfVars.push_back("jet2AK8_eta");
-   listOfVars.push_back("jet2AK8_mass");
-   listOfVars.push_back("jet2AK8_pt");
+   listOfVars.push_back("jetAK8_phi");
+   listOfVars.push_back("jetAK8_eta");
+   listOfVars.push_back("jetAK8_pt");
+   listOfVars.push_back("jetAK8_mass");
+   listOfVars.push_back("jetAK8_SoftDropMass");
 
    // Make Branches for each variable
    for (unsigned i = 0; i < listOfVars.size(); i++){
@@ -155,7 +157,8 @@ HHESTIAProducer::HHESTIAProducer(const edm::ParameterSet& iConfig)
 
    // AK8 Jets
    edm::InputTag ak8JetsTag_;
-   ak8JetsTag_ = edm::InputTag("slimmedJetsAK8", "", "PAT");
+   //ak8JetsTag_ = edm::InputTag("slimmedJetsAK8", "", "PAT");
+   ak8JetsTag_ = edm::InputTag(inputJetColl_, "", "run");
    ak8JetsToken_ = consumes<std::vector<pat::Jet> >(ak8JetsTag_);
 
    // Gen Particles
@@ -198,142 +201,73 @@ HHESTIAProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    // Find objects corresponding to the token and link to the handle
    Handle< std::vector<pat::Jet> > ak8JetsCollection;
    iEvent.getByToken(ak8JetsToken_, ak8JetsCollection);
-   vector<pat::Jet> ak8JetsVec = *ak8JetsCollection.product();
+   vector<pat::Jet> ak8Jets = *ak8JetsCollection.product();
  
    Handle< std::vector<reco::GenParticle> > genPartCollection;
    iEvent.getByToken(genPartToken_, genPartCollection);
    vector<reco::GenParticle> genPart = *genPartCollection.product();
 
    //------------------------------------------------------------------------------
+   // Gen Particles Loop ----------------------------------------------------------
+   //------------------------------------------------------------------------------
+   // This makes a TLorentz Vector for each generator Higgs to use for jet matching
+   //------------------------------------------------------------------------------
+
+   std::vector<TLorentzVector> genHiggs;
+   for (vector<reco::GenParticle>::const_iterator genBegin = genPart.begin(), genEnd = genPart.end(), ipart = genBegin; ipart != genEnd; ++ipart){
+      if(abs(ipart->pdgId() ) == 25){
+         genHiggs.push_back( TLorentzVector(ipart->px(), ipart->py(), ipart->pz(), ipart->energy() ) );
+      }
+   }
+
+   //------------------------------------------------------------------------------
    // AK8 Jet Loop ----------------------------------------------------------------
    //------------------------------------------------------------------------------
-
-   vector<pat::Jet> *ak8Jets = new vector<pat::Jet>;
-   ak8Jets = sortJets(&ak8JetsVec);
-   int nJets = 0;
-   vector<array<float, 2> > jetEtaPhi;
-   array<float, 2> etaPhi;
-   for (vector<pat::Jet>::const_iterator jetBegin = ak8Jets->begin(), jetEnd = ak8Jets->end(), ijet = jetBegin; ijet != jetEnd; ++ijet){
-
-      // AK8 Jets must meet these criteria
-      if(ijet->numberOfDaughters() >= 2 && ijet->pt() >= 500 && ijet->userFloat("ak8PFJetsCHSSoftDropMass") > 40 ){
-
-         nJets++;
-
-         // make vectors of jet eta phi values
-         if(nJets == 1){
-            etaPhi[0] = ijet->eta(); 
-            etaPhi[1] = ijet->phi();
-            jetEtaPhi.push_back(etaPhi);
-         }
-         if(nJets == 2){
-            etaPhi[0] = ijet->eta(); 
-            etaPhi[1] = ijet->phi();
-            jetEtaPhi.push_back(etaPhi);
-         }
-         if(nJets == 3){
-            etaPhi[0] = ijet->eta(); 
-            etaPhi[1] = ijet->phi();
-            jetEtaPhi.push_back(etaPhi);
-         }
-         if(nJets == 4){
-            etaPhi[0] = ijet->eta(); 
-            etaPhi[1] = ijet->phi();
-            jetEtaPhi.push_back(etaPhi);
-         }
-      }
-   }
-   treeVars["nJets"] = nJets;
-
-   //----------------------------------------------------------------
-   // Gen Particles Loop --------------------------------------------
-   //----------------------------------------------------------------
-
-   int nHiggs = 0;
-   vector<array<float, 2> > genHiggsEtaPhi;
-   for (vector<reco::GenParticle>::const_iterator genBegin = genPart.begin(), genEnd = genPart.end(), ipart = genBegin; ipart != genEnd; ++ipart){
-
-      // Higgs 
-      if(abs(ipart->pdgId() ) == 25) nHiggs++;
-      if(nHiggs == 1 && abs(ipart->pdgId() ) == 25 && ipart->status() < 50 && ipart->status() > 20 ){
-         etaPhi[0] = ipart->eta();
-         etaPhi[1] = ipart->phi();
-         genHiggsEtaPhi.push_back(etaPhi);
-      }
-      if(nHiggs == 2 && abs(ipart->pdgId() ) == 25 && ipart->status() < 50 && ipart->status() > 20 ){
-         etaPhi[0] = ipart->eta();
-         etaPhi[1] = ipart->phi();
-         genHiggsEtaPhi.push_back(etaPhi);
-      }
-   }
-
-   //------------------------------------------------------------------------------
-   // Fill Tree -------------------------------------------------------------------
+   // This loop makes a tree entry for each jet of interest -----------------------
    //------------------------------------------------------------------------------
 
-   // Do process for signal events only
-   int iJetMatched = 0;
-   if(nHiggs >= 2){
- 
-      // match jets to Higgs
-      vector<vector<bool> > matchJetsHiggs = deltaRMatch(jetEtaPhi, genHiggsEtaPhi, 0.1);
+   for (vector<pat::Jet>::const_iterator jetBegin = ak8Jets.begin(), jetEnd = ak8Jets.end(), ijet = jetBegin; ijet != jetEnd; ++ijet){
 
-      // fill jet properties
-      for(size_t iJet = 0; iJet < matchJetsHiggs.size(); iJet++){
-         for(size_t iHiggs = 0; iHiggs < matchJetsHiggs[iJet].size(); iHiggs++){
-            if(iJetMatched == 0 && matchJetsHiggs[iJet][iHiggs] == true){
-               // AK8 jet properties
-               treeVars["jet1AK8_phi"] = ak8Jets->at(iJet).phi();
-               treeVars["jet1AK8_eta"] = ak8Jets->at(iJet).eta();
-               treeVars["jet1AK8_mass"] = ak8Jets->at(iJet).mass();
-               treeVars["jet1AK8_pt"] = ak8Jets->at(iJet).pt();
-               iJetMatched++;
-            }
-            if(iJetMatched == 1 && matchJetsHiggs[iJet][iHiggs] == true){
-               // AK8 jet properties
-               treeVars["jet2AK8_phi"] = ak8Jets->at(iJet).phi();
-               treeVars["jet2AK8_eta"] = ak8Jets->at(iJet).eta();
-               treeVars["jet2AK8_mass"] = ak8Jets->at(iJet).mass();
-               treeVars["jet2AK8_pt"] = ak8Jets->at(iJet).pt();
-               iJetMatched++;
-               break;
-            }
-         }
+      // AK8 Jets of interest from non-signal samples
+      if(ijet->numberOfDaughters() >= 2 && ijet->pt() >= 500 && ijet->userFloat("ak8PFJetsCHSSoftDropMass") > 40 && isSignal_ == false){
+
+         // Store Jet Variables
+         treeVars["nJets"] = ak8Jets.size();
+         treeVars["jetAK8_phi"] = ijet->phi();
+         treeVars["jetAK8_eta"] = ijet->eta(); 
+         treeVars["jetAK8_pt"] = ijet->pt(); 
+         treeVars["jetAK8_mass"] = ijet->mass(); 
+         treeVars["jetAK8_SoftDropMass"] = ijet->userFloat("ak8PFJetsCHSSoftDropMass");
+
+         // Fill the jet entry tree
+         jetTree->Fill();
       }
-   }
 
-   // do this process for background events
-   if(nHiggs < 2){
-      for (vector<pat::Jet>::const_iterator jetBegin = ak8Jets->begin(), jetEnd = ak8Jets->end(), ijet = jetBegin; ijet != jetEnd; ++ijet){
-   
-         // AK8 Jets must meet these criteria
-         if(ijet->numberOfDaughters() >= 2 && ijet->pt() >= 500 && ijet->userFloat("ak8PFJetsCHSSoftDropMass") > 40 ){
-   
-            // link jet results to the tree
-            if(nJets == 1){
-               // AK8 jet properties
-               treeVars["jet1AK8_phi"] = ijet->phi();
-               treeVars["jet1AK8_eta"] = ijet->eta();
-               treeVars["jet1AK8_mass"] = ijet->mass();
-               treeVars["jet1AK8_pt"] = ijet->pt();
-               cout << "not Matched! jet1AK_pt: " << ijet->pt() << endl;
+      // AK8 Jets of interest from signal samples
+      if(ijet->numberOfDaughters() >= 2 && ijet->pt() >= 500 && ijet->userFloat("ak8PFJetsCHSSoftDropMass") > 40 && isSignal_ == true){
+         // gen Higgs loop
+         for (size_t iHiggs = 0; iHiggs < genHiggs.size(); iHiggs++){
+            TLorentzVector jet(ijet->px(), ijet->py(), ijet->pz(), ijet->energy() );
 
+            // match Jet to Higgs
+            if(jet.DeltaR(genHiggs[iHiggs]) < 0.1){
+
+               // Store Jet Variables
+               treeVars["nJets"] = ak8Jets.size();
+               treeVars["jetAK8_phi"] = ijet->phi();
+               treeVars["jetAK8_eta"] = ijet->eta(); 
+               treeVars["jetAK8_pt"] = ijet->pt(); 
+               treeVars["jetAK8_mass"] = ijet->mass(); 
+               treeVars["jetAK8_SoftDropMass"] = ijet->userFloat("ak8PFJetsCHSSoftDropMass");
+     
+               // Fill the jet entry tree
+               jetTree->Fill();
             }
-            if(nJets == 2){
-               // AK8 jet properties
-               treeVars["jet2AK8_phi"] = ijet->phi();
-               treeVars["jet2AK8_eta"] = ijet->eta();
-               treeVars["jet2AK8_mass"] = ijet->mass();
-               treeVars["jet2AK8_pt"] = ijet->pt();
-            }
-         }
-      }
-   }
-
-   // Fill the tree that stores the NNresults
-   jetTree->Fill();
-
+          }
+       }
+    }
 }
+
 
 //=================================================================================
 // Method called once each job just before starting event loop  -------------------

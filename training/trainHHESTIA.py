@@ -24,8 +24,9 @@ from sklearn.externals import joblib
 root.gROOT.SetBatch(True)
 
 # set options 
-plotInputVariables = True
-plotProbs = True 
+plotInputVariables = False
+plotAdditionalVariables = True
+plotProbs = False 
 
 #==================================================================================
 # Load Monte Carlo ////////////////////////////////////////////////////////////////
@@ -44,10 +45,11 @@ print "Accessed the trees"
 # get input variable names from branches
 vars = tools.getBranchNames(treeJJ)
 treeVars = vars
+print "Training with these variables: ", vars
 
 # create selection criteria
 #sel = ""
-sel = "jet1AK8_pt > 0 && jet2AK8_pt > 0"
+sel = "jet1AK8_pt > 500 && jet2AK8_pt > 500 && jet1AK8_mass > 50 && jet2AK8_mass > 50"
 #sel = "tau32 < 9999. && et > 500. && et < 2500. && bDisc1 > -0.05 && SDmass < 400"
 
 # make arrays from the trees
@@ -89,6 +91,27 @@ if plotInputVariables == True:
 
 if plotInputVariables == False:
    print "Input Variables will not be plotted. Change options at beginning of the program if this is incorrect."
+
+# plot additonal variables
+if plotAdditionalVariables == True:
+   for index, hist in enumerate(histsJJ):
+      if vars[index] == "jet1AK8_phi": 
+         phi1JJhist = hist
+         phi1HH4Whist = histsHH4W[index]
+      if vars[index] == "jet2AK8_phi":
+         phi2JJhist = hist
+         phi2HH4Whist = histsHH4W[index]
+         deltaPhiJJ = abs(phi1JJhist - phi2JJhist)
+         deltaPhiHH4W = abs(phi1HH4Whist - phi2HH4Whist)
+         plt.figure()
+         plt.hist(deltaPhiJJ, bins=100, color='b', label='QCD', histtype='step', normed=True)
+         plt.hist(deltaPhiHH4W, bins=100, color='m', label='HH->WWWWW', histtype='step', normed=True)
+         plt.xlabel("Delta Phi")
+         plt.legend()
+         plt.savefig("plots/Hist_deltaPhi.pdf")
+         plt.close()
+   print "Plotted each of the variables"
+    
 
 #==================================================================================
 # Train the Neural Network ////////////////////////////////////////////////////////

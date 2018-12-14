@@ -22,7 +22,23 @@ process.source = cms.Source("PoolSource",
 )
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
-process.run = cms.EDProducer('HHESTIAProducer')
+process.selectedAK8Jets = cms.EDFilter('PATJetSelector',
+    src = cms.InputTag('slimmedJetsAK8'),
+    cut = cms.string('pt > 100.0 && abs(eta) < 2.4'),
+    filter = cms.bool(True)
+)
+
+process.countAK8Jets = cms.EDFilter("PATCandViewCountFilter",
+    minNumber = cms.uint32(1),
+    maxNumber = cms.uint32(99999),
+    src = cms.InputTag("selectedAK8Jets"),
+    filter = cms.bool(True)
+)
+
+process.run = cms.EDProducer('HHESTIAProducer',
+	inputJetColl = cms.string('selectedAK8Jets'),
+        isSignal = cms.bool(True)
+)
 
 process.TFileService = cms.Service("TFileService", fileName = cms.string("preprocess_HHESTIA_HH.root") )
 
@@ -37,4 +53,4 @@ process.out = cms.OutputModule("PoolOutputModule",
                                )
 process.outpath = cms.EndPath(process.out)
 
-process.p = cms.Path(process.run)
+process.p = cms.Path(process.selectedAK8Jets*process.countAK8Jets*process.run)

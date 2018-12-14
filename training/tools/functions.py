@@ -76,6 +76,9 @@ def getBranchNames(tree ):
          continue
       if 'gen' in name:
          continue
+      if 'pt' in name:
+         print("Skipping this branch: " + name)
+         continue
       treeVars.append(name)
 
    return treeVars
