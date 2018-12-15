@@ -145,6 +145,12 @@ HHESTIAProducer::HHESTIAProducer(const edm::ParameterSet& iConfig):
    listOfVars.push_back("jetAK8_mass");
    listOfVars.push_back("jetAK8_SoftDropMass");
 
+   // nsubjettiness
+   listOfVars.push_back("jetAK8_Tau4");
+   listOfVars.push_back("jetAK8_Tau3");
+   listOfVars.push_back("jetAK8_Tau2");
+   listOfVars.push_back("jetAK8_Tau1");
+
    // Make Branches for each variable
    for (unsigned i = 0; i < listOfVars.size(); i++){
       treeVars[ listOfVars[i] ] = -999.99;
@@ -237,7 +243,12 @@ HHESTIAProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
          treeVars["jetAK8_eta"] = ijet->eta(); 
          treeVars["jetAK8_pt"] = ijet->pt(); 
          treeVars["jetAK8_mass"] = ijet->mass(); 
+
          treeVars["jetAK8_SoftDropMass"] = ijet->userFloat("ak8PFJetsCHSSoftDropMass");
+         treeVars["jetAK8_Tau4"] = ijet->userFloat("NjettinessAK8CHS:tau4");  //important for H->WW jets
+         treeVars["jetAK8_Tau3"] = ijet->userFloat("NjettinessAK8:tau3");
+         treeVars["jetAK8_Tau2"] = ijet->userFloat("NjettinessAK8:tau2");
+         treeVars["jetAK8_Tau1"] = ijet->userFloat("NjettinessAK8:tau1");
 
          // Fill the jet entry tree
          jetTree->Fill();
@@ -260,6 +271,11 @@ HHESTIAProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
                treeVars["jetAK8_mass"] = ijet->mass(); 
                treeVars["jetAK8_SoftDropMass"] = ijet->userFloat("ak8PFJetsCHSSoftDropMass");
      
+               treeVars["jetAK8_Tau4"] = ijet->userFloat("NjettinessAK8CHS:tau4");  //important for H->WW jets
+               treeVars["jetAK8_Tau3"] = ijet->userFloat("NjettinessAK8:tau3");
+               treeVars["jetAK8_Tau2"] = ijet->userFloat("NjettinessAK8:tau2");
+               treeVars["jetAK8_Tau1"] = ijet->userFloat("NjettinessAK8:tau1");
+
                // Fill the jet entry tree
                jetTree->Fill();
             }
