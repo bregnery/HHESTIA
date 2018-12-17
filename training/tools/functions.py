@@ -74,10 +74,13 @@ def getBranchNames(tree ):
       name = branch.GetName()
       if 'nJets' in name:
          continue
+#      if 'SoftDropMass' in name:
+#         continue
+#      if 'mass' in name:
+#         continue
       if 'gen' in name:
          continue
       if 'pt' in name:
-         print("Skipping this branch: " + name)
          continue
       treeVars.append(name)
 

@@ -11,10 +11,18 @@
 // include files
 #include "DataFormats/PatCandidates/interface/Jet.h"
 #include "TMath.h"
+#include "TLorentzVector.h"
 
 ///////////////////////////////////////////////////////////////////////////////////
 // Functions ----------------------------------------------------------------------
 ///////////////////////////////////////////////////////////////////////////////////
+
+// calculate Legendre Polynomials
+float LegendreP(float x, int order);
+
+
+// calculate Fox Wolfram moments
+int FWMoments(std::vector<TLorentzVector> particles, double (&outputs)[5] );
 
 // sort jet collection in terms of pT
 std::vector<pat::Jet> * sortJets(std::vector<pat::Jet> *jets);
