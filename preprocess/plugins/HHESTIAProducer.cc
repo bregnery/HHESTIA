@@ -163,6 +163,9 @@ HHESTIAProducer::HHESTIAProducer(const edm::ParameterSet& iConfig):
    listOfVars.push_back("aplanarity_Higgs");
    listOfVars.push_back("thrust_Higgs");
 
+   // Jet Asymmetry
+   listOfVars.push_back("asymmetry_Higgs");
+
    // Make Branches for each variable
    for (unsigned i = 0; i < listOfVars.size(); i++){
       treeVars[ listOfVars[i] ] = -999.99;
@@ -276,6 +279,9 @@ HHESTIAProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
          std::vector<math::XYZVector> particles2_H;
          std::vector<reco::LeafCandidate> particles3_H;
 
+         double sumPz = 0;
+         double sumP = 0;
+
          // Get all of the Jet's daughters
          vector<reco::Candidate * > daughtersOfJet;
             // First get all daughters for the first Soft Drop Subjet
@@ -305,6 +311,11 @@ HHESTIAProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
             particles2_H.push_back( math::XYZVector( thisParticleLV_H.X(), thisParticleLV_H.Y(), thisParticleLV_H.Z() ));
             particles3_H.push_back( reco::LeafCandidate(+1, reco::Candidate::LorentzVector( thisParticleLV_H.X(), thisParticleLV_H.Y(), 
                                                                                             thisParticleLV_H.Z(), thisParticleLV_H.T() ) ));
+            
+            // Sum rest frame momenta for asymmetry calculation
+            if (daughtersOfJet[i]->pt() < 10) continue;
+            sumPz += thisParticleLV_H.Pz();
+            sumP += abs(thisParticleLV_H.P() );
          }
 
          // Fox Wolfram Moments
@@ -322,6 +333,10 @@ HHESTIAProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
          treeVars["sphericity_Higgs"] = eventShapes_H.sphericity(2);
          treeVars["aplanarity_Higgs"] = eventShapes_H.aplanarity(2);
          treeVars["thrust_Higgs"] = thrustCalculator_H.thrust();
+
+         // Jet Asymmetry
+         double asymmetry = sumPz/sumP;
+         treeVars["asymmetry_Higgs"] = asymmetry;
 
          // Fill the jet entry tree
          jetTree->Fill();
@@ -360,6 +375,9 @@ HHESTIAProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
                std::vector<math::XYZVector> particles2_H;
                std::vector<reco::LeafCandidate> particles3_H;
       
+               double sumPz = 0;
+               double sumP = 0;
+
                // Get all of the Jet's daughters
                vector<reco::Candidate * > daughtersOfJet;
                   // First get all daughters for the first Soft Drop Subjet
@@ -389,6 +407,11 @@ HHESTIAProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
                   particles2_H.push_back( math::XYZVector( thisParticleLV_H.X(), thisParticleLV_H.Y(), thisParticleLV_H.Z() ));
                   particles3_H.push_back( reco::LeafCandidate(+1, reco::Candidate::LorentzVector( thisParticleLV_H.X(), thisParticleLV_H.Y(), 
                                                                                                   thisParticleLV_H.Z(), thisParticleLV_H.T() ) ));
+
+                  // Sum rest frame momenta for asymmetry calculation
+                  if (daughtersOfJet[i]->pt() < 10) continue;
+                  sumPz += thisParticleLV_H.Pz();
+                  sumP += abs( thisParticleLV_H.P() );
                }
       
                // Fox Wolfram Moments
@@ -406,6 +429,10 @@ HHESTIAProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
                treeVars["sphericity_Higgs"] = eventShapes_H.sphericity(2);
                treeVars["aplanarity_Higgs"] = eventShapes_H.aplanarity(2);
                treeVars["thrust_Higgs"] = thrustCalculator_H.thrust();
+
+               // Jet Asymmetry
+               double asymmetry = sumPz/sumP;
+               treeVars["asymmetry_Higgs"] = asymmetry;
 
                // Fill the jet entry tree
                jetTree->Fill();

@@ -24,7 +24,7 @@ from sklearn.externals import joblib
 root.gROOT.SetBatch(True)
 
 # set options 
-plotInputVariables = False
+plotInputVariables = True
 plotProbs = True
 savePDF = False
 savePNG = True 
@@ -91,6 +91,7 @@ if plotInputVariables == True:
       plt.figure()
       plt.hist(hist, bins=100, color='b', label='QCD', histtype='step', normed=True)
       plt.hist(histsHH4W[index], bins=100, color='m', label='H->WW', histtype='step', normed=True)
+      plt.hist(histsHH4B[index], bins=100, color='g', label='H->bb', histtype='step', normed=True)
       plt.xlabel(vars[index])
       plt.legend()
       if savePDF == True:
