@@ -24,7 +24,7 @@ from sklearn.externals import joblib
 root.gROOT.SetBatch(True)
 
 # set options 
-plotInputVariables = True
+plotInputVariables = False
 plotProbs = True
 savePDF = False
 savePNG = True 
@@ -36,10 +36,12 @@ savePNG = True
 # access the TFiles
 fileJJ = root.TFile("preprocess_HHESTIA_QCD.root", "READ")
 fileHH4W = root.TFile("preprocess_HHESTIA_HH.root", "READ")
+fileHH4B = root.TFile("preprocess_HHESTIA_HH_4B.root", "READ")
 
 # access the trees
 treeJJ = fileJJ.Get("run/jetTree")
 treeHH4W = fileHH4W.Get("run/jetTree")
+treeHH4B = fileHH4B.Get("run/jetTree")
 
 print "Accessed the trees"
 
@@ -60,13 +62,17 @@ arrayJJ = tools.appendTreeArray(arrayJJ)
 arrayHH4W = tree2array(treeHH4W, treeVars, sel)
 arrayHH4W = tools.appendTreeArray(arrayHH4W)
 
+arrayHH4B = tree2array(treeHH4B, treeVars, sel)
+arrayHH4B = tools.appendTreeArray(arrayHH4B)
+
 # make an array with all of the datasets
-arrayData = [arrayJJ, arrayHH4W]
+arrayData = [arrayJJ, arrayHH4W, arrayHH4B]
 
 # copy the arrays so that copies of the arrays are not deleted in the randomize function
 # without this, deleting arrayData will delete all tree arrays
 arrayJJ = copy.copy(arrayJJ)
 arrayHH4W = copy.copy(arrayHH4W)
+arrayHH4B = copy.copy(arrayHH4B)
 
 print "Made arrays from the datasets"
 
@@ -77,6 +83,7 @@ print "Made arrays from the datasets"
 # store the data in histograms
 histsJJ = numpy.array(arrayJJ).T
 histsHH4W = numpy.array(arrayHH4W).T
+histsHH4B = numpy.array(arrayHH4B).T
 
 # plot with python
 if plotInputVariables == True:
@@ -108,9 +115,10 @@ scaler = preprocessing.StandardScaler().fit(trainData)
 trainData = scaler.transform(trainData)
 arrayJJ = scaler.transform(arrayJJ)
 arrayHH4W = scaler.transform(arrayHH4W)
+arrayHH4W = scaler.transform(arrayHH4B)
 
 # number of events to train with
-numTrain = 40000
+numTrain = 60000
 
 # train the neural network
 mlp = neural_network.MLPClassifier(hidden_layer_sizes=(40,40,40), verbose=True, activation='relu')
@@ -126,7 +134,7 @@ print "Trained the neural network!"
 # Confusion Matrix
 cm = metrics.confusion_matrix(mlp.predict(trainData[10000:]), targetData[10000:])
 plt.figure()
-targetNames = ['QCD', 'H->WW']
+targetNames = ['QCD', 'H->WW', 'H->bb']
 tools.plot_confusion_matrix(cm.T, targetNames, normalize=True)
 if savePDF == True:
    plt.savefig('plots/confusion_matrix.pdf')
@@ -140,10 +148,12 @@ print "Training Score: ", mlp.score(trainData[10000:], targetData[10000:])
 # get the probabilities
 probsJJ = mlp.predict_proba(arrayJJ)
 probsHH4W = mlp.predict_proba(arrayHH4W)
+probsHH4B = mlp.predict_proba(arrayHH4B)
 
 # [ [probArray, label, color], .. ]
 probs = [ [probsJJ, 'QCD', 'b'],
-          [probsHH4W, 'QCD', 'm'] ]
+          [probsHH4W, 'QCD', 'm'],
+          [probsHH4B, 'QCD', 'm'] ]
 
 # plot probability results
 if plotProbs == True:
