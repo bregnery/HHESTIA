@@ -32,6 +32,8 @@
 
 // Data Formats and tools include files
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
+#include "DataFormats/VertexReco/interface/VertexFwd.h"
+#include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/PatCandidates/interface/Jet.h"
 #include "DataFormats/PatCandidates/interface/PackedGenParticle.h"
 #include "DataFormats/PatCandidates/interface/MET.h"
@@ -99,9 +101,9 @@ class HHESTIAProducer : public edm::stream::EDProducer<> {
       edm::EDGetTokenT<std::vector<pat::Jet> > ak8JetsToken_;
       //edm::EDGetTokenT<std::vector<pat::Jet> > ak4JetsToken_;
       edm::EDGetTokenT<std::vector<reco::GenParticle> > genPartToken_;
+      edm::EDGetTokenT<std::vector<reco::Vertex> > verticesToken_;
 
       //edm::EDGetTokenT<std::vector<pat::Jet> > ak8CHSSoftDropSubjetsToken_;
-      //edm::EDGetTokenT<std::vector<reco::Vertex> > verticesToken_;
 
       //edm::EDGetTokenT<edm::TriggerResults> trigResultsToken_;
       //edm::EDGetTokenT<bool> BadChCandFilterToken_;
