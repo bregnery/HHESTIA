@@ -147,6 +147,9 @@ HHESTIAProducer::HHESTIAProducer(const edm::ParameterSet& iConfig):
    listOfVars.push_back("jetAK8_mass");
    listOfVars.push_back("jetAK8_SoftDropMass");
 
+   // Vertex Variables
+   listOfVars.push_back("nSecondaryVertices");
+
    // nsubjettiness
    listOfVars.push_back("jetAK8_Tau4");
    listOfVars.push_back("jetAK8_Tau3");
@@ -188,6 +191,11 @@ HHESTIAProducer::HHESTIAProducer(const edm::ParameterSet& iConfig):
    edm::InputTag genPartTag_;
    genPartTag_ = edm::InputTag("prunedGenParticles", "", "PAT"); 
    genPartToken_ = consumes<std::vector<reco::GenParticle> >(genPartTag_);
+
+   // Vertices
+   edm::InputTag verticesTag_;
+   verticesTag_ = edm::InputTag("offlineSlimmedPrimaryVertices", "", "PAT");
+   verticesToken_ = consumes<std::vector<reco::Vertex> >(verticesTag_);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -232,6 +240,10 @@ HHESTIAProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    iEvent.getByToken(genPartToken_, genPartCollection);
    vector<reco::GenParticle> genPart = *genPartCollection.product();
 
+   Handle< std::vector<reco::Vertex> > vertexCollection;
+   iEvent.getByToken(verticesToken_, vertexCollection);
+   vector<reco::Vertex> vertices = *vertexCollection.product();
+
    //------------------------------------------------------------------------------
    // Gen Particles Loop ----------------------------------------------------------
    //------------------------------------------------------------------------------
@@ -265,6 +277,13 @@ HHESTIAProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
          treeVars["jetAK8_pt"] = ijet->pt(); 
          treeVars["jetAK8_mass"] = ijet->mass(); 
          treeVars["jetAK8_SoftDropMass"] = ijet->userFloat("ak8PFJetsCHSSoftDropMass");
+
+         // Secondary Vertex Variables
+         const reco::SecondaryVertexTagInfo &svTagInfo = ijet->tagInfoSecondaryVertex();
+         treeVars["nSecondaryVertices"] = svTagInfo.nVertices();
+         // Store Vertex information
+         //treeVars["jetAK8_vtxMass"] = ijet->userFloat("vtxMass");
+         //treeVars["jetAK8_vtxNtracks"] = ijet->userFloat("vtxNtracks");
 
          // Store Subjettiness info
          treeVars["jetAK8_Tau4"] = ijet->userFloat("NjettinessAK8CHS:tau4");  //important for H->WW jets
@@ -367,6 +386,10 @@ HHESTIAProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
                treeVars["jetAK8_Tau3"] = ijet->userFloat("NjettinessAK8:tau3");
                treeVars["jetAK8_Tau2"] = ijet->userFloat("NjettinessAK8:tau2");
                treeVars["jetAK8_Tau1"] = ijet->userFloat("NjettinessAK8:tau1");
+
+               // Secondary Vertex Variables
+               const reco::SecondaryVertexTagInfo &svTagInfo = ijet->tagInfoSecondaryVertex();
+               treeVars["nSecondaryVertices"] = svTagInfo.nVertices();
 
                // get 4 vector for Higgs rest frame
                fourv thisJet = ijet->polarP4();

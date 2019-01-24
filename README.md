@@ -26,7 +26,7 @@ Then, clone this repository and compile the programs as modules for CMSSW.
 
 ```bash
 cd CMSSW_9_4_8/src/
-https://github.com/bregnery/HHESTIA.git
+git clone https://github.com/bregnery/HHESTIA.git
 scram b -j8
 ```
 
