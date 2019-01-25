@@ -279,7 +279,7 @@ HHESTIAProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
          treeVars["jetAK8_SoftDropMass"] = ijet->userFloat("ak8PFJetsCHSSoftDropMass");
 
          // Secondary Vertex Variables
-         const reco::SecondaryVertexTagInfo &svTagInfo = ijet->tagInfoSecondaryVertex();
+         const reco::SecondaryVertexTagInfo &svTagInfo = *ijet->tagInfoSecondaryVertex();
          treeVars["nSecondaryVertices"] = svTagInfo.nVertices();
          // Store Vertex information
          //treeVars["jetAK8_vtxMass"] = ijet->userFloat("vtxMass");
@@ -388,7 +388,7 @@ HHESTIAProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
                treeVars["jetAK8_Tau1"] = ijet->userFloat("NjettinessAK8:tau1");
 
                // Secondary Vertex Variables
-               const reco::SecondaryVertexTagInfo &svTagInfo = ijet->tagInfoSecondaryVertex();
+               const reco::SecondaryVertexTagInfo &svTagInfo = *ijet->tagInfoSecondaryVertex();
                treeVars["nSecondaryVertices"] = svTagInfo.nVertices();
 
                // get 4 vector for Higgs rest frame
