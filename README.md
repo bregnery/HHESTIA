@@ -17,7 +17,7 @@ scram b -j8
 Now, add the Jet Toolbox.
 
 ```bash
-git clone -b jetToolbox_94X https://github.com/cms-jet/JetToolbox JMEAnalysis/JetToolbox
+git clone -b jetToolbox_91X https://github.com/cms-jet/JetToolbox JMEAnalysis/JetToolbox
 scram b
 cmsRun JMEAnalysis/JetToolbox/test/jettoolbox_cfg.py
 ```

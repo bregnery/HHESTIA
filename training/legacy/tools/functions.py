@@ -11,15 +11,11 @@ import matplotlib.pyplot as plt
 import copy
 import random
 import itertools
-import types
-import tempfile
-import keras.models
 
 # functions from modules
 from sklearn import svm, metrics, preprocessing, datasets
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix
-from sklearn.metrics import roc_curve, auc
 
 #==================================================================================
 # Plot Confusion Matrix ///////////////////////////////////////////////////////////
@@ -127,52 +123,6 @@ def randomizeData(array):
    return trainData, targetData
 
 #==================================================================================
-# Plot Performance ////////////////////////////////////////////////////////////////
-#----------------------------------------------------------------------------------
-# loss is an array of loss and loss_val from the training /////////////////////////
-# acc is an array of acc and acc_val from the training ////////////////////////////
-# train_test is the train data that has not been trained on ///////////////////////
-# target_test is the target data that has not been trained on /////////////////////
-# target_predict is the models prediction of data that has not been trained on ////
-#----------------------------------------------------------------------------------
-
-def plotPerformance(loss, acc): #, train_test, target_test, target_predict):
-   
-   # plot loss vs epoch
-   plt.figure(figsize=(15,10))
-   ax = plt.subplot(2, 2, 1)
-   ax.plot(loss[0], label='loss')
-   ax.plot(loss[1], label='val_loss')
-   ax.legend(loc="upper right")
-   ax.set_xlabel('epoch')
-   ax.set_ylabel('loss')
-   plt.savefig("plots/loss.pdf")
-   plt.savefig("plots/loss.png")
-
-   # plot accuracy vs epoch
-   ax = plt.subplot(2, 2, 2)
-   ax.plot(acc[0], label='acc')
-   ax.plot(acc[0], label='val_acc')
-   ax.legend(loc="upper left")
-   ax.set_xlabel('epoch')
-   ax.set_ylabel('acc')
-   plt.savefig("plots/acc.pdf")
-   plt.savefig("plots/acc.png")
-
-   # Plot ROC
-#   fpr, tpr, thresholds = roc_curve(target_test, target_predict)
-#   roc_auc = auc(fpr, tpr)
-#   ax = plt.subplot(2, 2, 3)
-#   ax.plot(fpr, tpr, lw=2, color='cyan', label='auc = %.3f' % (roc_auc))
-#   ax.plot([0, 1], [0, 1], linestyle='--', lw=2, color='k', label='random chance')
-#   ax.set_xlim([0, 1.0])
-#   ax.set_ylim([0, 1.0])
-#   ax.set_xlabel('false positive rate')
-#   ax.set_ylabel('true positive rate')
-#   ax.set_title('receiver operating curve')
-#   ax.legend(loc="lower right")
-
-#==================================================================================
 # Plot Probabilities //////////////////////////////////////////////////////////////
 #----------------------------------------------------------------------------------
 # probs is an array of probabilites, labels, and colors ///////////////////////////
@@ -190,30 +140,3 @@ def plotProbabilities(probs):
          plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, ncol=6, mode="expand", borderaxespad=0.)
          plt.savefig("prob_" + probs[iProb][1] + ".pdf")
          plt.close()
-
-#==================================================================================
-# Make Keras Picklable  ///////////////////////////////////////////////////////////
-#----------------------------------------------------------------------------------
-# A patch to make Keras give results in pickle format /////////////////////////////
-#----------------------------------------------------------------------------------
-
-def make_keras_picklable():
-    def __getstate__(self):
-        model_str = ""
-        with tempfile.NamedTemporaryFile(suffix='.hdf5', delete=True) as fd:
-            keras.models.save_model(self, fd.name, overwrite=True)
-            model_str = fd.read()
-        d = { 'model_str': model_str }
-        return d
-
-    def __setstate__(self, state):
-        with tempfile.NamedTemporaryFile(suffix='.hdf5', delete=True) as fd:
-            fd.write(state['model_str'])
-            fd.flush()
-            model = keras.models.load_model(fd.name)
-        self.__dict__ = model.__dict__
-
-
-    cls = keras.models.Model
-    cls.__getstate__ = __getstate__
-    cls.__setstate__ = __setstate__

@@ -6,16 +6,13 @@
 
 # modules
 import ROOT as root
-import uproot
 import numpy
-import pandas as pd
 import h5py
 import matplotlib.pyplot as plt
+import tensorflow as tf
+import pickle
 import copy
 import random
-
-# user modules
-import tools.functions as tools
 
 # get stuff from modules
 from root_numpy import tree2array
@@ -23,16 +20,23 @@ from sklearn import svm, metrics, preprocessing, neural_network, tree
 from sklearn.linear_model import SGDClassifier
 from sklearn.externals import joblib
 
+# set up keras
+from os import environ
+environ["KERAS_BACKEND"] = "tensorflow"
 from keras.models import Sequential, Model
 from keras.optimizers import SGD
 from keras.layers import Input, Activation, Dense, Convolution2D, MaxPooling2D, Dropout, Flatten
-from keras.utils import np_utils
+from keras.utils import np_utils, to_categorical
+from keras.callbacks import EarlyStopping, ModelCheckpoint
+
+# user modules
+import tools.functions as tools
 
 # enter batch mode in root (so python can access displays)
 root.gROOT.SetBatch(True)
 
 # set options 
-plotInputVariables = True
+plotInputVariables = False
 plotProbs = True
 savePDF = False
 savePNG = True 
@@ -116,26 +120,8 @@ if plotInputVariables == False:
 # Train the Neural Network ////////////////////////////////////////////////////////
 #==================================================================================
 
-# customize the neural network
-NDIM = len(VARS)
-inputs = Input(shape=(NDIM,), name = 'input')  
-
-# make the hidden layers
-hidden = []
-dropout = []
-hidden.append(Dense(40, name = 'hidden1', kernel_initializer='normal', activation='relu')(inputs) )
-for i in range(1, 39):
-   dropout.append(Dropout(0.20)(hidden[i-1]) )
-   hidden.append(Dense(40, name = 'hidden' + str(i), kernel_initializer='normal', activation='relu')(dropout[i-1]) )
-dropout.append(Dropout(0.20)(hidden[39]) )
-outputs = Dense(1, name = 'output', kernel_initializer='normal', activation='sigmoid')(dropout[39])
-
-# create the model
-model = Model(inputs=inputs, outputs=outputs)
-# compile the model
-model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
-# print the model summary
-model.summary()
+# make it so keras results can go in a pkl file
+tools.make_keras_picklable()
 
 # randomize the datasets
 trainData, targetData = tools.randomizeData(arrayData)
@@ -150,10 +136,42 @@ arrayHH4W = scaler.transform(arrayHH4B)
 # number of events to train with
 numTrain = 60000
 
+# get the target data in the correct form
+targetData = to_categorical(targetData, num_classes=3)
+
+# Define the Neural Network Structure
+trainDim = trainData.shape[1] 
+model_BESTNN = Sequential()
+model_BESTNN.add( Dense(40, kernel_initializer="glorot_normal", activation="relu",input_shape=(trainDim, ) ))
+model_BESTNN.add( Dropout(0.20) )
+model_BESTNN.add( Dense(40, kernel_initializer="glorot_normal", activation="relu"))
+model_BESTNN.add( Dropout(0.20) )
+model_BESTNN.add( Dense(40, kernel_initializer="glorot_normal", activation="relu"))
+model_BESTNN.add( Dropout(0.20) )
+model_BESTNN.add( Dense(40, kernel_initializer="glorot_normal", activation="relu"))
+model_BESTNN.add( Dropout(0.20) )
+model_BESTNN.add( Dense(40, kernel_initializer="glorot_normal", activation="relu"))
+model_BESTNN.add( Dropout(0.20) )
+model_BESTNN.add( Dense(3, kernel_initializer="glorot_normal", activation="softmax"))
+
+# compile the model
+model_BESTNN.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+
+# print the model summary
+print(model_BESTNN.summary() )
+
+# early stopping
+early_stopping = EarlyStopping(monitor='val_loss', patience=10)
+
+# model checkpoint callback
+# this saves the model architecture + parameters into dense_model.h5
+model_checkpoint = ModelCheckpoint('dense_model.h5', monitor='val_loss', 
+                                   verbose=0, save_best_only=True, 
+                                   save_weights_only=False, mode='auto', 
+                                   period=1)
+
 # train the neural network
-mlp = neural_network.MLPClassifier(hidden_layer_sizes=(40,40,40), verbose=True, activation='relu')
-#mlp = tree.DecisionTreeClassifier()
-mlp.fit(trainData[:numTrain], targetData[:numTrain])
+history = model_BESTNN.fit(trainData[:numTrain], targetData[:numTrain], batch_size=100, epochs=100, callbacks=[early_stopping, model_checkpoint], validation_split = 0.1)
 
 print "Trained the neural network!"
 
@@ -162,7 +180,7 @@ print "Trained the neural network!"
 #==================================================================================
 
 # Confusion Matrix
-cm = metrics.confusion_matrix(mlp.predict(trainData[10000:]), targetData[10000:])
+cm = metrics.confusion_matrix(numpy.argmax(model_BESTNN.predict(trainData[numTrain:]), axis=1), numpy.argmax(targetData[numTrain:],axis=1) )
 plt.figure()
 targetNames = ['QCD', 'H->WW', 'H->bb']
 tools.plot_confusion_matrix(cm.T, targetNames, normalize=True)
@@ -173,12 +191,18 @@ if savePNG == True:
 plt.close()
 
 # score
-print "Training Score: ", mlp.score(trainData[10000:], targetData[10000:])
+print "Training Score: ", model_BESTNN.evaluate(trainData[numTrain:], targetData[numTrain:], batch_size=100)
+
+# performance plots
+loss = [history.history['loss'], history.history['val_loss'] ]
+acc = [history.history['acc'], history.history['val_acc'] ]
+tools.plotPerformance(loss, acc)
+print "plotted HESTIA training Performance"
 
 # get the probabilities
-probsJJ = mlp.predict_proba(arrayJJ)
-probsHH4W = mlp.predict_proba(arrayHH4W)
-probsHH4B = mlp.predict_proba(arrayHH4B)
+probsJJ = model_BESTNN.predict(arrayJJ)
+probsHH4W = model_BESTNN.predict(arrayHH4W)
+probsHH4B = model_BESTNN.predict(arrayHH4B)
 
 # [ [probArray, label, color], .. ]
 probs = [ [probsJJ, 'QCD', 'b'],
@@ -193,7 +217,7 @@ if plotProbs == False:
    print "HHESTIA probabilities will not be plotted. This can be changed at the beginning of the program."
 
 # make file with probability results
-joblib.dump(mlp, "HHESTIA_mlp.pkl")
+joblib.dump(model_BESTNN, "HHESTIA_mlp.pkl")
 joblib.dump(scaler, "HHESTIA_scaler.pkl")
 
 print "Made weights based on probability results"

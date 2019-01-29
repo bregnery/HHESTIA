@@ -32,12 +32,13 @@
 
 // Data Formats and tools include files
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
-#include "DataFormats/VertexReco/interface/VertexFwd.h"
-#include "DataFormats/VertexReco/interface/Vertex.h"
+//#include "DataFormats/VertexReco/interface/VertexFwd.h"
+//#include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/PatCandidates/interface/Jet.h"
 #include "DataFormats/PatCandidates/interface/PackedGenParticle.h"
 #include "DataFormats/PatCandidates/interface/MET.h"
 #include "DataFormats/PatCandidates/interface/PackedCandidate.h"
+#include "DataFormats/BTauReco/interface/SecondaryVertexTagInfo.h"
 #include "PhysicsTools/CandUtils/interface/EventShapeVariables.h"
 #include "PhysicsTools/CandUtils/interface/Thrust.h"
 
@@ -101,7 +102,7 @@ class HHESTIAProducer : public edm::stream::EDProducer<> {
       edm::EDGetTokenT<std::vector<pat::Jet> > ak8JetsToken_;
       //edm::EDGetTokenT<std::vector<pat::Jet> > ak4JetsToken_;
       edm::EDGetTokenT<std::vector<reco::GenParticle> > genPartToken_;
-      edm::EDGetTokenT<std::vector<reco::Vertex> > verticesToken_;
+//      edm::EDGetTokenT<std::vector<reco::Vertex> > verticesToken_;
 
       //edm::EDGetTokenT<std::vector<pat::Jet> > ak8CHSSoftDropSubjetsToken_;
 
@@ -191,11 +192,12 @@ HHESTIAProducer::HHESTIAProducer(const edm::ParameterSet& iConfig):
    edm::InputTag genPartTag_;
    genPartTag_ = edm::InputTag("prunedGenParticles", "", "PAT"); 
    genPartToken_ = consumes<std::vector<reco::GenParticle> >(genPartTag_);
-
+/*
    // Vertices
    edm::InputTag verticesTag_;
    verticesTag_ = edm::InputTag("offlineSlimmedPrimaryVertices", "", "PAT");
    verticesToken_ = consumes<std::vector<reco::Vertex> >(verticesTag_);
+*/
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -240,9 +242,11 @@ HHESTIAProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    iEvent.getByToken(genPartToken_, genPartCollection);
    vector<reco::GenParticle> genPart = *genPartCollection.product();
 
+/*
    Handle< std::vector<reco::Vertex> > vertexCollection;
    iEvent.getByToken(verticesToken_, vertexCollection);
    vector<reco::Vertex> vertices = *vertexCollection.product();
+*/
 
    //------------------------------------------------------------------------------
    // Gen Particles Loop ----------------------------------------------------------
@@ -279,8 +283,8 @@ HHESTIAProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
          treeVars["jetAK8_SoftDropMass"] = ijet->userFloat("ak8PFJetsCHSSoftDropMass");
 
          // Secondary Vertex Variables
-         const reco::SecondaryVertexTagInfo &svTagInfo = *ijet->tagInfoSecondaryVertex();
-         treeVars["nSecondaryVertices"] = svTagInfo.nVertices();
+//         const reco::SecondaryVertexTagInfo &svTagInfo = *ijet->tagInfoSecondaryVertex();
+//         treeVars["nSecondaryVertices"] = svTagInfo.nVertices();
          // Store Vertex information
          //treeVars["jetAK8_vtxMass"] = ijet->userFloat("vtxMass");
          //treeVars["jetAK8_vtxNtracks"] = ijet->userFloat("vtxNtracks");
@@ -388,8 +392,11 @@ HHESTIAProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
                treeVars["jetAK8_Tau1"] = ijet->userFloat("NjettinessAK8:tau1");
 
                // Secondary Vertex Variables
-               const reco::SecondaryVertexTagInfo &svTagInfo = *ijet->tagInfoSecondaryVertex();
-               treeVars["nSecondaryVertices"] = svTagInfo.nVertices();
+               //const reco::SecondaryVertexTagInfo &svTagInfo = *ijet->tagInfoSecondaryVertex("secondaryVertex");
+               //cout << "Number of Secondary Vertices: " << ijet->tagInfoSecondaryVertex()->nVertices();
+               cout << "Has Secondary Vertex tag info: " << ijet->hasTagInfo("pfInclusiveSecondaryVertexFinderTagInfos");
+               //cout << "Number of Secondary Vertices: " << svTagInfo.nVertices();
+               //treeVars["nSecondaryVertices"] = svTagInfo.nVertices();
 
                // get 4 vector for Higgs rest frame
                fourv thisJet = ijet->polarP4();
