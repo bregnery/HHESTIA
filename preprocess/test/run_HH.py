@@ -39,31 +39,6 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 # Remake the Jet Collections ////////////////////////////////////////////////////
 #================================================================================
 
-# Select charged hadron subtracted packed PF candidates
-#process.pfCHS = cms.EDFilter("CandPtrSelector", src = cms.InputTag("packedPFCandidates"), cut = cms.string("fromPV"))
-#from RecoJets.JetProducers.ak8PFJets_cfi import ak8PFJets
-
-# Define PFJetsCHS
-#process.ak8PFJetsCHS = ak8PFJets.clone(src = 'pfCHS')
-
-# Clone the existing TagInfo configurations and adapt them to MiniAOD input
-#process.MyImpactParameterTagInfos = process.pfImpactParameterTagInfos.clone(
-#    primaryVertex = cms.InputTag("offlineSlimmedPrimaryVertices"),
-#    candidates = cms.InputTag("packedPFCandidates"),
-#    jets = cms.InputTag("ak8PFJetsCHS") # use the above-defined PF jets as input
-#)
-#process.MySecondaryVertexTagInfos = process.pfSecondaryVertexTagInfos.clone(
-#    trackIPTagInfos = cms.InputTag("MyImpactParameterTagInfos") # use the above IP TagInfos as input
-#)
-
-# Clone the existing b-tagger configurations and use the above TagInfos as input
-#process.MyTrackCountingHighEffBJetTags = process.pfTrackCountingHighEffBJetTags.clone(
-#    tagInfos = cms.VInputTag(cms.InputTag("MyImpactParameterTagInfos"))
-#)
-#process.MySimpleSecondaryVertexHighEffBJetTags = process.pfSimpleSecondaryVertexHighEffBJetTags.clone(
-#    tagInfos = cms.VInputTag(cms.InputTag("MySecondaryVertexTagInfos"))
-#)
-
 # Adjust the jet collection to include tau4
 jetToolbox( process, 'ak8', 'jetsequence', 'out',
     updateCollection = 'slimmedJetsAK8',
@@ -81,11 +56,7 @@ process.selectedAK8Jets = cms.EDFilter('PATJetSelector',
     src = cms.InputTag('selectedPatJetsAK8PFCHS'),
     cut = cms.string('pt > 100.0 && abs(eta) < 2.4'),
     filter = cms.bool(True)
-    #addTagInfos = cms.bool(True)
 )
-
-# Add the tag infos
-#getattr(process,'selectedAK8Jets').addTagInfos = cms.bool(True)
 
 process.countAK8Jets = cms.EDFilter("PATCandViewCountFilter",
     minNumber = cms.uint32(1),
@@ -116,13 +87,7 @@ process.outpath = cms.EndPath(process.out)
 
 # Organize the running process
 process.p = cms.Path(
-#    process.pfCHS
-#    * process.ak8PFJetsCHS
-#    * process.MyImpactParameterTagInfos
-#    * process.MyTrackCountingHighEffBJetTags
-#    * process.MySecondaryVertexTagInfos
-#    * process.MySimpleSecondaryVertexHighEffBJetTags
-     process.selectedAK8Jets
+    process.selectedAK8Jets
     * process.countAK8Jets
     * process.run
 )

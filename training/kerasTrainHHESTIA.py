@@ -148,10 +148,10 @@ model_BESTNN.add( Dense(40, kernel_initializer="glorot_normal", activation="relu
 model_BESTNN.add( Dropout(0.20) )
 model_BESTNN.add( Dense(40, kernel_initializer="glorot_normal", activation="relu"))
 model_BESTNN.add( Dropout(0.20) )
-model_BESTNN.add( Dense(40, kernel_initializer="glorot_normal", activation="relu"))
-model_BESTNN.add( Dropout(0.20) )
-model_BESTNN.add( Dense(40, kernel_initializer="glorot_normal", activation="relu"))
-model_BESTNN.add( Dropout(0.20) )
+#model_BESTNN.add( Dense(40, kernel_initializer="glorot_normal", activation="relu"))
+#model_BESTNN.add( Dropout(0.20) )
+#model_BESTNN.add( Dense(40, kernel_initializer="glorot_normal", activation="relu"))
+#model_BESTNN.add( Dropout(0.20) )
 model_BESTNN.add( Dense(3, kernel_initializer="glorot_normal", activation="softmax"))
 
 # compile the model
@@ -217,7 +217,7 @@ if plotProbs == False:
    print "HHESTIA probabilities will not be plotted. This can be changed at the beginning of the program."
 
 # make file with probability results
-joblib.dump(model_BESTNN, "HHESTIA_mlp.pkl")
+joblib.dump(model_BESTNN, "HHESTIA_keras.pkl")
 joblib.dump(scaler, "HHESTIA_scaler.pkl")
 
 print "Made weights based on probability results"
