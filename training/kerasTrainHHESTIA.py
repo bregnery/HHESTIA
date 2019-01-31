@@ -8,6 +8,8 @@
 import ROOT as root
 import numpy
 import h5py
+import matplotlib
+matplotlib.use('Agg') #prevents opening displays, must use before pyplot
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import pickle
@@ -22,7 +24,7 @@ from sklearn.externals import joblib
 
 # set up keras
 from os import environ
-environ["KERAS_BACKEND"] = "tensorflow"
+environ["KERAS_BACKEND"] = "tensorflow" #must set backend before importing keras
 from keras.models import Sequential, Model
 from keras.optimizers import SGD
 from keras.layers import Input, Activation, Dense, Convolution2D, MaxPooling2D, Dropout, Flatten

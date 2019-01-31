@@ -7,6 +7,8 @@
 # modules
 import ROOT as root
 import numpy
+import matplotlib
+matplotlib.use('Agg') #prevents opening displays, must use before pyplot
 import matplotlib.pyplot as plt
 import copy
 import random
@@ -58,9 +60,9 @@ def plot_confusion_matrix(cm, classes,
                 horizontalalignment="center",
                 color="white" if cm[i, j] > thresh else "black")
 
-   plt.tight_layout()
    plt.ylabel('True label')
    plt.xlabel('Predicted label')
+   plt.tight_layout() #make all the axis labels not get cutoff
 
 #==================================================================================
 # Get Branch Names ////////////////////////////////////////////////////////////////
@@ -139,25 +141,26 @@ def randomizeData(array):
 def plotPerformance(loss, acc): #, train_test, target_test, target_predict):
    
    # plot loss vs epoch
-   plt.figure(figsize=(15,10))
-   ax = plt.subplot(2, 2, 1)
-   ax.plot(loss[0], label='loss')
-   ax.plot(loss[1], label='val_loss')
-   ax.legend(loc="upper right")
-   ax.set_xlabel('epoch')
-   ax.set_ylabel('loss')
+   plt.figure()
+   plt.plot(loss[0], label='loss')
+   plt.plot(loss[1], label='val_loss')
+   plt.legend(loc="upper right")
+   plt.xlabel('epoch')
+   plt.ylabel('loss')
    plt.savefig("plots/loss.pdf")
    plt.savefig("plots/loss.png")
+   plt.close()
 
    # plot accuracy vs epoch
-   ax = plt.subplot(2, 2, 2)
-   ax.plot(acc[0], label='acc')
-   ax.plot(acc[0], label='val_acc')
-   ax.legend(loc="upper left")
-   ax.set_xlabel('epoch')
-   ax.set_ylabel('acc')
+   plt.figure()
+   plt.plot(acc[0], label='acc')
+   plt.plot(acc[1], label='val_acc')
+   plt.legend(loc="upper left")
+   plt.xlabel('epoch')
+   plt.ylabel('acc')
    plt.savefig("plots/acc.pdf")
    plt.savefig("plots/acc.png")
+   plt.close()
 
    # Plot ROC
 #   fpr, tpr, thresholds = roc_curve(target_test, target_predict)
