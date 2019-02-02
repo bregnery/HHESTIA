@@ -310,26 +310,7 @@ HHESTIAProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
          // Secondary Vertex Variables
          TLorentzVector jet(ijet->px(), ijet->py(), ijet->pz(), ijet->energy() );
-         int numMatched = 0;
-         for(vector<reco::VertexCompositePtrCandidate>::const_iterator vertBegin = secVertices.begin(), vertEnd = secVertices.end(), ivert = vertBegin; ivert != vertEnd; ivert++){
-            TLorentzVector vert(ivert->px(), ivert->py(), ivert->pz(), ivert->energy() );
-            // match vertices to jet
-            if(jet.DeltaR(vert) < 0.8 ){
-               numMatched++;
-               // fill secondary vertex info
-               if(numMatched <= 3){
-                  string i = to_string(numMatched);
-                  treeVars["SV_"+i+"_pt"] = ivert->pt();
-                  treeVars["SV_"+i+"_eta"] = ivert->eta();
-                  treeVars["SV_"+i+"_phi"] = ivert->phi();
-                  treeVars["SV_"+i+"_mass"] = ivert->mass();
-                  treeVars["SV_"+i+"_nTracks"] = ivert->numberOfDaughters();
-                  treeVars["SV_"+i+"_chi2"] = ivert->vertexChi2();
-                  treeVars["SV_"+i+"_Ndof"] = ivert->vertexNdof();
-               }
-            }
-         }
-         treeVars["nSecondaryVertices"] = numMatched;
+         storeSecVertexVariables(treeVars, jet, secVertices);
 
          // get 4 vector for Higgs rest frame
          fourv thisJet = ijet->polarP4();
@@ -421,26 +402,7 @@ HHESTIAProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
                storeJetVariables(treeVars, ijet);
 
                // Secondary Vertex Variables
-               int numMatched = 0;
-               for(vector<reco::VertexCompositePtrCandidate>::const_iterator vertBegin = secVertices.begin(), vertEnd = secVertices.end(), ivert = vertBegin; ivert != vertEnd; ivert++){
-                  TLorentzVector vert(ivert->px(), ivert->py(), ivert->pz(), ivert->energy() );
-                  // match vertices to jet
-                  if(jet.DeltaR(vert) < 0.8 ){
-                     numMatched++;
-                     // fill secondary vertex info
-                     if(numMatched <= 3){
-                        string i = to_string(numMatched);
-                        treeVars["SV_"+i+"_pt"] = ivert->pt();
-                        treeVars["SV_"+i+"_eta"] = ivert->eta();
-                        treeVars["SV_"+i+"_phi"] = ivert->phi();
-                        treeVars["SV_"+i+"_mass"] = ivert->mass();
-                        treeVars["SV_"+i+"_nTracks"] = ivert->numberOfDaughters();
-                        treeVars["SV_"+i+"_chi2"] = ivert->vertexChi2();
-                        treeVars["SV_"+i+"_Ndof"] = ivert->vertexNdof();
-                     }
-                  }
-               }
-               treeVars["nSecondaryVertices"] = numMatched;
+               storeSecVertexVariables(treeVars, jet, secVertices);
 
                // get 4 vector for Higgs rest frame
                fourv thisJet = ijet->polarP4();

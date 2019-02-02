@@ -26,4 +26,8 @@ int FWMoments(std::vector<TLorentzVector> particles, double (&outputs)[5] );
 // store the jet variables
 void storeJetVariables(std::map<std::string, float> &treeVars, std::vector<pat::Jet>::const_iterator jet); 
 
+// store the secondary vertex variables
+void storeSecVertexVariables(std::map<std::string, float> &treeVars, TLorentzVector jet, 
+                             std::vector<reco::VertexCompositePtrCandidate> secVertices);
+
 #endif

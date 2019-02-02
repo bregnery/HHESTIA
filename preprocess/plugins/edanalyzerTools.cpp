@@ -110,4 +110,34 @@ void storeJetVariables(std::map<std::string, float> &treeVars, std::vector<pat::
 }
 
 //=================================================================================
-// Store Secondary Vertex Information 
+// Store Secondary Vertex Information ---------------------------------------------
+//---------------------------------------------------------------------------------
+// This takes various secondary vertex quantities and stores them on the map ------
+// used to fill the tree ----------------------------------------------------------
+//---------------------------------------------------------------------------------
+
+void storeSecVertexVariables(std::map<std::string, float> &treeVars, TLorentzVector jet, 
+                             std::vector<reco::VertexCompositePtrCandidate> secVertices){
+
+         int numMatched = 0; // counts number of secondary vertices
+         for(std::vector<reco::VertexCompositePtrCandidate>::const_iterator vertBegin = secVertices.begin(), 
+                    vertEnd = secVertices.end(), ivert = vertBegin; ivert != vertEnd; ivert++){
+            TLorentzVector vert(ivert->px(), ivert->py(), ivert->pz(), ivert->energy() );
+            // match vertices to jet
+            if(jet.DeltaR(vert) < 0.8 ){
+               numMatched++;
+               // save secondary vertex info for the first three sec vertices
+               if(numMatched <= 3){
+                  std::string i = std::to_string(numMatched);
+                  treeVars["SV_"+i+"_pt"] = ivert->pt();
+                  treeVars["SV_"+i+"_eta"] = ivert->eta();
+                  treeVars["SV_"+i+"_phi"] = ivert->phi();
+                  treeVars["SV_"+i+"_mass"] = ivert->mass();
+                  treeVars["SV_"+i+"_nTracks"] = ivert->numberOfDaughters();
+                  treeVars["SV_"+i+"_chi2"] = ivert->vertexChi2();
+                  treeVars["SV_"+i+"_Ndof"] = ivert->vertexNdof();
+               }
+            }
+         }
+         treeVars["nSecondaryVertices"] = numMatched;
+}
