@@ -220,3 +220,65 @@ def make_keras_picklable():
     cls = keras.models.Model
     cls.__getstate__ = __getstate__
     cls.__setstate__ = __setstate__
+
+#==================================================================================
+# Rotate and Reflect Jet Images ///////////////////////////////////////////////////
+#----------------------------------------------------------------------------------
+# x is relative eta, i.e. the difference between jet eta and the eta of the ///////
+#   each daughter ////////////////////////////////////////////////////////////////
+# y is relative phi, i.e. the difference between jet phi and the phi of the ///////
+#   each daughter ////////////////////////////////////////////////////////////////
+# w is the weight. Typically jet pT ///////////////////////////////////////////////
+#----------------------------------------------------------------------------------
+
+def rotate_and_reflect(x,y,w):
+    rot_x = []
+    rot_y = []
+    theta = 0
+    maxPt = -1
+    for ix, iy, iw in zip(x, y, w):
+        dv = numpy.matrix([[ix],[iy]])-numpy.matrix([[x.iloc[0]],[y.iloc[0]]])
+        dR = numpy.linalg.norm(dv)
+        thisPt = iw
+        if dR > 0.35 and thisPt > maxPt:
+            maxPt = thisPt
+            # rotation in eta-phi plane c.f  https://arxiv.org/abs/1407.5675 and https://arxiv.org/abs/1511.05190:
+            # theta = -numpy.arctan2(iy,ix)-numpy.radians(90)
+            # rotation by lorentz transformation c.f. https://arxiv.org/abs/1704.02124:
+            px = iw * numpy.cos(iy)
+            py = iw * numpy.sin(iy)
+            pz = iw * numpy.sinh(ix)
+            theta = numpy.arctan2(py,pz)+numpy.radians(90)
+            
+    c, s = numpy.cos(theta), numpy.sin(theta)
+    R = numpy.matrix('{} {}; {} {}'.format(c, -s, s, c))
+    for ix, iy, iw in zip(x, y, w):
+        # rotation in eta-phi plane:
+        #rot = R*numpy.matrix([[ix],[iy]])
+        #rix, riy = rot[0,0], rot[1,0]
+        # rotation by lorentz transformation
+        px = iw * numpy.cos(iy)
+        py = iw * numpy.sin(iy)
+        pz = iw * numpy.sinh(ix)
+        rot = R*numpy.matrix([[py],[pz]])
+        px1 = px
+        py1 = rot[0,0]
+        pz1 = rot[1,0]
+        iw1 = numpy.sqrt(px1*px1+py1*py1)
+        rix, riy = numpy.arcsinh(pz1/iw1), numpy.arcsin(py1/iw1)
+        rot_x.append(rix)
+        rot_y.append(riy)
+        
+    # now reflect if leftSum > rightSum
+    leftSum = 0
+    rightSum = 0
+    for ix, iy, iw in zip(x, y, w):
+        if ix > 0: 
+            rightSum += iw
+        elif ix < 0:
+            leftSum += iw
+    if leftSum > rightSum:
+        ref_x = [-1.*rix for rix in rot_x]
+        ref_y = rot_y
+
+    return np.array(ref_x), np.array(ref_y)

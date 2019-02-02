@@ -20,20 +20,10 @@
 // calculate Legendre Polynomials
 float LegendreP(float x, int order);
 
-
 // calculate Fox Wolfram moments
 int FWMoments(std::vector<TLorentzVector> particles, double (&outputs)[5] );
 
-// sort jet collection in terms of pT
-std::vector<pat::Jet> * sortJets(std::vector<pat::Jet> *jets);
-
-// find difference in phi
-float myDeltaPhi(float phi1, float phi2);
-
-// find the delta R between two objects
-float myDeltaR(float eta1, float phi1, float eta2, float phi2);
-
-// delta R match two objects
-std::vector<std::vector<bool> > deltaRMatch(std::vector<std::array<float, 2> > etaPhi1, std::vector<std::array<float, 2> > etaPhi2, float limR);
+// store the jet variables
+void storeJetVariables(std::map<std::string, float> &treeVars, std::vector<pat::Jet>::const_iterator jet); 
 
 #endif

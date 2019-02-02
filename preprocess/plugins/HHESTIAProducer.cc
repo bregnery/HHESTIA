@@ -102,7 +102,8 @@ class HHESTIAProducer : public edm::stream::EDProducer<> {
       edm::EDGetTokenT<std::vector<pat::Jet> > ak8JetsToken_;
       //edm::EDGetTokenT<std::vector<pat::Jet> > ak4JetsToken_;
       edm::EDGetTokenT<std::vector<reco::GenParticle> > genPartToken_;
-      edm::EDGetTokenT<std::vector<reco::VertexCompositePtrCandidate> > verticesToken_;
+      edm::EDGetTokenT<std::vector<reco::VertexCompositePtrCandidate> > secVerticesToken_;
+      edm::EDGetTokenT<std::vector<reco::Vertex> > verticesToken_;
 
       //edm::EDGetTokenT<std::vector<pat::Jet> > ak8CHSSoftDropSubjetsToken_;
 
@@ -216,11 +217,15 @@ HHESTIAProducer::HHESTIAProducer(const edm::ParameterSet& iConfig):
    genPartTag_ = edm::InputTag("prunedGenParticles", "", "PAT"); 
    genPartToken_ = consumes<std::vector<reco::GenParticle> >(genPartTag_);
 
-   // Vertices
+   // Primary Vertices
    edm::InputTag verticesTag_;
-   verticesTag_ = edm::InputTag("slimmedSecondaryVertices", "", "PAT");
-   verticesToken_ = consumes<std::vector<reco::VertexCompositePtrCandidate> >(verticesTag_);
+   verticesTag_ = edm::InputTag("offlineSlimmedPrimaryVertices", "", "PAT");
+   verticesToken_ = consumes<std::vector<reco::Vertex> >(verticesTag_);
 
+   // Secondary Vertices
+   edm::InputTag secVerticesTag_;
+   secVerticesTag_ = edm::InputTag("slimmedSecondaryVertices", "", "PAT");
+   secVerticesToken_ = consumes<std::vector<reco::VertexCompositePtrCandidate> >(secVerticesTag_);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -265,9 +270,13 @@ HHESTIAProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    iEvent.getByToken(genPartToken_, genPartCollection);
    vector<reco::GenParticle> genPart = *genPartCollection.product();
 
-   Handle< std::vector<reco::VertexCompositePtrCandidate> > vertexCollection;
+   Handle< std::vector<reco::Vertex> > vertexCollection;
    iEvent.getByToken(verticesToken_, vertexCollection);
-   vector<reco::VertexCompositePtrCandidate> secVertices = *vertexCollection.product();
+   vector<reco::Vertex> pVertices = *vertexCollection.product();
+
+   Handle< std::vector<reco::VertexCompositePtrCandidate> > secVertexCollection;
+   iEvent.getByToken(secVerticesToken_, secVertexCollection);
+   vector<reco::VertexCompositePtrCandidate> secVertices = *secVertexCollection.product();
 
    //------------------------------------------------------------------------------
    // Gen Particles Loop ----------------------------------------------------------
@@ -297,17 +306,7 @@ HHESTIAProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
          // Store Jet Variables
          treeVars["nJets"] = ak8Jets.size();
-         treeVars["jetAK8_phi"] = ijet->phi();
-         treeVars["jetAK8_eta"] = ijet->eta(); 
-         treeVars["jetAK8_pt"] = ijet->pt(); 
-         treeVars["jetAK8_mass"] = ijet->mass(); 
-         treeVars["jetAK8_SoftDropMass"] = ijet->userFloat("ak8PFJetsCHSSoftDropMass");
-
-         // Store Subjettiness info
-         treeVars["jetAK8_Tau4"] = ijet->userFloat("NjettinessAK8CHS:tau4");  //important for H->WW jets
-         treeVars["jetAK8_Tau3"] = ijet->userFloat("NjettinessAK8:tau3");
-         treeVars["jetAK8_Tau2"] = ijet->userFloat("NjettinessAK8:tau2");
-         treeVars["jetAK8_Tau1"] = ijet->userFloat("NjettinessAK8:tau1");
+         storeJetVariables(treeVars, ijet);
 
          // Secondary Vertex Variables
          TLorentzVector jet(ijet->px(), ijet->py(), ijet->pz(), ijet->energy() );
@@ -419,16 +418,7 @@ HHESTIAProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
                // Store Jet Variables
                treeVars["nJets"] = ak8Jets.size();
-               treeVars["jetAK8_phi"] = ijet->phi();
-               treeVars["jetAK8_eta"] = ijet->eta(); 
-               treeVars["jetAK8_pt"] = ijet->pt(); 
-               treeVars["jetAK8_mass"] = ijet->mass(); 
-               treeVars["jetAK8_SoftDropMass"] = ijet->userFloat("ak8PFJetsCHSSoftDropMass");
-     
-               treeVars["jetAK8_Tau4"] = ijet->userFloat("NjettinessAK8CHS:tau4");  //important for H->WW jets
-               treeVars["jetAK8_Tau3"] = ijet->userFloat("NjettinessAK8:tau3");
-               treeVars["jetAK8_Tau2"] = ijet->userFloat("NjettinessAK8:tau2");
-               treeVars["jetAK8_Tau1"] = ijet->userFloat("NjettinessAK8:tau1");
+               storeJetVariables(treeVars, ijet);
 
                // Secondary Vertex Variables
                int numMatched = 0;

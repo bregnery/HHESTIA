@@ -133,7 +133,7 @@ print "Trained the neural network!"
 #==================================================================================
 
 # Confusion Matrix
-cm = metrics.confusion_matrix(mlp.predict(trainData[10000:]), targetData[10000:])
+cm = metrics.confusion_matrix(mlp.predict(trainData[numTrain:]), targetData[numTrain:])
 plt.figure()
 targetNames = ['QCD', 'H->WW', 'H->bb']
 tools.plot_confusion_matrix(cm.T, targetNames, normalize=True)
