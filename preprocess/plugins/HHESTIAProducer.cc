@@ -312,73 +312,12 @@ HHESTIAProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
          TLorentzVector jet(ijet->px(), ijet->py(), ijet->pz(), ijet->energy() );
          storeSecVertexVariables(treeVars, jet, secVertices);
 
-         // get 4 vector for Higgs rest frame
-         fourv thisJet = ijet->polarP4();
-         TLorentzVector thisJetLV_H(0.,0.,0.,0.);
-         thisJetLV_H.SetPtEtaPhiM(thisJet.Pt(), thisJet.Eta(), thisJet.Phi(), 125. );
-
-         std::vector<TLorentzVector> particles_H;
-         std::vector<math::XYZVector> particles2_H;
-         std::vector<reco::LeafCandidate> particles3_H;
-
-         double sumPz = 0;
-         double sumP = 0;
-
          // Get all of the Jet's daughters
          vector<reco::Candidate * > daughtersOfJet;
-            // First get all daughters for the first Soft Drop Subjet
-	 for (unsigned int i = 0; i < ijet->daughter(0)->numberOfDaughters(); i++){
-            daughtersOfJet.push_back( (reco::Candidate *) ijet->daughter(0)->daughter(i) );
-	 }
-            // Get all daughters for the second Soft Drop Subjet
-	 for (unsigned int i = 0; i < ijet->daughter(1)->numberOfDaughters(); i++){
-            daughtersOfJet.push_back( (reco::Candidate *) ijet->daughter(1)->daughter(i));
-	 }
-            // Get all daughters not included in Soft Drop
-	 for (unsigned int i = 2; i< ijet->numberOfDaughters(); i++){
-            daughtersOfJet.push_back( (reco::Candidate *) ijet->daughter(i) );
-	 }
+         getJetDaughters(daughtersOfJet, ijet);
 
-         // Boost to Higgs rest frame
-         for(unsigned int i = 0; i < daughtersOfJet.size(); i++){
-            // Do not include low mass subjets
-            if (daughtersOfJet[i]->pt() < 0.5) continue;
-   
-            // Create 4 vector to boost to Higgs frame
-            TLorentzVector thisParticleLV_H( daughtersOfJet[i]->px(), daughtersOfJet[i]->py(), daughtersOfJet[i]->pz(), daughtersOfJet[i]->energy() );
-
-            // Boost to Higgs rest frame
-            thisParticleLV_H.Boost( -thisJetLV_H.BoostVector() );
-            particles_H.push_back( thisParticleLV_H );	
-            particles2_H.push_back( math::XYZVector( thisParticleLV_H.X(), thisParticleLV_H.Y(), thisParticleLV_H.Z() ));
-            particles3_H.push_back( reco::LeafCandidate(+1, reco::Candidate::LorentzVector( thisParticleLV_H.X(), thisParticleLV_H.Y(), 
-                                                                                            thisParticleLV_H.Z(), thisParticleLV_H.T() ) ));
-            
-            // Sum rest frame momenta for asymmetry calculation
-            if (daughtersOfJet[i]->pt() < 10) continue;
-            sumPz += thisParticleLV_H.Pz();
-            sumP += abs(thisParticleLV_H.P() );
-         }
-
-         // Fox Wolfram Moments
-         double fwm_H[5] = { 0.0, 0.0 ,0.0 ,0.0,0.0};
-         FWMoments( particles_H, fwm_H);
-         treeVars["FoxWolfH1_Higgs"] = fwm_H[1];
-         treeVars["FoxWolfH2_Higgs"] = fwm_H[2];
-         treeVars["FoxWolfH3_Higgs"] = fwm_H[3];
-         treeVars["FoxWolfH4_Higgs"] = fwm_H[4];
-
-         // Event Shape Variables
-         EventShapeVariables eventShapes_H( particles2_H );
-         Thrust thrustCalculator_H( particles3_H.begin(), particles3_H.end() );
-         treeVars["isotropy_Higgs"] = eventShapes_H.isotropy();
-         treeVars["sphericity_Higgs"] = eventShapes_H.sphericity(2);
-         treeVars["aplanarity_Higgs"] = eventShapes_H.aplanarity(2);
-         treeVars["thrust_Higgs"] = thrustCalculator_H.thrust();
-
-         // Jet Asymmetry
-         double asymmetry = sumPz/sumP;
-         treeVars["asymmetry_Higgs"] = asymmetry;
+         // Higgs Rest Frame Variables
+         storeHiggsFrameVariables(treeVars, daughtersOfJet, ijet);
 
          // Fill the jet entry tree
          jetTree->Fill();
@@ -404,74 +343,13 @@ HHESTIAProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
                // Secondary Vertex Variables
                storeSecVertexVariables(treeVars, jet, secVertices);
 
-               // get 4 vector for Higgs rest frame
-               fourv thisJet = ijet->polarP4();
-               TLorentzVector thisJetLV_H(0.,0.,0.,0.);
-               thisJetLV_H.SetPtEtaPhiM(thisJet.Pt(), thisJet.Eta(), thisJet.Phi(), 125. );
-
-               std::vector<TLorentzVector> particles_H;
-               std::vector<math::XYZVector> particles2_H;
-               std::vector<reco::LeafCandidate> particles3_H;
-      
-               double sumPz = 0;
-               double sumP = 0;
-
                // Get all of the Jet's daughters
                vector<reco::Candidate * > daughtersOfJet;
-                  // First get all daughters for the first Soft Drop Subjet
-               for (unsigned int i = 0; i < ijet->daughter(0)->numberOfDaughters(); i++){
-                  daughtersOfJet.push_back( (reco::Candidate *) ijet->daughter(0)->daughter(i) );
-               }
-                  // Get all daughters for the second Soft Drop Subjet
-               for (unsigned int i = 0; i < ijet->daughter(1)->numberOfDaughters(); i++){
-                  daughtersOfJet.push_back( (reco::Candidate *) ijet->daughter(1)->daughter(i));
-               }
-                  // Get all daughters not included in Soft Drop
-               for (unsigned int i = 2; i< ijet->numberOfDaughters(); i++){
-                  daughtersOfJet.push_back( (reco::Candidate *) ijet->daughter(i) );
-               }
-      
-               // Boost to Higgs rest frame
-               for(unsigned int i = 0; i < daughtersOfJet.size(); i++){
-                  // Do not include low mass subjets
-                  if (daughtersOfJet[i]->pt() < 0.5) continue;
-         
-                  // Create 4 vector to boost to Higgs frame
-                  TLorentzVector thisParticleLV_H( daughtersOfJet[i]->px(), daughtersOfJet[i]->py(), daughtersOfJet[i]->pz(), daughtersOfJet[i]->energy() );
-      
-                  // Boost to Higgs rest frame
-                  thisParticleLV_H.Boost( -thisJetLV_H.BoostVector() );
-                  particles_H.push_back( thisParticleLV_H );	
-                  particles2_H.push_back( math::XYZVector( thisParticleLV_H.X(), thisParticleLV_H.Y(), thisParticleLV_H.Z() ));
-                  particles3_H.push_back( reco::LeafCandidate(+1, reco::Candidate::LorentzVector( thisParticleLV_H.X(), thisParticleLV_H.Y(), 
-                                                                                                  thisParticleLV_H.Z(), thisParticleLV_H.T() ) ));
+               getJetDaughters(daughtersOfJet, ijet);
 
-                  // Sum rest frame momenta for asymmetry calculation
-                  if (daughtersOfJet[i]->pt() < 10) continue;
-                  sumPz += thisParticleLV_H.Pz();
-                  sumP += abs( thisParticleLV_H.P() );
-               }
-      
-               // Fox Wolfram Moments
-               double fwm_H[5] = { 0.0, 0.0 ,0.0 ,0.0,0.0};
-               FWMoments( particles_H, fwm_H);
-               treeVars["FoxWolfH1_Higgs"] = fwm_H[1];
-               treeVars["FoxWolfH2_Higgs"] = fwm_H[2];
-               treeVars["FoxWolfH3_Higgs"] = fwm_H[3];
-               treeVars["FoxWolfH4_Higgs"] = fwm_H[4];
-      
-               // Event Shape Variables
-               EventShapeVariables eventShapes_H( particles2_H );
-               Thrust thrustCalculator_H( particles3_H.begin(), particles3_H.end() );
-               treeVars["isotropy_Higgs"] = eventShapes_H.isotropy();
-               treeVars["sphericity_Higgs"] = eventShapes_H.sphericity(2);
-               treeVars["aplanarity_Higgs"] = eventShapes_H.aplanarity(2);
-               treeVars["thrust_Higgs"] = thrustCalculator_H.thrust();
-
-               // Jet Asymmetry
-               double asymmetry = sumPz/sumP;
-               treeVars["asymmetry_Higgs"] = asymmetry;
-
+               // Higgs Rest Frame Variables
+               storeHiggsFrameVariables(treeVars, daughtersOfJet, ijet);
+ 
                // Fill the jet entry tree
                jetTree->Fill();
             }
