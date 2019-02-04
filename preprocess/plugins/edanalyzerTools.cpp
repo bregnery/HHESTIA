@@ -93,18 +93,28 @@ int FWMoments(std::vector<TLorentzVector> particles, double (&outputs)[5] ){
 // vector -------------------------------------------------------------------------
 //---------------------------------------------------------------------------------
 
-void getJetDaughters(std::vector<reco::Candidate * > &daughtersOfJet, std::vector<pat::Jet>::const_iterator jet){
+void getJetDaughters(std::vector<reco::Candidate * > &daughtersOfJet, std::vector<pat::Jet>::const_iterator jet,
+                     std::map<std::string, std::vector<float> > &jetPFcand ){ 
    // First get all daughters for the first Soft Drop Subjet
    for (unsigned int i = 0; i < jet->daughter(0)->numberOfDaughters(); i++){
       daughtersOfJet.push_back( (reco::Candidate *) jet->daughter(0)->daughter(i) );
+      jetPFcand["jet_PF_candidate_pt"].push_back(jet->daughter(0)->daughter(i)->pt() );
+      jetPFcand["jet_PF_candidate_phi"].push_back(jet->daughter(0)->daughter(i)->phi() );
+      jetPFcand["jet_PF_candidate_eta"].push_back(jet->daughter(0)->daughter(i)->eta() );
    }
    // Get all daughters for the second Soft Drop Subjet
    for (unsigned int i = 0; i < jet->daughter(1)->numberOfDaughters(); i++){
       daughtersOfJet.push_back( (reco::Candidate *) jet->daughter(1)->daughter(i));
+      jetPFcand["jet_PF_candidate_pt"].push_back(jet->daughter(1)->daughter(i)->pt() );
+      jetPFcand["jet_PF_candidate_phi"].push_back(jet->daughter(1)->daughter(i)->phi() );
+      jetPFcand["jet_PF_candidate_eta"].push_back(jet->daughter(1)->daughter(i)->eta() );
    }
    // Get all daughters not included in Soft Drop
    for (unsigned int i = 2; i< jet->numberOfDaughters(); i++){
       daughtersOfJet.push_back( (reco::Candidate *) jet->daughter(i) );
+      jetPFcand["jet_PF_candidate_pt"].push_back(jet->daughter(i)->pt() );
+      jetPFcand["jet_PF_candidate_phi"].push_back(jet->daughter(i)->phi() );
+      jetPFcand["jet_PF_candidate_eta"].push_back(jet->daughter(i)->eta() );
    }
 }
 

@@ -27,7 +27,8 @@ float LegendreP(float x, int order);
 int FWMoments(std::vector<TLorentzVector> particles, double (&outputs)[5] );
 
 // get jet's constituents
-void getJetDaughters(std::vector<reco::Candidate * > &daughtersOfJet, std::vector<pat::Jet>::const_iterator jet);
+void getJetDaughters(std::vector<reco::Candidate * > &daughtersOfJet, std::vector<pat::Jet>::const_iterator jet,
+                     std::map<std::string, std::vector<float> > &jetPFcand ); 
 
 // store the jet variables
 void storeJetVariables(std::map<std::string, float> &treeVars, std::vector<pat::Jet>::const_iterator jet); 

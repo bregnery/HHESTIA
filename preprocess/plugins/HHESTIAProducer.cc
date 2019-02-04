@@ -96,6 +96,8 @@ class HHESTIAProducer : public edm::stream::EDProducer<> {
       TTree *jetTree;
       std::map<std::string, float> treeVars;
       std::vector<std::string> listOfVars;
+      std::map<std::string, std::vector<float> > jetPFcand;
+      std::vector<std::string> listOfJetPFvars;
 
       // Tokens
       //edm::EDGetTokenT<std::vector<pat::PackedCandidate> > pfCandsToken_;
@@ -196,10 +198,20 @@ HHESTIAProducer::HHESTIAProducer(const edm::ParameterSet& iConfig):
    // Jet Asymmetry
    listOfVars.push_back("asymmetry_Higgs");
 
+   // Jet PF Candidate Variables
+   listOfJetPFvars.push_back("jet_PF_candidate_pt");
+   listOfJetPFvars.push_back("jet_PF_candidate_phi");
+   listOfJetPFvars.push_back("jet_PF_candidate_eta");
+
    // Make Branches for each variable
    for (unsigned i = 0; i < listOfVars.size(); i++){
       treeVars[ listOfVars[i] ] = -999.99;
       jetTree->Branch( (listOfVars[i]).c_str() , &(treeVars[ listOfVars[i] ]), (listOfVars[i]+"/F").c_str() );
+   }
+
+   // Make Branches for each of the jet constituents' variables
+   for (unsigned i = 0; i < listOfJetPFvars.size(); i++){
+      jetTree->Branch( (listOfJetPFvars[i]).c_str() , &(jetPFcand[ listOfJetPFvars[i] ]) );
    }
 
    //------------------------------------------------------------------------------
@@ -314,7 +326,7 @@ HHESTIAProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
          // Get all of the Jet's daughters
          vector<reco::Candidate * > daughtersOfJet;
-         getJetDaughters(daughtersOfJet, ijet);
+         getJetDaughters(daughtersOfJet, ijet, jetPFcand);
 
          // Higgs Rest Frame Variables
          storeHiggsFrameVariables(treeVars, daughtersOfJet, ijet);
@@ -345,7 +357,8 @@ HHESTIAProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
                // Get all of the Jet's daughters
                vector<reco::Candidate * > daughtersOfJet;
-               getJetDaughters(daughtersOfJet, ijet);
+               getJetDaughters(daughtersOfJet, ijet, jetPFcand);
+               cout << "Num Jet PF cands: " << jetPFcand["jet_PF_candidate_pt"].size() << " jet cand 1 pt: " << jetPFcand["jet_PF_candidate_pt"][0] << endl;
 
                // Higgs Rest Frame Variables
                storeHiggsFrameVariables(treeVars, daughtersOfJet, ijet);
