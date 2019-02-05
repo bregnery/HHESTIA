@@ -367,7 +367,16 @@ HHESTIAProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
                jetTree->Fill();
             }
           }
-       }
+      }
+      //-------------------------------------------------------------------------------
+      // Clear and Reset all tree variables -------------------------------------------
+      //-------------------------------------------------------------------------------
+      for (unsigned i = 0; i < listOfVars.size(); i++){
+         treeVars[ listOfVars[i] ] = -999.99;
+      }
+      for (unsigned i = 0; i < listOfJetPFvars.size(); i++){
+         jetPFcand[ listOfJetPFvars[i] ] = vector<float>();
+      }
     }
 }
 
