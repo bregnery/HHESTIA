@@ -358,7 +358,6 @@ HHESTIAProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
                // Get all of the Jet's daughters
                vector<reco::Candidate * > daughtersOfJet;
                getJetDaughters(daughtersOfJet, ijet, jetPFcand);
-               cout << "Num Jet PF cands: " << jetPFcand["jet_PF_candidate_pt"].size() << " jet cand 1 pt: " << jetPFcand["jet_PF_candidate_pt"][0] << endl;
 
                // Higgs Rest Frame Variables
                storeHiggsFrameVariables(treeVars, daughtersOfJet, ijet);
