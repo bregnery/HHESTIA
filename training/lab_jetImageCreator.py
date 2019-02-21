@@ -16,6 +16,7 @@ import tensorflow as tf
 import pickle
 import copy
 import random
+import timeit
 
 # get stuff from modules
 from root_numpy import tree2array
@@ -59,7 +60,7 @@ print "Variables for jet image creation: ", vars
 
 # create selection criteria
 #sel = ""
-sel = "jetAK8_pt > 50 && jetAK8_mass > 50"
+sel = "jetAK8_pt > 500 && jetAK8_mass > 50"
 #sel = "tau32 < 9999. && et > 500. && et < 2500. && bDisc1 > -0.05 && SDmass < 400"
 
 # make arrays from the trees
@@ -75,27 +76,39 @@ arrayHH4B = tree2array(treeHH4B, treeVars, sel)
 arrayHH4B = tools.appendTreeArray(arrayHH4B)
 imgArrayHH4B = img.makePFcandArray(arrayHH4B)
 
+print "Made arrays from the datasets"
+
+#==================================================================================
+# Make Lab Frame Jet Images ///////////////////////////////////////////////////////
+#==================================================================================
+
 candDF = {}
 candDF['QCD'] = pd.DataFrame(imgArrayJJ, columns = ['njet', 'jet_pt', 'cand_pt', 'cand_eta', 'cand_phi'])
 candDF['HH4B'] = pd.DataFrame(imgArrayHH4B, columns = ['njet', 'jet_pt', 'cand_pt', 'cand_eta', 'cand_phi'])
 candDF['HH4W'] = pd.DataFrame(imgArrayHH4W, columns = ['njet', 'jet_pt', 'cand_pt', 'cand_eta', 'cand_phi'])
 
-# make an array with all of the datasets
-#arrayData = [arrayJJ, arrayHH4W, arrayHH4B]
+print "Made particle flow candidate data frames"
 
-# copy the arrays so that copies of the arrays are not deleted in the randomize function
-# without this, deleting arrayData will delete all tree arrays
-#arrayJJ = copy.copy(arrayJJ)
-#arrayHH4W = copy.copy(arrayHH4W)
-#arrayHH4B = copy.copy(arrayHH4B)
+jetImagesDF = {}
+print "Creating Jet Images for QCD"
+jetImagesDF['QCD'] = img.prepareImages(candDF['QCD'], arrayJJ)
+print "Creating Jet Images for HH->bbbb"
+jetImagesDF['HH4B'] = img.prepareImages(candDF['HH4B'], arrayHH4B)
+print "Creating Jet Images for HH->WWWW"
+jetImagesDF['HH4W'] = img.prepareImages(candDF['HH4W'], arrayHH4B)
 
-print "Made arrays from the datasets"
+print "Made jet image data frames"
 
 #==================================================================================
 # Plot Jet Images /////////////////////////////////////////////////////////////////
 #==================================================================================
 
-# store the data in histograms
-
 # plot with python
+if plotJetImages == True:
+   print "Plotting jet images"
+   img.plotAverageJetImage(jetImagesDF['QCD'], 'lab_QCD', savePNG, savePDF)
+   img.plotAverageJetImage(jetImagesDF['HH4B'], 'lab_HH4B', savePNG, savePDF)
+   img.plotAverageJetImage(jetImagesDF['HH4W'], 'lab_HH4W', savePNG, savePDF)
+
+print "Program was a great success!!!"
 

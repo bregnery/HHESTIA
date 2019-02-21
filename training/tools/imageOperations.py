@@ -16,6 +16,7 @@ import random
 import itertools
 import types
 import tempfile
+import timeit
 
 # grab some keras stuff
 from os import environ
@@ -75,14 +76,16 @@ def makePFcandArray(array):
 #==================================================================================
 # Make lab frame Jet Images -------------------------------------------------------
 #----------------------------------------------------------------------------------
+# make jet image histograms using the candidate data frame and the original -------
+#    jet array --------------------------------------------------------------------
+#----------------------------------------------------------------------------------
 
-
-def prepareImages(process, df_dict_cand, df_dict_jet):
+def prepareImages(candDF, jetArray):
 
     nx = 30 # size of image in eta
     ny = 30 # size of image in phi
-    xbins = np.linspace(-1.4,1.4,nx+1)
-    ybins = np.linspace(-1.4,1.4,ny+1)
+    xbins = numpy.linspace(-1.4,1.4,nx+1)
+    ybins = numpy.linspace(-1.4,1.4,ny+1)
 
     list_x = []
     list_y = []
@@ -93,24 +96,26 @@ def prepareImages(process, df_dict_cand, df_dict_jet):
         # 2nd dim is eta bin
         # 3rd dim is phi bin
         # 4th dim is pt value (or rgb layer, etc.)
-        jet_images = np.zeros((len(df_dict_jet[process]), nx, ny, 1))
+        jet_images = numpy.zeros((len(jetArray), nx, ny, 1))
     else:        
-        jet_images = np.zeros((len(df_dict_jet[process]), 1, nx, ny))
+        jet_images = numpy.zeros((len(jetArray), 1, nx, ny))
     
-    for i in range(0,len(df_dict_jet[process])):
+    for i in range(0,len(jetArray)):
+        if i % 1000 == 0: print "Imaging jet number: ", i+1
         # get the ith jet
-        df_dict_cand_i = df_dict_cand[process][(df_dict_cand[process]['ak7pfcand_ijet'] == df_dict_jet[process]['ak7pfcand_ijet'].iloc[i]) 
-                                               & (df_dict_cand[process]['event'] == df_dict_jet[process]['event'].iloc[i]) ]
+        mask = candDF['njet'].values == i + 1 # boolean mask ... the fastest way from stack
+        df_unsorted_cand_i = candDF[mask] # new data frame with only ith jet candidates
+        df_dict_cand_i = df_unsorted_cand_i.sort_values(by=['cand_pt'], ascending=False) # sort candidates by pt
         # relative eta
-        x = df_dict_cand_i['ak7pfcand_eta']-df_dict_cand_i['ak7pfcand_eta'].iloc[0]
+        x = df_dict_cand_i['cand_eta']-df_dict_cand_i['cand_eta'].iloc[0]
         # relative phi
-        y = df_dict_cand_i['ak7pfcand_phi']-df_dict_cand_i['ak7pfcand_phi'].iloc[0]
-        weights = df_dict_cand_i['ak7pfcand_pt'] # pt of candidate is the weight
+        y = df_dict_cand_i['cand_phi']-df_dict_cand_i['cand_phi'].iloc[0]
+        weights = df_dict_cand_i['cand_pt'] # pt of candidate is the weight
         x,y = rotate_and_reflect(x,y,weights)
         list_x.append(x)
         list_y.append(y)
         list_w.append(weights)
-        hist, xedges, yedges = np.histogram2d(x, y, weights=weights, bins=(xbins,ybins))
+        hist, xedges, yedges = numpy.histogram2d(x, y, weights=weights, bins=(xbins,ybins))
         for ix in range(0,nx):
             for iy in range(0,ny):
                 if K.image_dim_ordering()=='tf':
@@ -182,4 +187,33 @@ def rotate_and_reflect(x,y,w):
         ref_x = rot_x
         ref_y = rot_y
     
-    return np.array(ref_x), np.array(ref_y)
+    return numpy.array(ref_x), numpy.array(ref_y)
+
+#==================================================================================
+# Plot Averaged Jet Images --------------------------------------------------------
+#----------------------------------------------------------------------------------
+# Average over the jet images and plot the result as a 2D histogram ---------------
+# title has limited options, see if statements ------------------------------------
+#----------------------------------------------------------------------------------
+
+def plotAverageJetImage(jetImageDF, title, plotPNG, plotPDF):
+
+   summed = numpy.sum(jetImageDF, axis=0)
+   avg = numpy.apply_along_axis(lambda x: x/len(jetImageDF), axis=1, arr=summed)
+   plt.figure('N') 
+   plt.imshow(avg[:,:,0].T, norm=mpl.colors.LogNorm(), origin='lower', interpolation='none')
+   cbar = plt.colorbar()
+   cbar.set_label(r'$p_T$ [GeV]')
+   if title == 'lab_QCD' :
+      plt.title('QCD Lab Jet Image')
+   if title == 'lab_HH4W' :
+      plt.title(r'$HH\rightarrow WWWW$ Lab Jet Image')
+   if title == 'lab_HH4B' :
+      plt.title(r'$HH\rightarrow bbbb$ Lab Jet Image')
+   plt.xlabel(r'$\eta_i$')
+   plt.ylabel(r'$\phi_i$')
+   if plotPNG == True :
+      plt.savefig('plots/'+title+'_jetImage.png')
+   if plotPDF == True :
+      plt.savefig('plots/'+title+'_jetImage.pdf')
+   plt.close()
