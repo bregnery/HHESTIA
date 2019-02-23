@@ -202,6 +202,14 @@ HHESTIAProducer::HHESTIAProducer(const edm::ParameterSet& iConfig):
    listOfJetPFvars.push_back("jet_PF_candidate_pt");
    listOfJetPFvars.push_back("jet_PF_candidate_phi");
    listOfJetPFvars.push_back("jet_PF_candidate_eta");
+   listOfJetPFvars.push_back("HiggsFrame_PF_candidate_px");
+   listOfJetPFvars.push_back("HiggsFrame_PF_candidate_py");
+   listOfJetPFvars.push_back("HiggsFrame_PF_candidate_pz");
+   listOfJetPFvars.push_back("HiggsFrame_PF_candidate_energy");
+   listOfJetPFvars.push_back("HiggsFrame_subjet_px");
+   listOfJetPFvars.push_back("HiggsFrame_subjet_py");
+   listOfJetPFvars.push_back("HiggsFrame_subjet_pz");
+   listOfJetPFvars.push_back("HiggsFrame_subjet_energy");
 
    // Make Branches for each variable
    for (unsigned i = 0; i < listOfVars.size(); i++){
@@ -329,7 +337,7 @@ HHESTIAProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
          getJetDaughters(daughtersOfJet, ijet, jetPFcand);
 
          // Higgs Rest Frame Variables
-         storeHiggsFrameVariables(treeVars, daughtersOfJet, ijet);
+         storeHiggsFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand);
 
          // Fill the jet entry tree
          jetTree->Fill();
@@ -360,7 +368,7 @@ HHESTIAProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
                getJetDaughters(daughtersOfJet, ijet, jetPFcand);
 
                // Higgs Rest Frame Variables
-               storeHiggsFrameVariables(treeVars, daughtersOfJet, ijet);
+               storeHiggsFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand);
  
                // Fill the jet entry tree
                jetTree->Fill();

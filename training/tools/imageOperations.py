@@ -46,6 +46,28 @@ def getPFcandBranchNames(tree ):
    return treeVars
 
 #==================================================================================
+# Get Higgs Frame Candidate Branches ----------------------------------------------
+#----------------------------------------------------------------------------------
+# tree is TTree -------------------------------------------------------------------
+#----------------------------------------------------------------------------------
+
+def getBoostCandBranchNames(tree ):
+
+   # empty array to store names
+   treeVars = []
+
+   # loop over branches
+   for branch in tree.GetListOfBranches():
+      name = branch.GetName()
+      # Only get PF branches
+      if 'HiggsFrame_PF' in name:
+         treeVars.append(name)
+      if 'jetAK8_pt' in name:
+         treeVars.append(name)
+
+   return treeVars
+
+#==================================================================================
 # Make array with PF candidate information ----------------------------------------
 #----------------------------------------------------------------------------------
 # This function converts the array made from the jetTree to the correct form to ---
@@ -67,6 +89,36 @@ def makePFcandArray(array):
          phi = array[n][2][i]
          eta = array[n][3][i]
          tmpArray.append([jetCount, jetPt, pt, eta, phi])
+      jetCount +=1
+      n += 1
+
+   newArray = copy.copy(tmpArray)
+   return newArray
+
+#==================================================================================
+# Make array with Boosted PF candidate information --------------------------------
+#----------------------------------------------------------------------------------
+# This function converts the array made from the jetTree to the correct form to ---
+#   use with the jet image functions ----------------------------------------------
+# array is a numpy array made from a TTree ----------------------------------------
+#----------------------------------------------------------------------------------
+
+def makeBoostCandArray(array):
+
+   tmpArray = []  #use lists not numpy arrays (wayyyyy faster)
+   jetCount = 1
+   n = 0
+   # loop over jets
+   while n < len(array) :
+      # loop over pf candidates
+      for i in range( len(array[n][1][:]) ) :
+         jetPt = array[n][0]
+         px = array[n][1][i]
+         py = array[n][2][i]
+         pz = array[n][3][i]
+         e = array[n][4][i]
+         candLV = root.TLorentzVector(px, py, pz, e)
+         tmpArray.append([jetCount, jetPt, candLV.Pt(), candLV.Eta(), candLV.Phi()])
       jetCount +=1
       n += 1
 
@@ -207,9 +259,9 @@ def plotAverageJetImage(jetImageDF, title, plotPNG, plotPDF):
    if title == 'lab_QCD' :
       plt.title('QCD Lab Jet Image')
    if title == 'lab_HH4W' :
-      plt.title(r'$HH\rightarrow WWWW$ Lab Jet Image')
+      plt.title(r'$H\rightarrow WW$ Lab Jet Image')
    if title == 'lab_HH4B' :
-      plt.title(r'$HH\rightarrow bbbb$ Lab Jet Image')
+      plt.title(r'$H\rightarrow bb$ Lab Jet Image')
    plt.xlabel(r'$\eta_i$')
    plt.ylabel(r'$\phi_i$')
    if plotPNG == True :

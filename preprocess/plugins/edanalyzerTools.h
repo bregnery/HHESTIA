@@ -16,6 +16,14 @@
 #include "TMath.h"
 #include "TLorentzVector.h"
 
+// Fast Jet Include files
+#include <fastjet/JetDefinition.hh>
+#include <fastjet/PseudoJet.hh>
+#include "fastjet/tools/Filter.hh"
+#include <fastjet/ClusterSequence.hh>
+#include <fastjet/ActiveAreaSpec.hh>
+#include <fastjet/ClusterSequenceArea.hh>
+
 ///////////////////////////////////////////////////////////////////////////////////
 // Functions ----------------------------------------------------------------------
 ///////////////////////////////////////////////////////////////////////////////////
@@ -39,6 +47,6 @@ void storeSecVertexVariables(std::map<std::string, float> &treeVars, TLorentzVec
 
 // store the Higgs frame variables
 void storeHiggsFrameVariables(std::map<std::string, float> &treeVars, std::vector<reco::Candidate *> daughtersOfJet,
-                              std::vector<pat::Jet>::const_iterator jet); 
+                              std::vector<pat::Jet>::const_iterator jet, std::map<std::string, std::vector<float> > &jetPFcand ); 
 
 #endif
