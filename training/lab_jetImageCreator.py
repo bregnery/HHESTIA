@@ -91,11 +91,11 @@ print "Made particle flow candidate data frames"
 
 jetImagesDF = {}
 print "Creating Jet Images for QCD"
-jetImagesDF['QCD'] = img.prepareImages(candDF['QCD'], arrayJJ)
+jetImagesDF['QCD'] = img.prepareImages(candDF['QCD'], arrayJJ, 'lab')
 print "Creating Jet Images for HH->bbbb"
-jetImagesDF['HH4B'] = img.prepareImages(candDF['HH4B'], arrayHH4B)
+jetImagesDF['HH4B'] = img.prepareImages(candDF['HH4B'], arrayHH4B, 'lab')
 print "Creating Jet Images for HH->WWWW"
-jetImagesDF['HH4W'] = img.prepareImages(candDF['HH4W'], arrayHH4B)
+jetImagesDF['HH4W'] = img.prepareImages(candDF['HH4W'], arrayHH4B, 'lab')
 
 print "Made jet image data frames"
 

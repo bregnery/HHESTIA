@@ -130,14 +130,20 @@ def makeBoostCandArray(array):
 #----------------------------------------------------------------------------------
 # make jet image histograms using the candidate data frame and the original -------
 #    jet array --------------------------------------------------------------------
+# refFrame is the reference frame for the images to be created in -----------------
 #----------------------------------------------------------------------------------
 
-def prepareImages(candDF, jetArray):
+def prepareImages(candDF, jetArray, refFrame):
 
     nx = 30 # size of image in eta
     ny = 30 # size of image in phi
-    xbins = numpy.linspace(-1.4,1.4,nx+1)
-    ybins = numpy.linspace(-1.4,1.4,ny+1)
+    # set limits on relative phi and eta for the histogram
+    if refFrame == 'lab' :
+       xbins = numpy.linspace(-1.4,1.4,nx+1)
+       ybins = numpy.linspace(-1.4,1.4,ny+1)
+    if refFrame == 'boost' :
+       xbins = numpy.linspace(-7,7,nx+1)
+       ybins = numpy.linspace(-7,7,ny+1)
 
     list_x = []
     list_y = []
@@ -158,15 +164,20 @@ def prepareImages(candDF, jetArray):
         mask = candDF['njet'].values == i + 1 # boolean mask ... the fastest way from stack
         df_unsorted_cand_i = candDF[mask] # new data frame with only ith jet candidates
         df_dict_cand_i = df_unsorted_cand_i.sort_values(by=['cand_pt'], ascending=False) # sort candidates by pt
+
         # relative eta
         x = df_dict_cand_i['cand_eta']-df_dict_cand_i['cand_eta'].iloc[0]
         # relative phi
         y = df_dict_cand_i['cand_phi']-df_dict_cand_i['cand_phi'].iloc[0]
         weights = df_dict_cand_i['cand_pt'] # pt of candidate is the weight
+
+        # rotate rel eta and rel phi
         x,y = rotate_and_reflect(x,y,weights)
         list_x.append(x)
         list_y.append(y)
         list_w.append(weights)
+
+
         hist, xedges, yedges = numpy.histogram2d(x, y, weights=weights, bins=(xbins,ybins))
         for ix in range(0,nx):
             for iy in range(0,ny):
@@ -195,32 +206,41 @@ def rotate_and_reflect(x,y,w):
         dv = numpy.matrix([[ix],[iy]])-numpy.matrix([[x.iloc[0]],[y.iloc[0]]])
         dR = numpy.linalg.norm(dv)
         thisPt = iw
+
+        # Find the second highest Pt cand that is not in leading subjet
         if dR > 0.35 and thisPt > maxPt:
             maxPt = thisPt
+
             # rotation in eta-phi plane c.f  https://arxiv.org/abs/1407.5675 and https://arxiv.org/abs/1511.05190:
-            # theta = -numpy.arctan2(iy,ix)-numpy.radians(90)
+            theta = -numpy.arctan2(iy,ix)-numpy.radians(90)
+
             # rotation by lorentz transformation c.f. https://arxiv.org/abs/1704.02124:
-            px = iw * numpy.cos(iy)
-            py = iw * numpy.sin(iy)
-            pz = iw * numpy.sinh(ix)
-            theta = numpy.arctan2(py,pz)+numpy.radians(90)
-            
+            #px = iw * numpy.cos(iy)
+            #py = iw * numpy.sin(iy)
+            #pz = iw * numpy.sinh(ix)
+            # calculate polar angle
+            #theta = numpy.arctan2(py,pz)+numpy.radians(90)
+    # make the rotation matrix        
     c, s = numpy.cos(theta), numpy.sin(theta)
     R = numpy.matrix('{} {}; {} {}'.format(c, -s, s, c))
+
+    # rotate all candidates using theta
     for ix, iy, iw in zip(x, y, w):
+
         # rotation in eta-phi plane:
-        #rot = R*numpy.matrix([[ix],[iy]])
-        #rix, riy = rot[0,0], rot[1,0]
+        rot = R*numpy.matrix([[ix],[iy]])
+        rix, riy = rot[0,0], rot[1,0]
+
         # rotation by lorentz transformation
-        px = iw * numpy.cos(iy)
-        py = iw * numpy.sin(iy)
-        pz = iw * numpy.sinh(ix)
-        rot = R*numpy.matrix([[py],[pz]])
-        px1 = px
-        py1 = rot[0,0]
-        pz1 = rot[1,0]
-        iw1 = numpy.sqrt(px1*px1+py1*py1)
-        rix, riy = numpy.arcsinh(pz1/iw1), numpy.arcsin(py1/iw1)
+        #px = iw * numpy.cos(iy)
+        #py = iw * numpy.sin(iy)
+        #pz = iw * numpy.sinh(ix)
+        #rot = R*numpy.matrix([[py],[pz]])
+        #px1 = px
+        #py1 = rot[0,0]
+        #pz1 = rot[1,0]
+        #iw1 = numpy.sqrt(px1*px1+py1*py1)
+        #rix, riy = numpy.arcsinh(pz1/iw1), numpy.arcsin(py1/iw1) #range of arcsine is -pi to pi
         rot_x.append(rix)
         rot_y.append(riy)
         
