@@ -126,6 +126,226 @@ def makeBoostCandArray(array):
    return newArray
 
 #==================================================================================
+# Make array with Boosted PF candidate 4 vectors ----------------------------------
+#----------------------------------------------------------------------------------
+# This function converts the array made from the jetTree to the correct form to ---
+#   use with the boosted jet image functions --------------------------------------
+# array is a numpy array made from a TTree ----------------------------------------
+#----------------------------------------------------------------------------------
+
+def makeBoostCandFourVector(array):
+
+   tmpArray = []  #use lists not numpy arrays (wayyyyy faster)
+   jetCount = 1
+   entryNum = 0
+   n = 0
+   # loop over jets
+   while n < len(array) :
+      # loop over pf candidates
+      for i in range( len(array[n][1][:]) ) :
+         px = array[n][1][i]
+         py = array[n][2][i]
+         pz = array[n][3][i]
+         e = array[n][4][i]
+         candLV = root.TLorentzVector(px, py, pz, e)
+
+         # List the most energetic candidate first
+         if i == 0:
+            tmpArray.append([jetCount, candLV])
+         elif i > 0 and candLV.E() > tmpArray[entryNum - i][1].E() :
+            tmpArray.append([jetCount, tmpArray[entryNum - i][1] ])
+            tmpArray[entryNum - i] = [jetCount, candLV]
+         else:
+            tmpArray.append([jetCount, candLV]) 
+         entryNum += 1
+      jetCount +=1
+      n += 1
+
+   newArray = copy.copy(tmpArray)
+   return newArray
+
+#==================================================================================
+# Boosted Candidate Rotations -----------------------------------------------------
+#----------------------------------------------------------------------------------
+# candArray is an array of four vectors for one jet -------------------------------
+#----------------------------------------------------------------------------------
+
+def boostedRotations(candArray):
+   phiPrime = []
+   thetaPrime = []
+
+   # define the rotation angles for first two rotations
+   rotPhi = candArray[0].Phi()
+   rotTheta = candArray[0].Theta()
+   subPhi = 0
+
+   # Perform the first two rotations
+   subleadE = -1
+   leadE = candArray[0].E()
+   for icand in candArray :
+      icand.RotateZ(-rotPhi)
+      #set small py values to 0
+      if abs(icand.Py() ) < 0.01 : icand.SetPy(0) 
+
+      icand.RotateY(-rotTheta)
+      #set small px values to 0
+      if abs(icand.Px() ) < 0.01 : icand.SetPx(0)
+
+      # Find subleading candidate
+      if icand.DeltaR(candArray[0]) > 0.35 and icand.E() > subleadE :
+         subleadE = icand.E()
+         # store its phi for a third rotation
+         subPhi = icand.Phi()
+
+   # Perform the third rotation
+   for icand in candArray :
+      icand.RotateZ(-subPhi)
+      #set small py values to 0
+      if abs(icand.Py() ) < 0.01 : icand.SetPy(0)
+
+      # store image info
+      phiPrime.append(icand.Phi() )
+      thetaPrime.append( icand.CosTheta() )
+
+   return numpy.array(phiPrime), numpy.array(thetaPrime)
+
+#==================================================================================
+# Make boosted frame Jet Images ---------------------------------------------------
+#----------------------------------------------------------------------------------
+# make jet image histograms using the candidate data frame and the original -------
+#    jet array --------------------------------------------------------------------
+# refFrame is the reference frame for the images to be created in -----------------
+#----------------------------------------------------------------------------------
+
+def prepareBoostedImages(candLV, jetArray):
+
+    nx = 41 # number of image bins in phi
+    ny = 41 # number of image bins in theta
+    # set limits on relative phi and theta for the histogram
+    xbins = numpy.linspace(-numpy.pi,numpy.pi,nx+1)
+    ybins = numpy.linspace(-1,1,ny+1)
+
+    if K.image_dim_ordering()=='tf':
+        # 4D tensor (tensorflow backend)
+        # 1st dim is jet index
+        # 2nd dim is eta bin
+        # 3rd dim is phi bin
+        # 4th dim is pt value (or rgb layer, etc.)
+        jet_images = numpy.zeros((len(jetArray), nx, ny, 1))
+    else:        
+        jet_images = numpy.zeros((len(jetArray), 1, nx, ny))
+    
+    candNum = 0
+    jetNum = 0
+    for i in range(0,len(jetArray)):
+        if i % 1000 == 0: print "Imaging jet number: ", i+1
+
+        # get the ith jet candidate 4 vectors
+        icandLV = []
+        weightList = []
+        while jetNum < i + 2 :
+            jetNum = candLV[candNum][0]
+            if jetNum == i + 1:
+               icandLV.append(candLV[candNum][1])
+               # use candidate energy as weight
+               weightList.append(candLV[candNum][1].E() )
+            candNum += 1
+            # stop the loop for the last jet
+            if candNum == len(candLV):
+               break
+
+        # perform boosted frame rotations
+        phiPrime,thetaPrime = boostedRotations(icandLV)
+
+        # make the weight list into a numpy array
+        weights = numpy.array(weightList )
+
+        # make a 2D numpy hist for the image
+        hist, xedges, yedges = numpy.histogram2d(phiPrime, thetaPrime, weights=weights, bins=(xbins,ybins))
+        for ix in range(0,nx):
+           for iy in range(0,ny):
+              if K.image_dim_ordering()=='tf':
+                 jet_images[i,ix,iy,0] = hist[ix,iy]
+              else:
+                 jet_images[i,0,ix,iy] = hist[ix,iy]
+
+    return jet_images
+
+#==================================================================================
+# Plot Averaged Boosted Jet Images ------------------------------------------------
+#----------------------------------------------------------------------------------
+# Average over the jet images and plot the result as a 2D histogram ---------------
+# title has limited options, see if statements ------------------------------------
+#----------------------------------------------------------------------------------
+
+def plotAverageBoostedJetImage(jetImageDF, title, plotPNG, plotPDF):
+
+   # sum and average jet images
+   summed = numpy.sum(jetImageDF, axis=0)
+   avg = numpy.apply_along_axis(lambda x: x/len(jetImageDF), axis=1, arr=summed)
+
+   # plot the images
+   plt.figure('N') 
+   plt.imshow(avg[:,:,0].T, norm=mpl.colors.LogNorm(), origin='lower', interpolation='none')
+   cbar = plt.colorbar()
+   cbar.set_label(r'Energy [GeV]')
+   if title == 'boost_QCD' :
+      plt.title('QCD Lab Jet Image')
+   if title == 'boost_HH4W' :
+      plt.title(r'$H\rightarrow WW$ Boosted Jet Image')
+   if title == 'boost_HH4B' :
+      plt.title(r'$H\rightarrow bb$ Boosted Jet Image')
+   plt.xlabel(r'$\phi_i$')
+   plt.ylabel(r'cos($\theta_i$)')
+#   plt.xticks(numpy.arange(-4, 4, step=1.0) )
+#   plt.yticks(numpy.arange(0, 4, step=1.0) )
+   if plotPNG == True :
+      plt.savefig('plots/'+title+'_jetImage.png')
+   if plotPDF == True :
+      plt.savefig('plots/'+title+'_jetImage.pdf')
+   plt.close()
+
+#==================================================================================
+# Plot Molleweide Boosted Jet Images ----------------------------------------------
+#----------------------------------------------------------------------------------
+# Average over the jet images and plot the result as a 2D histogram ---------------
+# title has limited options, see if statements ------------------------------------
+#----------------------------------------------------------------------------------
+
+def plotMolleweideBoostedJetImage(jetImageDF, title, plotPNG, plotPDF):
+
+   # sum and average jet images
+   summed = numpy.sum(jetImageDF, axis=0)
+   avg = numpy.apply_along_axis(lambda x: x/len(jetImageDF), axis=1, arr=summed)
+
+   # plot the images
+   fig = plt.figure()
+   ax = fig.add_subplot(111, projection = 'mollweide')
+
+   lon = numpy.linspace(-numpy.pi, numpy.pi, 42) 
+   lat = numpy.linspace(-numpy.pi/2, numpy.pi/2, 42) 
+   Lon, Lat = numpy.meshgrid(lon, lat)
+
+   im = ax.pcolormesh(Lon, Lat, avg[:,:,0].T, norm=mpl.colors.LogNorm() )
+   cbar = fig.colorbar(im, orientation='horizontal')
+   cbar.set_label(r'Energy [GeV]')
+   if title == 'boost_QCD' :
+      plt.title('QCD Boosted Jet Image')
+   if title == 'boost_HH4W' :
+      plt.title(r'$H\rightarrow WW$ Boosted Jet Image')
+   if title == 'boost_HH4B' :
+      plt.title(r'$H\rightarrow bb$ Boosted Jet Image')
+   plt.xlabel(r'$\phi_i$')
+   plt.ylabel(r'$\theta_i$')
+#   plt.xticks(numpy.arange(-4, 4, step=1.0) )
+#   plt.yticks(numpy.arange(0, 4, step=1.0) )
+   if plotPNG == True :
+      plt.savefig('plots/'+title+'_jetImage.png')
+   if plotPDF == True :
+      plt.savefig('plots/'+title+'_jetImage.pdf')
+   plt.close()
+
+#==================================================================================
 # Make lab frame Jet Images -------------------------------------------------------
 #----------------------------------------------------------------------------------
 # make jet image histograms using the candidate data frame and the original -------

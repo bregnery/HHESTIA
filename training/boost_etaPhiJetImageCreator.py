@@ -66,29 +66,36 @@ sel = "jetAK8_pt > 500 && jetAK8_mass > 50"
 # make arrays from the trees
 arrayJJ = tree2array(treeJJ, treeVars, sel)
 arrayJJ = tools.appendTreeArray(arrayJJ)
-imgArrayJJ = img.makeBoostCandFourVector(arrayJJ)
+imgArrayJJ = img.makeBoostCandArray(arrayJJ)
 
 arrayHH4W = tree2array(treeHH4W, treeVars, sel)
 arrayHH4W = tools.appendTreeArray(arrayHH4W)
-imgArrayHH4W = img.makeBoostCandFourVector(arrayHH4W)
+imgArrayHH4W = img.makeBoostCandArray(arrayHH4W)
 
 arrayHH4B = tree2array(treeHH4B, treeVars, sel)
 arrayHH4B = tools.appendTreeArray(arrayHH4B)
-imgArrayHH4B = img.makeBoostCandFourVector(arrayHH4B)
+imgArrayHH4B = img.makeBoostCandArray(arrayHH4B)
 
-print "Made candidate 4 vector arrays from the datasets"
+print "Made arrays from the datasets"
 
 #==================================================================================
 # Make Lab Frame Jet Images ///////////////////////////////////////////////////////
 #==================================================================================
 
+candDF = {}
+candDF['QCD'] = pd.DataFrame(imgArrayJJ, columns = ['njet', 'jet_pt', 'cand_pt', 'cand_eta', 'cand_phi'])
+candDF['HH4B'] = pd.DataFrame(imgArrayHH4B, columns = ['njet', 'jet_pt', 'cand_pt', 'cand_eta', 'cand_phi'])
+candDF['HH4W'] = pd.DataFrame(imgArrayHH4W, columns = ['njet', 'jet_pt', 'cand_pt', 'cand_eta', 'cand_phi'])
+
+print "Made particle flow candidate data frames in the Higgs rest frame"
+
 jetImagesDF = {}
 print "Creating boosted Jet Images for QCD"
-jetImagesDF['QCD'] = img.prepareBoostedImages(imgArrayJJ, arrayJJ)
+jetImagesDF['QCD'] = img.prepareImages(candDF['QCD'], arrayJJ, 'boost')
 print "Creating boosted Jet Images for HH->bbbb"
-jetImagesDF['HH4B'] = img.prepareBoostedImages(imgArrayHH4B, arrayHH4B)
+jetImagesDF['HH4B'] = img.prepareImages(candDF['HH4B'], arrayHH4B, 'boost')
 print "Creating boosted Jet Images for HH->WWWW"
-jetImagesDF['HH4W'] = img.prepareBoostedImages(imgArrayHH4W, arrayHH4W)
+jetImagesDF['HH4W'] = img.prepareImages(candDF['HH4W'], arrayHH4B, 'boost')
 
 print "Made jet image data frames"
 
@@ -98,13 +105,10 @@ print "Made jet image data frames"
 
 # plot with python
 if plotJetImages == True:
-   print "Plotting Average Boosted jet images"
-   img.plotAverageBoostedJetImage(jetImagesDF['QCD'], 'boost_QCD', savePNG, savePDF)
-   img.plotAverageBoostedJetImage(jetImagesDF['HH4B'], 'boost_HH4B', savePNG, savePDF)
-   img.plotAverageBoostedJetImage(jetImagesDF['HH4W'], 'boost_HH4W', savePNG, savePDF)
+   print "Plotting jet images"
+   img.plotAverageJetImage(jetImagesDF['QCD'], 'boost_QCD', savePNG, savePDF)
+   img.plotAverageJetImage(jetImagesDF['HH4B'], 'boost_HH4B', savePNG, savePDF)
+   img.plotAverageJetImage(jetImagesDF['HH4W'], 'boost_HH4W', savePNG, savePDF)
 
-   #img.plotMolleweideBoostedJetImage(jetImagesDF['QCD'], 'boost_QCD', savePNG, savePDF)
-   #img.plotMolleweideBoostedJetImage(jetImagesDF['HH4B'], 'boost_HH4B', savePNG, savePDF)
-   #img.plotMolleweideBoostedJetImage(jetImagesDF['HH4W'], 'boost_HH4W', savePNG, savePDF)
 print "Program was a great success!!!"
 
