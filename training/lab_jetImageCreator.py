@@ -95,9 +95,16 @@ jetImagesDF['QCD'] = img.prepareImages(candDF['QCD'], arrayJJ, 'lab')
 print "Creating Jet Images for HH->bbbb"
 jetImagesDF['HH4B'] = img.prepareImages(candDF['HH4B'], arrayHH4B, 'lab')
 print "Creating Jet Images for HH->WWWW"
-jetImagesDF['HH4W'] = img.prepareImages(candDF['HH4W'], arrayHH4B, 'lab')
+jetImagesDF['HH4W'] = img.prepareImages(candDF['HH4W'], arrayHH4W, 'lab')
 
 print "Made jet image data frames"
+
+h5f = h5py.File("data/NachmanLabJetImages.h5","w")
+h5f.create_dataset('QCD', data=jetImagesDF['QCD'], compression='lzf')
+h5f.create_dataset('HH4B', data=jetImagesDF['HH4B'], compression='lzf')
+h5f.create_dataset('HH4W', data=jetImagesDF['HH4W'], compression='lzf')
+
+print "Saved Boosted Jet Images"
 
 #==================================================================================
 # Plot Jet Images /////////////////////////////////////////////////////////////////

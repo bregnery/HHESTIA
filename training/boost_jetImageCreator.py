@@ -92,6 +92,13 @@ jetImagesDF['HH4W'] = img.prepareBoostedImages(imgArrayHH4W, arrayHH4W)
 
 print "Made jet image data frames"
 
+h5f = h5py.File("data/phiCosThetaBoostedJetImages.h5","w")
+h5f.create_dataset('QCD', data=jetImagesDF['QCD'], compression='lzf')
+h5f.create_dataset('HH4B', data=jetImagesDF['HH4B'], compression='lzf')
+h5f.create_dataset('HH4W', data=jetImagesDF['HH4W'], compression='lzf')
+
+print "Saved Boosted Jet Images"
+
 #==================================================================================
 # Plot Jet Images /////////////////////////////////////////////////////////////////
 #==================================================================================

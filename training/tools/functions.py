@@ -138,7 +138,7 @@ def randomizeData(array):
 # target_predict is the models prediction of data that has not been trained on ////
 #----------------------------------------------------------------------------------
 
-def plotPerformance(loss, acc): #, train_test, target_test, target_predict):
+def plotPerformance(loss, acc, adToTitle): #, train_test, target_test, target_predict):
    
    # plot loss vs epoch
    plt.figure()
@@ -147,8 +147,8 @@ def plotPerformance(loss, acc): #, train_test, target_test, target_predict):
    plt.legend(loc="upper right")
    plt.xlabel('epoch')
    plt.ylabel('loss')
-   plt.savefig("plots/loss.pdf")
-   plt.savefig("plots/loss.png")
+   plt.savefig("plots/"+adToTitle+"_loss.pdf")
+   plt.savefig("plots/"+adToTitle+"_loss.png")
    plt.close()
 
    # plot accuracy vs epoch
@@ -158,8 +158,8 @@ def plotPerformance(loss, acc): #, train_test, target_test, target_predict):
    plt.legend(loc="upper left")
    plt.xlabel('epoch')
    plt.ylabel('acc')
-   plt.savefig("plots/acc.pdf")
-   plt.savefig("plots/acc.png")
+   plt.savefig("plots/"+adToTitle+"_acc.pdf")
+   plt.savefig("plots/"+adToTitle+"_acc.png")
    plt.close()
 
    # Plot ROC

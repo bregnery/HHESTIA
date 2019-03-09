@@ -95,9 +95,16 @@ jetImagesDF['QCD'] = img.prepareImages(candDF['QCD'], arrayJJ, 'boost')
 print "Creating boosted Jet Images for HH->bbbb"
 jetImagesDF['HH4B'] = img.prepareImages(candDF['HH4B'], arrayHH4B, 'boost')
 print "Creating boosted Jet Images for HH->WWWW"
-jetImagesDF['HH4W'] = img.prepareImages(candDF['HH4W'], arrayHH4B, 'boost')
+jetImagesDF['HH4W'] = img.prepareImages(candDF['HH4W'], arrayHH4W, 'boost')
 
 print "Made jet image data frames"
+
+h5f = h5py.File("data/etaPhiBoostedJetImages.h5","w")
+h5f.create_dataset('QCD', data=jetImagesDF['QCD'], compression='lzf')
+h5f.create_dataset('HH4B', data=jetImagesDF['HH4B'], compression='lzf')
+h5f.create_dataset('HH4W', data=jetImagesDF['HH4W'], compression='lzf')
+
+print "Saved Boosted Jet Images"
 
 #==================================================================================
 # Plot Jet Images /////////////////////////////////////////////////////////////////
@@ -106,9 +113,9 @@ print "Made jet image data frames"
 # plot with python
 if plotJetImages == True:
    print "Plotting jet images"
-   img.plotAverageJetImage(jetImagesDF['QCD'], 'boost_QCD', savePNG, savePDF)
-   img.plotAverageJetImage(jetImagesDF['HH4B'], 'boost_HH4B', savePNG, savePDF)
-   img.plotAverageJetImage(jetImagesDF['HH4W'], 'boost_HH4W', savePNG, savePDF)
+   img.plotAverageJetImage(jetImagesDF['QCD'], 'etaPhi_boost_QCD', savePNG, savePDF)
+   img.plotAverageJetImage(jetImagesDF['HH4B'], 'etaPhi_boost_HH4B', savePNG, savePDF)
+   img.plotAverageJetImage(jetImagesDF['HH4W'], 'etaPhi_boost_HH4W', savePNG, savePDF)
 
 print "Program was a great success!!!"
 

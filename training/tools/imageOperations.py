@@ -219,8 +219,8 @@ def boostedRotations(candArray):
 
 def prepareBoostedImages(candLV, jetArray):
 
-    nx = 41 # number of image bins in phi
-    ny = 41 # number of image bins in theta
+    nx = 30 # number of image bins in phi
+    ny = 30 # number of image bins in theta
     # set limits on relative phi and theta for the histogram
     xbins = numpy.linspace(-numpy.pi,numpy.pi,nx+1)
     ybins = numpy.linspace(-1,1,ny+1)
