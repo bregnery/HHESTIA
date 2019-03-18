@@ -34,6 +34,7 @@ root.gROOT.SetBatch(True)
 
 # set options 
 plotJetImages = True
+boostAxis = False
 savePDF = False
 savePNG = True 
 
@@ -68,6 +69,9 @@ arrayJJ = tree2array(treeJJ, treeVars, sel)
 arrayJJ = tools.appendTreeArray(arrayJJ)
 imgArrayJJ = img.makeBoostCandFourVector(arrayJJ)
 
+#for i in range( len(imgArrayJJ) ):
+#   print "Jet Count: ", imgArrayJJ[i][0], " Energy: ", imgArrayJJ[i][1].E()
+
 arrayHH4W = tree2array(treeHH4W, treeVars, sel)
 arrayHH4W = tools.appendTreeArray(arrayHH4W)
 imgArrayHH4W = img.makeBoostCandFourVector(arrayHH4W)
@@ -79,16 +83,16 @@ imgArrayHH4B = img.makeBoostCandFourVector(arrayHH4B)
 print "Made candidate 4 vector arrays from the datasets"
 
 #==================================================================================
-# Make Lab Frame Jet Images ///////////////////////////////////////////////////////
+# Make Jet Images /////////////////////////////////////////////////////////////////
 #==================================================================================
 
 jetImagesDF = {}
 print "Creating boosted Jet Images for QCD"
-jetImagesDF['QCD'] = img.prepareBoostedImages(imgArrayJJ, arrayJJ)
+jetImagesDF['QCD'] = img.prepareBoostedImages(imgArrayJJ, arrayJJ, boostAxis)
 print "Creating boosted Jet Images for HH->bbbb"
-jetImagesDF['HH4B'] = img.prepareBoostedImages(imgArrayHH4B, arrayHH4B)
+jetImagesDF['HH4B'] = img.prepareBoostedImages(imgArrayHH4B, arrayHH4B, boostAxis)
 print "Creating boosted Jet Images for HH->WWWW"
-jetImagesDF['HH4W'] = img.prepareBoostedImages(imgArrayHH4W, arrayHH4W)
+jetImagesDF['HH4W'] = img.prepareBoostedImages(imgArrayHH4W, arrayHH4W, boostAxis)
 
 print "Made jet image data frames"
 
@@ -109,6 +113,10 @@ if plotJetImages == True:
    img.plotAverageBoostedJetImage(jetImagesDF['QCD'], 'boost_QCD', savePNG, savePDF)
    img.plotAverageBoostedJetImage(jetImagesDF['HH4B'], 'boost_HH4B', savePNG, savePDF)
    img.plotAverageBoostedJetImage(jetImagesDF['HH4W'], 'boost_HH4W', savePNG, savePDF)
+
+   img.plotThreeBoostedJetImages(jetImagesDF['QCD'], 'boost_QCD', savePNG, savePDF)
+   img.plotThreeBoostedJetImages(jetImagesDF['HH4B'], 'boost_HH4B', savePNG, savePDF)
+   img.plotThreeBoostedJetImages(jetImagesDF['HH4W'], 'boost_HH4W', savePNG, savePDF)
 
    #img.plotMolleweideBoostedJetImage(jetImagesDF['QCD'], 'boost_QCD', savePNG, savePDF)
    #img.plotMolleweideBoostedJetImage(jetImagesDF['HH4B'], 'boost_HH4B', savePNG, savePDF)

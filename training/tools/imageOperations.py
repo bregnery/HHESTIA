@@ -64,6 +64,12 @@ def getBoostCandBranchNames(tree ):
          treeVars.append(name)
       if 'jetAK8_pt' in name:
          treeVars.append(name)
+      if 'jetAK8_phi' in name:
+         treeVars.append(name)
+      if 'jetAK8_eta' in name:
+         treeVars.append(name)
+      if 'jetAK8_mass' in name:
+         treeVars.append(name)
 
    return treeVars
 
@@ -142,11 +148,11 @@ def makeBoostCandFourVector(array):
    # loop over jets
    while n < len(array) :
       # loop over pf candidates
-      for i in range( len(array[n][1][:]) ) :
-         px = array[n][1][i]
-         py = array[n][2][i]
-         pz = array[n][3][i]
-         e = array[n][4][i]
+      for i in range( len(array[n][4][:]) ) :
+         px = array[n][4][i]
+         py = array[n][5][i]
+         pz = array[n][6][i]
+         e = array[n][7][i]
          candLV = root.TLorentzVector(px, py, pz, e)
 
          # List the most energetic candidate first
@@ -210,6 +216,53 @@ def boostedRotations(candArray):
    return numpy.array(phiPrime), numpy.array(thetaPrime)
 
 #==================================================================================
+# Boosted Candidate Rotations relative to Boost Axis ------------------------------
+#----------------------------------------------------------------------------------
+# candArray is an array of four vectors for one jet -------------------------------
+#----------------------------------------------------------------------------------
+
+def boostedRotationsRelBoostAxis(candArray, jetLV):
+   phiPrime = []
+   thetaPrime = []
+
+   # define the rotation angles for first two rotations
+   rotPhi = jetLV.Phi()
+   rotTheta = jetLV.Theta()
+   subPhi = 0
+
+   # Perform the first two rotations
+   subleadE = -1
+   leadE = candArray[0].E()
+   for icand in candArray :
+      icand.RotateZ(-rotPhi)
+      #set small py values to 0
+      if abs(icand.Py() ) < 0.01 : icand.SetPy(0) 
+
+      icand.RotateY(-rotTheta)
+      #set small px values to 0
+      if abs(icand.Px() ) < 0.01 : icand.SetPx(0)
+
+      # store leading phi for a third rotation
+      if icand.E() == leadE : 
+         subPhi = icand.Phi()
+
+      # Find subleading candidate
+      if icand.DeltaR(candArray[0]) > 0.35 and icand.E() > subleadE :
+         subleadE = icand.E()
+
+   # Perform the third rotation
+   for icand in candArray :
+      icand.RotateZ(-subPhi)
+      #set small py values to 0
+      if abs(icand.Py() ) < 0.01 : icand.SetPy(0)
+
+      # store image info
+      phiPrime.append(icand.Phi() )
+      thetaPrime.append( icand.CosTheta() )
+
+   return numpy.array(phiPrime), numpy.array(thetaPrime)
+
+#==================================================================================
 # Make boosted frame Jet Images ---------------------------------------------------
 #----------------------------------------------------------------------------------
 # make jet image histograms using the candidate data frame and the original -------
@@ -217,7 +270,7 @@ def boostedRotations(candArray):
 # refFrame is the reference frame for the images to be created in -----------------
 #----------------------------------------------------------------------------------
 
-def prepareBoostedImages(candLV, jetArray):
+def prepareBoostedImages(candLV, jetArray, boostAxis ):
 
     nx = 30 # number of image bins in phi
     ny = 30 # number of image bins in theta
@@ -234,31 +287,42 @@ def prepareBoostedImages(candLV, jetArray):
         jet_images = numpy.zeros((len(jetArray), nx, ny, 1))
     else:        
         jet_images = numpy.zeros((len(jetArray), 1, nx, ny))
-    
+
+    jetCount = 0    
     candNum = 0
-    jetNum = 0
     for i in range(0,len(jetArray)):
-        if i % 1000 == 0: print "Imaging jet number: ", i+1
+        jetNum = i + 1
+        if i % 1000 == 0: print "Imaging jet number: ", jetNum
+
+        # make 4 vector of the jet
+        jetPt, jetEta, jetPhi, jetMass = jetArray[i][2], jetArray[i][1], jetArray[i][0], jetArray[i][3]
+        jetLV = root.TLorentzVector()
+        jetLV.SetPtEtaPhiM(jetPt, jetEta, jetPhi, jetMass)
 
         # get the ith jet candidate 4 vectors
         icandLV = []
         weightList = []
-        while jetNum < i + 2 :
-            jetNum = candLV[candNum][0]
-            if jetNum == i + 1:
+        while jetCount <= jetNum :
+            jetCount = candLV[candNum][0]
+            if jetCount == jetNum:
                icandLV.append(candLV[candNum][1])
                # use candidate energy as weight
                weightList.append(candLV[candNum][1].E() )
-            candNum += 1
+               candNum += 1
             # stop the loop for the last jet
             if candNum == len(candLV):
                break
-
+        
         # perform boosted frame rotations
-        phiPrime,thetaPrime = boostedRotations(icandLV)
+        if boostAxis == False : #use leading candidate as Z axis in rotations
+           phiPrime,thetaPrime = boostedRotations(icandLV)
+        if boostAxis == True : # use boost axis as Z axis in rotations
+           phiPrime,thetaPrime = boostedRotationsRelBoostAxis(icandLV, jetLV)
 
         # make the weight list into a numpy array
-        weights = numpy.array(weightList )
+        #leadingE = weightList[0]
+        #normWeight = [weight / leadingE for weight in weightList] #normalize energy to that of the leading
+        weights = numpy.array(weightList ) #normWeight )
 
         # make a 2D numpy hist for the image
         hist, xedges, yedges = numpy.histogram2d(phiPrime, thetaPrime, weights=weights, bins=(xbins,ybins))
@@ -286,24 +350,51 @@ def plotAverageBoostedJetImage(jetImageDF, title, plotPNG, plotPDF):
 
    # plot the images
    plt.figure('N') 
-   plt.imshow(avg[:,:,0].T, norm=mpl.colors.LogNorm(), origin='lower', interpolation='none')
+   plt.imshow(avg[:,:,0].T, norm=mpl.colors.LogNorm(), origin='lower', interpolation='none', extent=[-numpy.pi, numpy.pi, -1, 1], aspect = "auto")
    cbar = plt.colorbar()
    cbar.set_label(r'Energy [GeV]')
    if title == 'boost_QCD' :
-      plt.title('QCD Lab Jet Image')
+      plt.title('QCD Boosted Jet Image', fontsize = 22)
    if title == 'boost_HH4W' :
-      plt.title(r'$H\rightarrow WW$ Boosted Jet Image')
+      plt.title(r'$H\rightarrow WW$ Boosted Jet Image', fontsize = 22)
    if title == 'boost_HH4B' :
-      plt.title(r'$H\rightarrow bb$ Boosted Jet Image')
-   plt.xlabel(r'$\phi_i$')
-   plt.ylabel(r'cos($\theta_i$)')
-#   plt.xticks(numpy.arange(-4, 4, step=1.0) )
-#   plt.yticks(numpy.arange(0, 4, step=1.0) )
+      plt.title(r'$H\rightarrow bb$ Boosted Jet Image', fontsize = 22)
+   plt.xlabel(r'$\phi$', fontsize = 18)
+   plt.ylabel(r'cos($\theta$)', fontsize = 20)
    if plotPNG == True :
       plt.savefig('plots/'+title+'_jetImage.png')
    if plotPDF == True :
       plt.savefig('plots/'+title+'_jetImage.pdf')
    plt.close()
+
+#==================================================================================
+# Plot 3 Boosted Jet Images -------------------------------------------------------
+#----------------------------------------------------------------------------------
+# Average over the jet images and plot the result as a 2D histogram ---------------
+# title has limited options, see if statements ------------------------------------
+#----------------------------------------------------------------------------------
+
+def plotThreeBoostedJetImages(jetImageDF, title, plotPNG, plotPDF):
+
+   for i in range (0, 3) :
+      # plot the images
+      plt.figure('N') 
+      plt.imshow(jetImageDF[i,:,:,0].T, norm=mpl.colors.LogNorm(), origin='lower', interpolation='none', extent=[-numpy.pi, numpy.pi, -1, 1], aspect = "auto")
+      cbar = plt.colorbar()
+      cbar.set_label(r'Energy [GeV]')
+      if title == 'boost_QCD' :
+         plt.title('QCD Boosted Jet Image #'+str(i), fontsize = 22)
+      if title == 'boost_HH4W' :
+         plt.title(r'$H\rightarrow WW$ Boosted Jet Image #'+str(i), fontsize = 22)
+      if title == 'boost_HH4B' :
+         plt.title(r'$H\rightarrow bb$ Boosted Jet Image #'+str(i), fontsize = 22)
+      plt.xlabel(r'$\phi$', fontsize = 18)
+      plt.ylabel(r'cos($\theta$)', fontsize = 20)
+      if plotPNG == True :
+         plt.savefig('plots/'+title+'_jetImageNum'+str(i)+'.png')
+      if plotPDF == True :
+         plt.savefig('plots/'+title+'_jetImageNum'+str(i)+'.pdf')
+      plt.close()
 
 #==================================================================================
 # Plot Molleweide Boosted Jet Images ----------------------------------------------
