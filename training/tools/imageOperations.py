@@ -188,7 +188,12 @@ def boostedRotations(candArray):
    # Perform the first two rotations
    subleadE = -1
    leadE = candArray[0].E()
+   leadLV = candArray[0]
    for icand in candArray :
+
+      # Waring for incorrect energy sorting
+      if icand.E() > leadE : print "WARNING: Energy sorting was done incorrectly!"
+
       icand.RotateZ(-rotPhi)
       #set small py values to 0
       if abs(icand.Py() ) < 0.01 : icand.SetPy(0) 
@@ -198,13 +203,19 @@ def boostedRotations(candArray):
       if abs(icand.Px() ) < 0.01 : icand.SetPx(0)
 
       # Find subleading candidate
-      if icand.DeltaR(candArray[0]) > 0.35 and icand.E() > subleadE :
-         subleadE = icand.E()
-         # store its phi for a third rotation
-         subPhi = icand.Phi()
+      if icand.E() > subleadE and icand.E() < leadE :
+         if abs( (icand.CosTheta() - leadLV.CosTheta() ) ) > 0.3 :
+            subleadE = icand.E()
+            # store its phi for a third rotation
+            subPhi = icand.Phi()
 
    # Perform the third rotation
    for icand in candArray :
+
+      # warning for subleading identification
+      if icand.E() > subleadE and icand.E() < leadE : 
+         if abs( (icand.CosTheta() - leadLV.CosTheta() ) ) > 0.3 : print "WARNING: Subleading candidate was improperly identified!"  
+
       icand.RotateZ(-subPhi)
       #set small py values to 0
       if abs(icand.Py() ) < 0.01 : icand.SetPy(0)
@@ -234,6 +245,9 @@ def boostedRotationsRelBoostAxis(candArray, jetLV):
    subleadE = -1
    leadE = candArray[0].E()
    for icand in candArray :
+
+      if icand.E() > leadE : print "WARNING: Energy sorting was done incorrectly!"
+
       icand.RotateZ(-rotPhi)
       #set small py values to 0
       if abs(icand.Py() ) < 0.01 : icand.SetPy(0) 
@@ -244,7 +258,7 @@ def boostedRotationsRelBoostAxis(candArray, jetLV):
 
       # store leading phi for a third rotation
       if icand.E() == leadE : 
-         subPhi = icand.Phi()
+         leadPhi = icand.Phi()
 
       # Find subleading candidate
       if icand.DeltaR(candArray[0]) > 0.35 and icand.E() > subleadE :
@@ -252,7 +266,7 @@ def boostedRotationsRelBoostAxis(candArray, jetLV):
 
    # Perform the third rotation
    for icand in candArray :
-      icand.RotateZ(-subPhi)
+      icand.RotateZ(-leadPhi)
       #set small py values to 0
       if abs(icand.Py() ) < 0.01 : icand.SetPy(0)
 
