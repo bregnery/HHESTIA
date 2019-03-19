@@ -31,7 +31,7 @@ from keras.models import Sequential, Model
 from keras.optimizers import SGD
 from keras.layers import Input, Activation, Dense, Conv2D, MaxPool2D, BatchNormalization, Dropout, Flatten
 from keras.regularizers import l1,l2
-from keras.utils import np_utils, to_categorical
+from keras.utils import np_utils, to_categorical, plot_model
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 
 # user modules
@@ -48,10 +48,8 @@ savePNG = True
 # Load Jet Images /////////////////////////////////////////////////////////////////
 #==================================================================================
 
-print "This Program is plotting the Nachman Lab Images"
-
 # Load images from h5 file
-h5f = h5py.File("data/NachmanLabJetImages.h5","r")
+h5f = h5py.File("data/phiCosThetaBoostedJetImages10by10.h5","r")
 
 print "Accessed Jet Images"
 
@@ -102,17 +100,14 @@ testTruth = to_categorical(testTruth, num_classes=3)
 # Define the Neural Network Structure
 print "NN input shape: ", trainData.shape[1], trainData.shape[2], trainData.shape[3]
 model_BESTNN = Sequential()
-model_BESTNN.add( Conv2D(12, (3,3), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01), input_shape=(trainData.shape[1], trainData.shape[2], trainData.shape[3]) ))
-model_BESTNN.add( BatchNormalization(momentum = 0.6) )
-model_BESTNN.add( MaxPool2D(pool_size=(2,2) ) )
-model_BESTNN.add( Conv2D(8, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
+model_BESTNN.add( Conv2D(12, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01), input_shape=(trainData.shape[1], trainData.shape[2], trainData.shape[3]) ))
 model_BESTNN.add( BatchNormalization(momentum = 0.6) )
 model_BESTNN.add( MaxPool2D(pool_size=(2,2) ) )
 model_BESTNN.add( Conv2D(8, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
 model_BESTNN.add( BatchNormalization(momentum = 0.6) )
 model_BESTNN.add( MaxPool2D(pool_size=(2,2) ) )
 model_BESTNN.add( Flatten() )
-model_BESTNN.add( Dense(72, kernel_initializer="glorot_normal", activation="relu" ))
+model_BESTNN.add( Dense(32, kernel_initializer="glorot_normal", activation="relu" ))
 model_BESTNN.add( Dropout(0.20) )
 model_BESTNN.add( Dense(3, kernel_initializer="glorot_normal", activation="softmax"))
 
@@ -123,11 +118,11 @@ model_BESTNN.compile(optimizer='adam', loss='categorical_crossentropy', metrics=
 print(model_BESTNN.summary() )
 
 # early stopping
-early_stopping = EarlyStopping(monitor='val_loss', min_delta=0.0001, patience=0, verbose=0, mode='auto' )
+early_stopping = EarlyStopping(monitor='val_loss', min_delta=0.0001, patience=2, verbose=0, mode='auto' )
 
 # model checkpoint callback
 # this saves the model architecture + parameters into dense_model.h5
-model_checkpoint = ModelCheckpoint('lab_image_model.h5', monitor='val_loss', 
+model_checkpoint = ModelCheckpoint('boost_CosTheta_10by10_model.h5', monitor='val_loss', 
                                    verbose=0, save_best_only=True, 
                                    save_weights_only=False, mode='auto', 
                                    period=1)
@@ -150,9 +145,9 @@ plt.figure()
 targetNames = ['QCD', 'H->bb', 'H->WW']
 tools.plot_confusion_matrix(cm.T, targetNames, normalize=True)
 if savePDF == True:
-   plt.savefig('plots/lab_EtaPhi_confusion_matrix.pdf')
+   plt.savefig('plots/boost_CosTheta_10by10_confusion_matrix.pdf')
 if savePNG == True:
-   plt.savefig('plots/lab_EtaPhi_confusion_matrix.png')
+   plt.savefig('plots/boost_CosTheta_10by10_confusion_matrix.png')
 plt.close()
 
 # score
@@ -161,11 +156,11 @@ print "Training Score: ", model_BESTNN.evaluate(testData[:], testTruth[:], batch
 # performance plots
 loss = [history.history['loss'], history.history['val_loss'] ]
 acc = [history.history['acc'], history.history['val_acc'] ]
-tools.plotPerformance(loss, acc, "lab_EtaPhi")
+tools.plotPerformance(loss, acc, "boost_CosTheta_10by10")
 print "plotted HESTIA training Performance"
 
 # make file with probability results
-joblib.dump(model_BESTNN, "HHESTIA_keras_lab_EtaPhi.pkl")
+joblib.dump(model_BESTNN, "HHESTIA_keras_CosTheta_10by10.pkl")
 #joblib.dump(scaler, "HHESTIA_scaler.pkl")
 
 print "Made weights based on probability results"

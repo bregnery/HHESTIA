@@ -83,13 +83,6 @@ print "Stored data and truth information"
 
 # split the training and testing data
 trainData, testData, trainTruth, testTruth = train_test_split(jetImages, jetLabels, test_size=0.1, random_state=7)
-# randomize the data
-#print jetImagesDF['HH4B'].tolist()
-#imageArray = [ jetImagesDF['QCD'].tolist(), jetImagesDF['HH4B'].tolist(), jetImagesDF['HH4W'].tolist() ]
-#data, truth = tools.randomizeData(imageArray)
-#numTrain = 120000
-#trainData, testData = data[:numTrain], data[numTrain:]
-#trainTruth, testTruth = truth[:numTrain], truth[numTrain:]
 
 print "Number of QCD jets in training: ", numpy.sum(trainTruth == 0)
 print "Number of H->bb jets in training: ", numpy.sum(trainTruth == 1)
@@ -99,21 +92,27 @@ print "Number of QCD jets in testing: ", numpy.sum(testTruth == 0)
 print "Number of H->bb jets in testing: ", numpy.sum(testTruth == 1)
 print "Number of H->WW jets in testing: ", numpy.sum(testTruth == 2)
 
+# make it so keras results can go in a pkl file
+tools.make_keras_picklable()
+
 # get the truth info in the correct form
 trainTruth = to_categorical(trainTruth, num_classes=3)
 testTruth = to_categorical(testTruth, num_classes=3)
 
-# make it so keras results can go in a pkl file
-tools.make_keras_picklable()
-
 # Define the Neural Network Structure
 print "NN input shape: ", trainData.shape[1], trainData.shape[2], trainData.shape[3]
 model_BESTNN = Sequential()
-model_BESTNN.add( Conv2D(8, (3,3), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01), input_shape=(trainData.shape[1], trainData.shape[2], trainData.shape[3]) ))
+model_BESTNN.add( Conv2D(12, (3,3), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01), input_shape=(trainData.shape[1], trainData.shape[2], trainData.shape[3]) ))
+model_BESTNN.add( BatchNormalization(momentum = 0.6) )
+model_BESTNN.add( MaxPool2D(pool_size=(2,2) ) )
+model_BESTNN.add( Conv2D(8, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
+model_BESTNN.add( BatchNormalization(momentum = 0.6) )
+model_BESTNN.add( MaxPool2D(pool_size=(2,2) ) )
+model_BESTNN.add( Conv2D(8, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
 model_BESTNN.add( BatchNormalization(momentum = 0.6) )
 model_BESTNN.add( MaxPool2D(pool_size=(2,2) ) )
 model_BESTNN.add( Flatten() )
-model_BESTNN.add( Dense(64, kernel_initializer="glorot_normal", activation="relu" ))
+model_BESTNN.add( Dense(72, kernel_initializer="glorot_normal", activation="relu" ))
 model_BESTNN.add( Dropout(0.20) )
 model_BESTNN.add( Dense(3, kernel_initializer="glorot_normal", activation="softmax"))
 
@@ -124,11 +123,11 @@ model_BESTNN.compile(optimizer='adam', loss='categorical_crossentropy', metrics=
 print(model_BESTNN.summary() )
 
 # early stopping
-early_stopping = EarlyStopping(monitor='val_loss', patience=10)
+early_stopping = EarlyStopping(monitor='val_loss', min_delta=0.0001, patience=0, verbose=0, mode='auto' )
 
 # model checkpoint callback
 # this saves the model architecture + parameters into dense_model.h5
-model_checkpoint = ModelCheckpoint('dense_model.h5', monitor='val_loss', 
+model_checkpoint = ModelCheckpoint('boost_etaPhi_model.h5', monitor='val_loss', 
                                    verbose=0, save_best_only=True, 
                                    save_weights_only=False, mode='auto', 
                                    period=1)
@@ -137,6 +136,9 @@ model_checkpoint = ModelCheckpoint('dense_model.h5', monitor='val_loss',
 history = model_BESTNN.fit(trainData[:], trainTruth[:], batch_size=100, epochs=100, callbacks=[early_stopping, model_checkpoint], validation_split = 0.1)
 
 print "Trained the neural network!"
+
+# print model visualization
+#plot_model(model_BESTNN, to_file='plots/boost_CosTheta_NN_Vis.png')
 
 #==================================================================================
 # Plot Training Results ///////////////////////////////////////////////////////////

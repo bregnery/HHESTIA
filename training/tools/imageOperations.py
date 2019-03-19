@@ -117,12 +117,12 @@ def makeBoostCandArray(array):
    # loop over jets
    while n < len(array) :
       # loop over pf candidates
-      for i in range( len(array[n][1][:]) ) :
+      for i in range( len(array[n][4][:]) ) :
          jetPt = array[n][0]
-         px = array[n][1][i]
-         py = array[n][2][i]
-         pz = array[n][3][i]
-         e = array[n][4][i]
+         px = array[n][4][i]
+         py = array[n][5][i]
+         pz = array[n][6][i]
+         e = array[n][7][i]
          candLV = root.TLorentzVector(px, py, pz, e)
          tmpArray.append([jetCount, jetPt, candLV.Pt(), candLV.Eta(), candLV.Phi()])
       jetCount +=1
@@ -284,10 +284,10 @@ def boostedRotationsRelBoostAxis(candArray, jetLV):
 # refFrame is the reference frame for the images to be created in -----------------
 #----------------------------------------------------------------------------------
 
-def prepareBoostedImages(candLV, jetArray, boostAxis ):
+def prepareBoostedImages(candLV, jetArray, nbins, boostAxis ):
 
-    nx = 30 # number of image bins in phi
-    ny = 30 # number of image bins in theta
+    nx = nbins #30 # number of image bins in phi
+    ny = nbins #30 # number of image bins in theta
     # set limits on relative phi and theta for the histogram
     xbins = numpy.linspace(-numpy.pi,numpy.pi,nx+1)
     ybins = numpy.linspace(-1,1,ny+1)
@@ -335,7 +335,9 @@ def prepareBoostedImages(candLV, jetArray, boostAxis ):
 
         # make the weight list into a numpy array
         #leadingE = weightList[0]
-        #normWeight = [weight / leadingE for weight in weightList] #normalize energy to that of the leading
+        #totE = sum(weightList)
+        #normWeight = [weight / totE for weight in weightList] #normalize energy to that of the leading
+        #weights = numpy.array(normWeight )
         weights = numpy.array(weightList ) #normWeight )
 
         # make a 2D numpy hist for the image
@@ -598,17 +600,17 @@ def plotAverageJetImage(jetImageDF, title, plotPNG, plotPDF):
    summed = numpy.sum(jetImageDF, axis=0)
    avg = numpy.apply_along_axis(lambda x: x/len(jetImageDF), axis=1, arr=summed)
    plt.figure('N') 
-   plt.imshow(avg[:,:,0].T, norm=mpl.colors.LogNorm(), origin='lower', interpolation='none')
+   plt.imshow(avg[:,:,0].T, norm=mpl.colors.LogNorm(), origin='lower', interpolation='none', extent=[-1.4,1.4, -1.4, 1.4])
    cbar = plt.colorbar()
    cbar.set_label(r'$p_T$ [GeV]')
    if title == 'lab_QCD' :
-      plt.title('QCD Lab Jet Image')
+      plt.title('QCD Lab Jet Image', fontsize = 22)
    if title == 'lab_HH4W' :
-      plt.title(r'$H\rightarrow WW$ Lab Jet Image')
+      plt.title(r'$H\rightarrow WW$ Lab Jet Image', fontsize = 22)
    if title == 'lab_HH4B' :
-      plt.title(r'$H\rightarrow bb$ Lab Jet Image')
-   plt.xlabel(r'$\eta_i$')
-   plt.ylabel(r'$\phi_i$')
+      plt.title(r'$H\rightarrow bb$ Lab Jet Image', fontsize = 22)
+   plt.xlabel(r'$\eta_i$', fontsize = 18)
+   plt.ylabel(r'$\phi_i$', fontsize = 20)
    if plotPNG == True :
       plt.savefig('plots/'+title+'_jetImage.png')
    if plotPDF == True :

@@ -121,7 +121,7 @@ model_BESTNN.compile(optimizer='adam', loss='categorical_crossentropy', metrics=
 print(model_BESTNN.summary() )
 
 # early stopping
-early_stopping = EarlyStopping(monitor='val_loss', min_delta=0.0001, patience=2, verbose=0, mode='auto' )
+early_stopping = EarlyStopping(monitor='val_loss', min_delta=0.0001, patience=0, verbose=0, mode='auto' )
 
 # model checkpoint callback
 # this saves the model architecture + parameters into dense_model.h5

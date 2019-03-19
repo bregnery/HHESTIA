@@ -1,5 +1,5 @@
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# boost_jetImageCreator.py ////////////////////////////////////////////////////////
+# boost_jetImageCreator10by10.py ////////////////////////////////////////////////////////
 #==================================================================================
 # This program makes boosted frame cosTheta phi jet images ////////////////////////
 #==================================================================================
@@ -85,15 +85,15 @@ print "Made candidate 4 vector arrays from the datasets"
 
 jetImagesDF = {}
 print "Creating boosted Jet Images for QCD"
-jetImagesDF['QCD'] = img.prepareBoostedImages(imgArrayJJ, arrayJJ, 30, boostAxis)
+jetImagesDF['QCD'] = img.prepareBoostedImages(imgArrayJJ, arrayJJ, 10, boostAxis)
 print "Creating boosted Jet Images for HH->bbbb"
-jetImagesDF['HH4B'] = img.prepareBoostedImages(imgArrayHH4B, arrayHH4B, 30, boostAxis)
+jetImagesDF['HH4B'] = img.prepareBoostedImages(imgArrayHH4B, arrayHH4B, 10, boostAxis)
 print "Creating boosted Jet Images for HH->WWWW"
-jetImagesDF['HH4W'] = img.prepareBoostedImages(imgArrayHH4W, arrayHH4W, 30, boostAxis)
+jetImagesDF['HH4W'] = img.prepareBoostedImages(imgArrayHH4W, arrayHH4W, 10, boostAxis)
 
 print "Made jet image data frames"
 
-h5f = h5py.File("data/phiCosThetaBoostedJetImages.h5","w")
+h5f = h5py.File("data/phiCosThetaBoostedJetImages10by10.h5","w")
 h5f.create_dataset('QCD', data=jetImagesDF['QCD'], compression='lzf')
 h5f.create_dataset('HH4B', data=jetImagesDF['HH4B'], compression='lzf')
 h5f.create_dataset('HH4W', data=jetImagesDF['HH4W'], compression='lzf')
@@ -107,13 +107,13 @@ print "Saved Boosted Jet Images"
 # plot with python
 if plotJetImages == True:
    print "Plotting Average Boosted jet images"
-   img.plotAverageBoostedJetImage(jetImagesDF['QCD'], 'boost_QCD', savePNG, savePDF)
-   img.plotAverageBoostedJetImage(jetImagesDF['HH4B'], 'boost_HH4B', savePNG, savePDF)
-   img.plotAverageBoostedJetImage(jetImagesDF['HH4W'], 'boost_HH4W', savePNG, savePDF)
+   img.plotAverageBoostedJetImage(jetImagesDF['QCD'], 'boost_QCD_10by10', savePNG, savePDF)
+   img.plotAverageBoostedJetImage(jetImagesDF['HH4B'], 'boost_HH4B_10by10', savePNG, savePDF)
+   img.plotAverageBoostedJetImage(jetImagesDF['HH4W'], 'boost_HH4W_10by10', savePNG, savePDF)
 
-   img.plotThreeBoostedJetImages(jetImagesDF['QCD'], 'boost_QCD', savePNG, savePDF)
-   img.plotThreeBoostedJetImages(jetImagesDF['HH4B'], 'boost_HH4B', savePNG, savePDF)
-   img.plotThreeBoostedJetImages(jetImagesDF['HH4W'], 'boost_HH4W', savePNG, savePDF)
+   img.plotThreeBoostedJetImages(jetImagesDF['QCD'], 'boost_QCD_10by10', savePNG, savePDF)
+   img.plotThreeBoostedJetImages(jetImagesDF['HH4B'], 'boost_HH4B_10by10', savePNG, savePDF)
+   img.plotThreeBoostedJetImages(jetImagesDF['HH4W'], 'boost_HH4W_10by10', savePNG, savePDF)
 
    #img.plotMolleweideBoostedJetImage(jetImagesDF['QCD'], 'boost_QCD', savePNG, savePDF)
    #img.plotMolleweideBoostedJetImage(jetImagesDF['HH4B'], 'boost_HH4B', savePNG, savePDF)
