@@ -28,9 +28,9 @@ process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1),
 process.source = cms.Source("PoolSource",
     # replace 'myfile.root' with the source file you want to use
     fileNames = cms.untracked.vstring(
-	'/store/mc/RunIISummer16MiniAODv2/RadionTohhTohbbhbb_narrow_M-3500_13TeV-madgraph/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/80000/AEF652DD-79BE-E611-AEB0-0090FAA57CE4.root',
-	'/store/mc/RunIISummer16MiniAODv2/RadionTohhTohbbhbb_narrow_M-3500_13TeV-madgraph/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/80000/8A0C8CDF-79BE-E611-B709-002590E7DF2A.root',
-	'/store/mc/RunIISummer16MiniAODv2/RadionTohhTohbbhbb_narrow_M-3500_13TeV-madgraph/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/80000/221182CA-79BE-E611-8F24-00259048AE50.root'
+#	'/store/mc/RunIISummer16MiniAODv2/RadionTohhTohbbhbb_narrow_M-3500_13TeV-madgraph/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/80000/AEF652DD-79BE-E611-AEB0-0090FAA57CE4.root',
+#	'/store/mc/RunIISummer16MiniAODv2/RadionTohhTohbbhbb_narrow_M-3500_13TeV-madgraph/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/80000/8A0C8CDF-79BE-E611-B709-002590E7DF2A.root',
+#	'/store/mc/RunIISummer16MiniAODv2/RadionTohhTohbbhbb_narrow_M-3500_13TeV-madgraph/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/80000/221182CA-79BE-E611-8F24-00259048AE50.root'
 	)
 )
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000

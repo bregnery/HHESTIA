@@ -147,6 +147,7 @@ def makeBoostCandFourVector(array):
    n = 0
    # loop over jets
    while n < len(array) :
+      if n % 10000 == 0: print "Making 4 vector array for jet number: ", jetCount
       # loop over pf candidates
       for i in range( len(array[n][4][:]) ) :
          px = array[n][4][i]
@@ -176,7 +177,7 @@ def makeBoostCandFourVector(array):
 # candArray is an array of four vectors for one jet -------------------------------
 #----------------------------------------------------------------------------------
 
-def boostedRotations(candArray):
+def boostedRotationsLeadZ(candArray):
    phiPrime = []
    thetaPrime = []
 
@@ -199,6 +200,8 @@ def boostedRotations(candArray):
       if abs(icand.Py() ) < 0.01 : icand.SetPy(0) 
 
       icand.RotateY(-rotTheta)
+      # make sure leading candidate vector has been rotated
+      if icand.E() == leadE : leadLV = icand
       #set small px values to 0
       if abs(icand.Px() ) < 0.01 : icand.SetPx(0)
 
@@ -219,6 +222,68 @@ def boostedRotations(candArray):
       icand.RotateZ(-subPhi)
       #set small py values to 0
       if abs(icand.Py() ) < 0.01 : icand.SetPy(0)
+
+      # store image info
+      phiPrime.append(icand.Phi() )
+      thetaPrime.append( icand.CosTheta() )
+
+   return numpy.array(phiPrime), numpy.array(thetaPrime)
+
+#==================================================================================
+# Boosted Candidate Rotations -----------------------------------------------------
+#----------------------------------------------------------------------------------
+# candArray is an array of four vectors for one jet -------------------------------
+#----------------------------------------------------------------------------------
+
+def boostedRotations(candArray):
+   phiPrime = []
+   thetaPrime = []
+
+   # define the rotation angles for first two rotations
+   rotPhi = candArray[0].Phi()
+   rotTheta = candArray[0].Theta()
+   subPsi = 0
+
+   # Perform the first two rotations
+   subleadE = -1
+   leadE = candArray[0].E()
+   leadLV = candArray[0]
+   for icand in candArray :
+
+      # Waring for incorrect energy sorting
+      if icand.E() > leadE : print "WARNING: Energy sorting was done incorrectly!"
+
+      icand.RotateZ(-rotPhi)
+      #set small py values to 0
+      if abs(icand.Py() ) < 0.01 : icand.SetPy(0) 
+
+      icand.RotateY(numpy.pi/2 - rotTheta)
+
+      # make sure leading candidate vector has been rotated
+      if icand.E() == leadE : leadLV = icand
+      #set small px values to 0
+      if abs(icand.Pz() ) < 0.01 : icand.SetPz(0)
+
+      # Find subleading candidate
+      if icand.E() > subleadE and icand.E() < leadE :
+         if abs( (icand.Phi() - leadLV.Phi() ) ) > 1.0 :
+            subleadE = icand.E()
+            # store its y z projection angle to Z axis (psi) for a third rotation
+            # arctan2 is very important
+            subPsi = numpy.arctan2(icand.Py(), icand.Pz() )
+
+   # Perform the third rotation
+   for icand in candArray :
+
+      # warning for subleading identification
+      if icand.E() > subleadE and icand.E() < leadE : 
+         if abs( (icand.Phi() - leadLV.Phi() ) ) > 1.0 : print "WARNING: Subleading candidate was improperly identified!"  
+
+      # rotatate about x with psi to get to x-y plane      
+      icand.RotateX(subPsi - numpy.pi/2)
+
+      #set small py values to 0
+      if abs(icand.Pz() ) < 0.01 : icand.SetPz(0)
 
       # store image info
       phiPrime.append(icand.Phi() )
@@ -334,11 +399,10 @@ def prepareBoostedImages(candLV, jetArray, nbins, boostAxis ):
            phiPrime,thetaPrime = boostedRotationsRelBoostAxis(icandLV, jetLV)
 
         # make the weight list into a numpy array
-        #leadingE = weightList[0]
-        #totE = sum(weightList)
-        #normWeight = [weight / totE for weight in weightList] #normalize energy to that of the leading
-        #weights = numpy.array(normWeight )
-        weights = numpy.array(weightList ) #normWeight )
+        totE = sum(weightList)
+        normWeight = [weight / totE for weight in weightList] #normalize energy to that of the leading
+        weights = numpy.array(normWeight )
+        #weights = numpy.array(weightList ) #normWeight )
 
         # make a 2D numpy hist for the image
         hist, xedges, yedges = numpy.histogram2d(phiPrime, thetaPrime, weights=weights, bins=(xbins,ybins))

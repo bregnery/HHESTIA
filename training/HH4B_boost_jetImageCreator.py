@@ -43,19 +43,15 @@ savePNG = True
 #==================================================================================
 
 # access the TFiles
-fileJJ = root.TFile("preprocess_HHESTIA_QCD.root", "READ")
-fileHH4W = root.TFile("preprocess_HHESTIA_HH.root", "READ")
-fileHH4B = root.TFile("preprocess_HHESTIA_HH_4B.root", "READ")
+fileHH4B = root.TFile("preprocess_HHESTIA_HH_4B_all.root", "READ")
 
 # access the trees
-treeJJ = fileJJ.Get("run/jetTree")
-treeHH4W = fileHH4W.Get("run/jetTree")
 treeHH4B = fileHH4B.Get("run/jetTree")
 
 print "Accessed the trees"
 
 # get input variable names from branches
-vars = img.getBoostCandBranchNames(treeJJ)
+vars = img.getBoostCandBranchNames(treeHH4B)
 treeVars = vars
 print "Variables for jet image creation: ", vars
 
@@ -65,16 +61,11 @@ sel = "jetAK8_pt > 500 && jetAK8_mass > 50"
 #sel = "tau32 < 9999. && et > 500. && et < 2500. && bDisc1 > -0.05 && SDmass < 400"
 
 # make arrays from the trees
-arrayJJ = tree2array(treeJJ, treeVars, sel)
-arrayJJ = tools.appendTreeArray(arrayJJ)
-imgArrayJJ = img.makeBoostCandFourVector(arrayJJ)
-
-arrayHH4W = tree2array(treeHH4W, treeVars, sel)
-arrayHH4W = tools.appendTreeArray(arrayHH4W)
-imgArrayHH4W = img.makeBoostCandFourVector(arrayHH4W)
-
 arrayHH4B = tree2array(treeHH4B, treeVars, sel)
 arrayHH4B = tools.appendTreeArray(arrayHH4B)
+
+print "Number of Jets that will be imaged: ", len(arrayHH4B)
+
 imgArrayHH4B = img.makeBoostCandFourVector(arrayHH4B)
 
 print "Made candidate 4 vector arrays from the datasets"
@@ -84,21 +75,15 @@ print "Made candidate 4 vector arrays from the datasets"
 #==================================================================================
 
 jetImagesDF = {}
-print "Creating boosted Jet Images for QCD"
-jetImagesDF['QCD'] = img.prepareBoostedImages(imgArrayJJ, arrayJJ, 30, boostAxis)
 print "Creating boosted Jet Images for HH->bbbb"
 jetImagesDF['HH4B'] = img.prepareBoostedImages(imgArrayHH4B, arrayHH4B, 30, boostAxis)
-print "Creating boosted Jet Images for HH->WWWW"
-jetImagesDF['HH4W'] = img.prepareBoostedImages(imgArrayHH4W, arrayHH4W, 30, boostAxis)
 
 print "Made jet image data frames"
 
-h5f = h5py.File("images/phiCosThetaBoostedJetImages.h5","w")
-h5f.create_dataset('QCD', data=jetImagesDF['QCD'], compression='lzf')
+h5f = h5py.File("images/HH4BphiCosThetaBoostedJetImages.h5","w")
 h5f.create_dataset('HH4B', data=jetImagesDF['HH4B'], compression='lzf')
-h5f.create_dataset('HH4W', data=jetImagesDF['HH4W'], compression='lzf')
 
-print "Saved Boosted Jet Images"
+print "Saved HH4B Boosted Jet Images"
 
 #==================================================================================
 # Plot Jet Images /////////////////////////////////////////////////////////////////
@@ -107,16 +92,10 @@ print "Saved Boosted Jet Images"
 # plot with python
 if plotJetImages == True:
    print "Plotting Average Boosted jet images"
-   img.plotAverageBoostedJetImage(jetImagesDF['QCD'], 'boost_QCD', savePNG, savePDF)
    img.plotAverageBoostedJetImage(jetImagesDF['HH4B'], 'boost_HH4B', savePNG, savePDF)
-   img.plotAverageBoostedJetImage(jetImagesDF['HH4W'], 'boost_HH4W', savePNG, savePDF)
 
-   img.plotThreeBoostedJetImages(jetImagesDF['QCD'], 'boost_QCD', savePNG, savePDF)
    img.plotThreeBoostedJetImages(jetImagesDF['HH4B'], 'boost_HH4B', savePNG, savePDF)
-   img.plotThreeBoostedJetImages(jetImagesDF['HH4W'], 'boost_HH4W', savePNG, savePDF)
 
-   #img.plotMolleweideBoostedJetImage(jetImagesDF['QCD'], 'boost_QCD', savePNG, savePDF)
    #img.plotMolleweideBoostedJetImage(jetImagesDF['HH4B'], 'boost_HH4B', savePNG, savePDF)
-   #img.plotMolleweideBoostedJetImage(jetImagesDF['HH4W'], 'boost_HH4W', savePNG, savePDF)
 print "Program was a great success!!!"
 

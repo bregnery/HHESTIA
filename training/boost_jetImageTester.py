@@ -34,7 +34,7 @@ root.gROOT.SetBatch(True)
 
 # set options 
 plotJetImages = True
-boostAxis = True
+boostAxis = False
 savePDF = False
 savePNG = True 
 
@@ -74,7 +74,7 @@ print "Made candidate 4 vector arrays from the datasets"
 
 jetImagesDF = {}
 print "Creating boosted Jet Images for HH->bbbb"
-jetImagesDF['HH4B'] = img.prepareBoostedImages(imgArrayHH4B, arrayHH4B, boostAxis)
+jetImagesDF['HH4B'] = img.prepareBoostedImages(imgArrayHH4B, arrayHH4B, 30, boostAxis)
 
 print "Made jet image data frames"
 

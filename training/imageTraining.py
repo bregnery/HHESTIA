@@ -49,7 +49,7 @@ savePNG = True
 #==================================================================================
 
 # Load images from h5 file
-h5f = h5py.File("data/phiCosThetaBoostedJetImages.h5","r")
+h5f = h5py.File("images/phiCosThetaBoostedJetImages.h5","r")
 
 print "Accessed Jet Images"
 
@@ -100,18 +100,19 @@ testTruth = to_categorical(testTruth, num_classes=3)
 # Define the Neural Network Structure
 print "NN input shape: ", trainData.shape[1], trainData.shape[2], trainData.shape[3]
 model_BESTNN = Sequential()
-model_BESTNN.add( Conv2D(12, (3,3), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01), input_shape=(trainData.shape[1], trainData.shape[2], trainData.shape[3]) ))
+model_BESTNN.add( Conv2D(12, (11,11), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01), input_shape=(trainData.shape[1], trainData.shape[2], trainData.shape[3]) ))
 model_BESTNN.add( BatchNormalization(momentum = 0.6) )
 model_BESTNN.add( MaxPool2D(pool_size=(2,2) ) )
 model_BESTNN.add( Conv2D(8, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
 model_BESTNN.add( BatchNormalization(momentum = 0.6) )
-model_BESTNN.add( MaxPool2D(pool_size=(2,2) ) )
+model_BESTNN.add( MaxPool2D(pool_size=(3,3) ) )
 model_BESTNN.add( Conv2D(8, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
 model_BESTNN.add( BatchNormalization(momentum = 0.6) )
-model_BESTNN.add( MaxPool2D(pool_size=(2,2) ) )
+model_BESTNN.add( MaxPool2D(pool_size=(3,3) ) )
 model_BESTNN.add( Flatten() )
-model_BESTNN.add( Dense(72, kernel_initializer="glorot_normal", activation="relu" ))
 model_BESTNN.add( Dropout(0.20) )
+model_BESTNN.add( Dense(72, kernel_initializer="glorot_normal", activation="relu" ))
+model_BESTNN.add( Dropout(0.10) )
 model_BESTNN.add( Dense(3, kernel_initializer="glorot_normal", activation="softmax"))
 
 # compile the model
@@ -131,7 +132,7 @@ model_checkpoint = ModelCheckpoint('dense_model.h5', monitor='val_loss',
                                    period=1)
 
 # train the neural network
-history = model_BESTNN.fit(trainData[:], trainTruth[:], batch_size=100, epochs=100, callbacks=[early_stopping, model_checkpoint], validation_split = 0.1)
+history = model_BESTNN.fit(trainData[:], trainTruth[:], batch_size=32, epochs=100, callbacks=[early_stopping, model_checkpoint], validation_split = 0.1)
 
 print "Trained the neural network!"
 
