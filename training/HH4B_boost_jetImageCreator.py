@@ -26,8 +26,8 @@ from os import environ
 environ["KERAS_BACKEND"] = "tensorflow" #must set backend before importing keras
 
 # user modules
-import tools.functions as tools
-import tools.imageOperations as img
+import functions as tools
+import imageOperations as img
 
 # enter batch mode in root (so python can access displays)
 root.gROOT.SetBatch(True)
