@@ -16,6 +16,8 @@ echo "CMSSW: "$CMSSW_BASE
 # Copy over input files
 cp ../../HH4B_boost_jetImageCreator.py .
 cp ../../preprocess_HHESTIA_HH_4B_all.root .
+cp ../../imageOperations.py .
+cp ../../functions.py .
 
 # Execute program
 python HH4B_boost_jetImageCreator.py 
