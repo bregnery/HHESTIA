@@ -45,15 +45,15 @@ savePNG = True
 #==================================================================================
 
 # access the TFiles
-fileHH4B = root.TFile("preprocess_HHESTIA_HH_4B_all.root", "READ")
+fileHH4W = root.TFile("preprocess_HHESTIA_HH.root", "READ")
 
 # access the trees
-treeHH4B = fileHH4B.Get("run/jetTree")
+treeHH4W = fileHH4W.Get("run/jetTree")
 
 print "Accessed the trees"
 
 # get input variable names from branches
-vars = img.getBoostCandBranchNames(treeHH4B)
+vars = img.getBoostCandBranchNames(treeHH4W)
 treeVars = vars
 print "Variables for jet image creation: ", vars
 
@@ -63,13 +63,13 @@ sel = "jetAK8_pt > 500 && jetAK8_mass > 50"
 #sel = "tau32 < 9999. && et > 500. && et < 2500. && bDisc1 > -0.05 && SDmass < 400"
 
 # make arrays from the trees
-start, stop, step = 0, 167262, 1
-arrayHH4B = tree2array(treeHH4B, treeVars, sel, None, start, stop, step )
-arrayHH4B = tools.appendTreeArray(arrayHH4B)
+#start, stop, step = 0, 200000, 1
+arrayHH4W = tree2array(treeHH4W, treeVars, sel)#, None, start, stop, step )
+arrayHH4W = tools.appendTreeArray(arrayHH4W)
 
-print "Number of Jets that will be imaged: ", len(arrayHH4B)
+print "Number of Jets that will be imaged: ", len(arrayHH4W)
 
-imgArrayHH4B = img.makeBoostCandFourVector(arrayHH4B)
+imgArrayHH4W = img.makeBoostCandFourVector(arrayHH4W)
 
 print "Made candidate 4 vector arrays from the datasets"
 
@@ -79,14 +79,14 @@ print "Made candidate 4 vector arrays from the datasets"
 
 jetImagesDF = {}
 print "Creating boosted Jet Images for HH->bbbb"
-jetImagesDF['HH4B'] = img.prepareBoostedImages(imgArrayHH4B, arrayHH4B, 30, boostAxis)
+jetImagesDF['HH4W'] = img.prepareBoostedImages(imgArrayHH4W, arrayHH4W, 30, boostAxis)
 
 print "Made jet image data frames"
 
-h5f = h5py.File("images/HH4BphiCosThetaBoostedJetImages.h5","w")
-h5f.create_dataset('HH4B', data=jetImagesDF['HH4B'], compression='lzf')
+h5f = h5py.File("images/HH4WphiCosThetaBoostedJetImages.h5","w")
+h5f.create_dataset('HH4W', data=jetImagesDF['HH4W'], compression='lzf')
 
-print "Saved HH4B Boosted Jet Images"
+print "Saved HH4W Boosted Jet Images"
 
 #==================================================================================
 # Plot Jet Images /////////////////////////////////////////////////////////////////
@@ -95,10 +95,10 @@ print "Saved HH4B Boosted Jet Images"
 # plot with python
 if plotJetImages == True:
    print "Plotting Average Boosted jet images"
-   img.plotAverageBoostedJetImage(jetImagesDF['HH4B'], 'boost_HH4B', savePNG, savePDF)
+   img.plotAverageBoostedJetImage(jetImagesDF['HH4W'], 'boost_HH4W', savePNG, savePDF)
 
-   img.plotThreeBoostedJetImages(jetImagesDF['HH4B'], 'boost_HH4B', savePNG, savePDF)
+   img.plotThreeBoostedJetImages(jetImagesDF['HH4W'], 'boost_HH4W', savePNG, savePDF)
 
-   #img.plotMolleweideBoostedJetImage(jetImagesDF['HH4B'], 'boost_HH4B', savePNG, savePDF)
+   #img.plotMolleweideBoostedJetImage(jetImagesDF['HH4W'], 'boost_HH4W', savePNG, savePDF)
 print "Program was a great success!!!"
 

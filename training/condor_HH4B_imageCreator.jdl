@@ -3,7 +3,7 @@ Executable = condor_HH4B_imageCreator_exe.sh
 
 #Should_Transfer_Files = YES
 #When_To_Transer_Output = ON_EXIT
-Transfer_Input_Files = HH4B_boost_jetImageCreator.py, preprocess_HHESTIA_HH_4B_all.root, tools/imageOperations.py, tools/functions.py
+Transfer_Input_Files = HH4B_boost_jetImageCreator.py, preprocess_HHESTIA_HH_4B_all.root, tools/imageOperations.py, tools/functions.py, tools/__init__.py
 
 Output = condor_output/condor_HH4B_imageCreator.out
 Error = condor_output/condor_HH4B_imageCreator.err

@@ -5,7 +5,6 @@
 #==================================================================================
 
 # modules
-import ROOT as root
 import numpy
 import matplotlib
 matplotlib.use('Agg') #prevents opening displays, must use before pyplot

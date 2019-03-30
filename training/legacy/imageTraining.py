@@ -56,23 +56,17 @@ savePNG = True
 #==================================================================================
 
 # Load images from h5 file
-#h5f = h5py.File("images/phiCosThetaBoostedJetImages.h5","r")
+h5f = h5py.File("images/phiCosThetaBoostedJetImages.h5","r")
 
 print "Accessed Jet Images"
 
 # put images in data frames
 jetImagesDF = {}
-QCD = h5py.File("images/QCDphiCosThetaBoostedJetImages.h5","r")
-jetImagesDF['QCD'] = QCD['QCD'][()]
-QCD.close()
-HH4B = h5py.File("images/HH4BphiCosThetaBoostedJetImages.h5","r")
-jetImagesDF['HH4B'] = HH4B['HH4B'][()]
-HH4B.close()
-HH4W = h5py.File("images/HH4WphiCosThetaBoostedJetImages.h5","r")
-jetImagesDF['HH4W'] = HH4W['HH4W'][()]
-HH4W.close()
+jetImagesDF['QCD'] = h5f['QCD'][()]
+jetImagesDF['HH4B'] = h5f['HH4B'][()]
+jetImagesDF['HH4W'] = h5f['HH4W'][()]
 
-#h5f.close()
+h5f.close()
 
 print "Made image dataframes"
 
@@ -82,11 +76,11 @@ print "Made image dataframes"
 
 # Store data and truth
 qcdImages = jetImagesDF['QCD'] 
-print "Number of QCD Jet Images: ", len(qcdImages)
-hh4bImages = jetImagesDF['HH4B']
-print "Number of H->bb Jet Images: ", len(hh4bImages)
-hh4wImages = jetImagesDF['HH4W']
-print "Number of H->WW Jet Images: ", len(hh4wImages)
+print len(qcdImages)
+hh4bImages = numpy.array_split(jetImagesDF['HH4B'], 2)[1]
+print len(hh4bImages)
+hh4wImages = numpy.array_split(jetImagesDF['HH4W'], 4)[1]
+print len(hh4wImages)
 jetImages = numpy.concatenate([qcdImages, hh4bImages, hh4wImages ])
 jetLabels = numpy.concatenate([numpy.zeros(len(qcdImages) ), numpy.ones(len(hh4bImages) ), numpy.full(len(hh4wImages), 2)] )
 
@@ -135,11 +129,11 @@ model_BESTNN.compile(optimizer='adam', loss='categorical_crossentropy', metrics=
 print(model_BESTNN.summary() )
 
 # early stopping
-early_stopping = EarlyStopping(monitor='val_loss', min_delta=0.0001, patience=5, verbose=0, mode='auto')
+early_stopping = EarlyStopping(monitor='val_loss', min_delta=0.0001, patience=6, verbose=0, mode='auto')
 
 # model checkpoint callback
 # this saves the model architecture + parameters into dense_model.h5
-model_checkpoint = ModelCheckpoint('boost_phiCosTheta_image_model.h5', monitor='val_loss', 
+model_checkpoint = ModelCheckpoint('dense_model.h5', monitor='val_loss', 
                                    verbose=0, save_best_only=True, 
                                    save_weights_only=False, mode='auto', 
                                    period=1)
