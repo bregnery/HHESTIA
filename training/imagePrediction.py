@@ -5,7 +5,7 @@
 #==================================================================================
 
 # modules
-import ROOT as root
+#import ROOT as root
 import numpy
 import pandas as pd
 import h5py
@@ -18,7 +18,7 @@ import copy
 import random
 
 # get stuff from modules
-from root_numpy import tree2array
+#from root_numpy import tree2array
 from sklearn import svm, metrics, preprocessing, neural_network, tree
 from sklearn.linear_model import SGDClassifier
 from sklearn.model_selection import train_test_split
@@ -38,7 +38,7 @@ from keras.callbacks import EarlyStopping, ModelCheckpoint
 import tools.functions as tools
 
 # enter batch mode in root (so python can access displays)
-root.gROOT.SetBatch(True)
+#root.gROOT.SetBatch(True)
 
 # set options 
 savePDF = False
@@ -49,17 +49,17 @@ savePNG = True
 #==================================================================================
 
 # Load images from h5 file
-h5f = h5py.File("data/phiCosThetaBoostedJetImages.h5","r")
-
-print "Accessed Jet Images"
-
 # put images in data frames
 jetImagesDF = {}
-jetImagesDF['QCD'] = h5f['QCD'][()]
-jetImagesDF['HH4B'] = h5f['HH4B'][()]
-jetImagesDF['HH4W'] = h5f['HH4W'][()]
-
-h5f.close()
+QCD = h5py.File("images/QCDphiCosThetaBoostedJetImages.h5","r")
+jetImagesDF['QCD'] = QCD['QCD'][()]
+QCD.close()
+HH4B = h5py.File("images/HH4BphiCosThetaBoostedJetImages.h5","r")
+jetImagesDF['HH4B'] = HH4B['HH4B'][()]
+HH4B.close()
+HH4W = h5py.File("images/HH4WphiCosThetaBoostedJetImages.h5","r")
+jetImagesDF['HH4W'] = HH4W['HH4W'][()]
+HH4W.close()
 
 print "Made image dataframes"
 
@@ -70,9 +70,9 @@ print "Made image dataframes"
 # Store data and truth
 qcdImages = jetImagesDF['QCD'] 
 print len(qcdImages)
-hh4bImages = numpy.array_split(jetImagesDF['HH4B'], 2)[1]
+hh4bImages = jetImagesDF['HH4B']
 print len(hh4bImages)
-hh4wImages = numpy.array_split(jetImagesDF['HH4W'], 4)[1]
+hh4wImages = jetImagesDF['HH4W']
 print len(hh4wImages)
 jetImages = numpy.concatenate([qcdImages, hh4bImages, hh4wImages ])
 jetLabels = numpy.concatenate([numpy.zeros(len(qcdImages) ), numpy.ones(len(hh4bImages) ), numpy.full(len(hh4wImages), 2)] )
@@ -100,22 +100,28 @@ testTruth = to_categorical(testTruth, num_classes=3)
 # Define the Neural Network Structure
 print "NN input shape: ", trainData.shape[1], trainData.shape[2], trainData.shape[3]
 model_BESTNN = Sequential()
-model_BESTNN.add( Conv2D(12, (3,3), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01), input_shape=(trainData.shape[1], trainData.shape[2], trainData.shape[3]) ))
+model_BESTNN.add( Conv2D(32, (11,11), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01), input_shape=(trainData.shape[1], trainData.shape[2], trainData.shape[3]) ))
+#model_BESTNN.add( SeparableConv2D(64, (11,11), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01), input_shape=(trainData.shape[1], trainData.shape[2], trainData.shape[3]) ))
 model_BESTNN.add( BatchNormalization(momentum = 0.6) )
 model_BESTNN.add( MaxPool2D(pool_size=(2,2) ) )
-model_BESTNN.add( Conv2D(8, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
+model_BESTNN.add( Conv2D(32, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01), input_shape=(trainData.shape[1], trainData.shape[2], trainData.shape[3]) ))
+#model_BESTNN.add( SeparableConv2D(128, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
 model_BESTNN.add( BatchNormalization(momentum = 0.6) )
 model_BESTNN.add( MaxPool2D(pool_size=(2,2) ) )
-model_BESTNN.add( Conv2D(8, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
+model_BESTNN.add( Conv2D(32, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01), input_shape=(trainData.shape[1], trainData.shape[2], trainData.shape[3]) ))
+#model_BESTNN.add( SeparableConv2D(128, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
 model_BESTNN.add( BatchNormalization(momentum = 0.6) )
 model_BESTNN.add( MaxPool2D(pool_size=(2,2) ) )
 model_BESTNN.add( Flatten() )
-model_BESTNN.add( Dense(72, kernel_initializer="glorot_normal", activation="relu" ))
 model_BESTNN.add( Dropout(0.20) )
+model_BESTNN.add( Dense(144, kernel_initializer="glorot_normal", activation="relu" ))
+model_BESTNN.add( Dense(72, kernel_initializer="glorot_normal", activation="relu" ))
+model_BESTNN.add( Dense(24, kernel_initializer="glorot_normal", activation="relu" ))
+model_BESTNN.add( Dropout(0.10) )
 model_BESTNN.add( Dense(3, kernel_initializer="glorot_normal", activation="softmax"))
 
 # Load Weights
-model_BESTNN.load_weights("dense_model.h5")
+model_BESTNN.load_weights("boost_phiCosTheta_image_model.h5")
 
 # compile the model
 model_BESTNN.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
@@ -142,7 +148,7 @@ layer_names = []
 for layer in model_BESTNN.layers[:9]:
     layer_names.append(layer.name) # Names of the layers, so you can have them as part of your plot
     
-images_per_row = 6
+images_per_row = 8
 for layer_name, layer_activation in zip(layer_names, activations): # Displays the feature maps
     n_features = layer_activation.shape[-1] # Number of features in the feature map
     size = layer_activation.shape[1] #The feature map has shape (1, size, size, n_features).

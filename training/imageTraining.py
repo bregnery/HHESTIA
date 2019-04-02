@@ -27,7 +27,7 @@ from os import environ
 environ["KERAS_BACKEND"] = "tensorflow" #must set backend before importing keras
 from keras.models import Sequential, Model
 from keras.optimizers import SGD
-from keras.layers import Input, Activation, Dense, Conv2D, MaxPool2D, BatchNormalization, Dropout, Flatten
+from keras.layers import Input, Activation, Dense, SeparableConv2D, Conv2D, MaxPool2D, BatchNormalization, Dropout, Flatten
 from keras.regularizers import l1,l2
 from keras.utils import np_utils, to_categorical, plot_model
 from keras.callbacks import EarlyStopping, ModelCheckpoint
@@ -36,7 +36,7 @@ from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras import backend as k
 config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
-config.gpu_options.per_process_gpu_memory_fraction = 0.5
+config.gpu_options.per_process_gpu_memory_fraction = 0.6
 k.tensorflow_backend.set_session(tf.Session(config=config))
 
 # user modules
@@ -112,19 +112,36 @@ testTruth = to_categorical(testTruth, num_classes=3)
 
 # Define the Neural Network Structure
 print "NN input shape: ", trainData.shape[1], trainData.shape[2], trainData.shape[3]
+#model_BESTNN = Sequential()
+#model_BESTNN.add( Conv2D(12, (11,11), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01), input_shape=(trainData.shape[1], trainData.shape[2], trainData.shape[3]) ))
+#model_BESTNN.add( BatchNormalization(momentum = 0.6) )
+#model_BESTNN.add( MaxPool2D(pool_size=(2,2) ) )
+#model_BESTNN.add( Conv2D(8, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
+#model_BESTNN.add( BatchNormalization(momentum = 0.6) )
+#model_BESTNN.add( MaxPool2D(pool_size=(2,2) ) )
+#model_BESTNN.add( Conv2D(8, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
+#model_BESTNN.add( BatchNormalization(momentum = 0.6) )
+#model_BESTNN.add( MaxPool2D(pool_size=(2,2) ) )
+#model_BESTNN.add( Flatten() )
+
 model_BESTNN = Sequential()
-model_BESTNN.add( Conv2D(12, (11,11), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01), input_shape=(trainData.shape[1], trainData.shape[2], trainData.shape[3]) ))
+model_BESTNN.add( Conv2D(32, (11,11), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01), input_shape=(trainData.shape[1], trainData.shape[2], trainData.shape[3]) ))
+#model_BESTNN.add( SeparableConv2D(64, (11,11), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01), input_shape=(trainData.shape[1], trainData.shape[2], trainData.shape[3]) ))
 model_BESTNN.add( BatchNormalization(momentum = 0.6) )
 model_BESTNN.add( MaxPool2D(pool_size=(2,2) ) )
-model_BESTNN.add( Conv2D(8, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
+model_BESTNN.add( Conv2D(32, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01), input_shape=(trainData.shape[1], trainData.shape[2], trainData.shape[3]) ))
+#model_BESTNN.add( SeparableConv2D(128, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
 model_BESTNN.add( BatchNormalization(momentum = 0.6) )
-model_BESTNN.add( MaxPool2D(pool_size=(3,3) ) )
-model_BESTNN.add( Conv2D(8, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
+model_BESTNN.add( MaxPool2D(pool_size=(2,2) ) )
+model_BESTNN.add( Conv2D(32, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01), input_shape=(trainData.shape[1], trainData.shape[2], trainData.shape[3]) ))
+#model_BESTNN.add( SeparableConv2D(128, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
 model_BESTNN.add( BatchNormalization(momentum = 0.6) )
-model_BESTNN.add( MaxPool2D(pool_size=(3,3) ) )
+model_BESTNN.add( MaxPool2D(pool_size=(2,2) ) )
 model_BESTNN.add( Flatten() )
 model_BESTNN.add( Dropout(0.20) )
+model_BESTNN.add( Dense(144, kernel_initializer="glorot_normal", activation="relu" ))
 model_BESTNN.add( Dense(72, kernel_initializer="glorot_normal", activation="relu" ))
+model_BESTNN.add( Dense(24, kernel_initializer="glorot_normal", activation="relu" ))
 model_BESTNN.add( Dropout(0.10) )
 model_BESTNN.add( Dense(3, kernel_initializer="glorot_normal", activation="softmax"))
 
@@ -135,7 +152,7 @@ model_BESTNN.compile(optimizer='adam', loss='categorical_crossentropy', metrics=
 print(model_BESTNN.summary() )
 
 # early stopping
-early_stopping = EarlyStopping(monitor='val_loss', min_delta=0.0001, patience=5, verbose=0, mode='auto')
+early_stopping = EarlyStopping(monitor='val_loss', min_delta=0.0001, patience=10, verbose=0, mode='auto')
 
 # model checkpoint callback
 # this saves the model architecture + parameters into dense_model.h5

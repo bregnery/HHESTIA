@@ -400,7 +400,7 @@ def prepareBoostedImages(candLV, jetArray, nbins, boostAxis ):
 
         # make the weight list into a numpy array
         totE = sum(weightList)
-        normWeight = [weight / totE for weight in weightList] #normalize energy to that of the leading
+        normWeight = [(weight / totE)*255 for weight in weightList] #normalize energy to that of the leading, multiply to be in pixel range (0 to 255)
         weights = numpy.array(normWeight )
         #weights = numpy.array(weightList ) #normWeight )
 
