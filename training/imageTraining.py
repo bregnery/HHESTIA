@@ -27,7 +27,8 @@ from os import environ
 environ["KERAS_BACKEND"] = "tensorflow" #must set backend before importing keras
 from keras.models import Sequential, Model
 from keras.optimizers import SGD
-from keras.layers import Input, Activation, Dense, SeparableConv2D, Conv2D, MaxPool2D, BatchNormalization, Dropout, Flatten
+from keras.layers import Input, Activation, Dense, SeparableConv2D, Conv2D, MaxPool2D, BatchNormalization, Dropout, Flatten, MaxoutDense
+from keras.layers import GRU, LSTM, ConvLSTM2D, Reshape
 from keras.regularizers import l1,l2
 from keras.utils import np_utils, to_categorical, plot_model
 from keras.callbacks import EarlyStopping, ModelCheckpoint
@@ -62,13 +63,13 @@ print "Accessed Jet Images"
 
 # put images in data frames
 jetImagesDF = {}
-QCD = h5py.File("images/QCDphiCosThetaBoostedJetImages.h5","r")
+QCD = h5py.File("images/QCDphiCosThetaBoostedJetImagesX10.h5","r")
 jetImagesDF['QCD'] = QCD['QCD'][()]
 QCD.close()
-HH4B = h5py.File("images/HH4BphiCosThetaBoostedJetImages.h5","r")
+HH4B = h5py.File("images/HH4BphiCosThetaBoostedJetImagesX10.h5","r")
 jetImagesDF['HH4B'] = HH4B['HH4B'][()]
 HH4B.close()
-HH4W = h5py.File("images/HH4WphiCosThetaBoostedJetImages.h5","r")
+HH4W = h5py.File("images/HH4WphiCosThetaBoostedJetImagesX10.h5","r")
 jetImagesDF['HH4W'] = HH4W['HH4W'][()]
 HH4W.close()
 
@@ -93,7 +94,12 @@ jetLabels = numpy.concatenate([numpy.zeros(len(qcdImages) ), numpy.ones(len(hh4b
 print "Stored data and truth information"
 
 # split the training and testing data
-trainData, testData, trainTruth, testTruth = train_test_split(jetImages, jetLabels, test_size=0.1, random_state=7)
+trainData, testData, trainTruth, testTruth = train_test_split(jetImages, jetLabels, test_size=0.1)
+#data_tuple = list(zip(trainData,trainTruth))
+#random.shuffle(data_tuple)
+#trainData, trainTruth = zip(*data_tuple)
+#trainData=numpy.array(trainData)
+#trainTruth=numpy.array(trainTruth)
 
 print "Number of QCD jets in training: ", numpy.sum(trainTruth == 0)
 print "Number of H->bb jets in training: ", numpy.sum(trainTruth == 1)
@@ -125,23 +131,35 @@ print "NN input shape: ", trainData.shape[1], trainData.shape[2], trainData.shap
 #model_BESTNN.add( Flatten() )
 
 model_BESTNN = Sequential()
-model_BESTNN.add( Conv2D(32, (11,11), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01), input_shape=(trainData.shape[1], trainData.shape[2], trainData.shape[3]) ))
-#model_BESTNN.add( SeparableConv2D(64, (11,11), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01), input_shape=(trainData.shape[1], trainData.shape[2], trainData.shape[3]) ))
+model_BESTNN.add( SeparableConv2D(32, (11,11), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01), input_shape=(trainData.shape[1], trainData.shape[2], trainData.shape[3]) ))
+model_BESTNN.add( SeparableConv2D(32, (7,7), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
+model_BESTNN.add( SeparableConv2D(32, (5,5), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
 model_BESTNN.add( BatchNormalization(momentum = 0.6) )
 model_BESTNN.add( MaxPool2D(pool_size=(2,2) ) )
-model_BESTNN.add( Conv2D(32, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01), input_shape=(trainData.shape[1], trainData.shape[2], trainData.shape[3]) ))
+#model_BESTNN.add( Dropout(0.10) )
+model_BESTNN.add( SeparableConv2D(32, (7,7), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
+model_BESTNN.add( SeparableConv2D(32, (5,5), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
+model_BESTNN.add( SeparableConv2D(32, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
 #model_BESTNN.add( SeparableConv2D(128, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
 model_BESTNN.add( BatchNormalization(momentum = 0.6) )
 model_BESTNN.add( MaxPool2D(pool_size=(2,2) ) )
-model_BESTNN.add( Conv2D(32, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01), input_shape=(trainData.shape[1], trainData.shape[2], trainData.shape[3]) ))
+#model_BESTNN.add( Dropout(0.10) )
+model_BESTNN.add( SeparableConv2D(32, (5,5), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
+model_BESTNN.add( SeparableConv2D(32, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
 #model_BESTNN.add( SeparableConv2D(128, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
 model_BESTNN.add( BatchNormalization(momentum = 0.6) )
 model_BESTNN.add( MaxPool2D(pool_size=(2,2) ) )
 model_BESTNN.add( Flatten() )
 model_BESTNN.add( Dropout(0.20) )
+#model_BESTNN.add( Reshape((1,288), input_shape=(None,288) ) )
+#model_BESTNN.add( GRU(72, dropout=0.1, recurrent_dropout=0.5, return_sequences=True) )
+#model_BESTNN.add( GRU(144, dropout=0.1, recurrent_dropout=0.5) )
+#model_BESTNN.add( MaxoutDense(144) )
+#model_BESTNN.add( LSTM(288, return_sequences=True, input_shape=(288,))) 
 model_BESTNN.add( Dense(144, kernel_initializer="glorot_normal", activation="relu" ))
 model_BESTNN.add( Dense(72, kernel_initializer="glorot_normal", activation="relu" ))
 model_BESTNN.add( Dense(24, kernel_initializer="glorot_normal", activation="relu" ))
+#model_BESTNN.add( Dense(24, kernel_initializer="glorot_normal", activation="relu" ))
 model_BESTNN.add( Dropout(0.10) )
 model_BESTNN.add( Dense(3, kernel_initializer="glorot_normal", activation="softmax"))
 
@@ -152,7 +170,7 @@ model_BESTNN.compile(optimizer='adam', loss='categorical_crossentropy', metrics=
 print(model_BESTNN.summary() )
 
 # early stopping
-early_stopping = EarlyStopping(monitor='val_loss', min_delta=0.0001, patience=10, verbose=0, mode='auto')
+early_stopping = EarlyStopping(monitor='val_loss', min_delta=0.0001, patience=20, verbose=0, mode='auto')
 
 # model checkpoint callback
 # this saves the model architecture + parameters into dense_model.h5
@@ -162,7 +180,7 @@ model_checkpoint = ModelCheckpoint('boost_phiCosTheta_image_model.h5', monitor='
                                    period=1)
 
 # train the neural network
-history = model_BESTNN.fit(trainData[:], trainTruth[:], batch_size=32, epochs=100, callbacks=[early_stopping, model_checkpoint], validation_split = 0.1)
+history = model_BESTNN.fit(trainData[:], trainTruth[:], batch_size=1000, epochs=200, callbacks=[early_stopping, model_checkpoint], validation_split = 0.15)
 
 print "Trained the neural network!"
 

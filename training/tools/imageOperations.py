@@ -286,8 +286,36 @@ def boostedRotations(candArray):
       if abs(icand.Pz() ) < 0.01 : icand.SetPz(0)
 
       # store image info
-      phiPrime.append(icand.Phi() )
-      thetaPrime.append( icand.CosTheta() )
+      #phiPrime.append(icand.Phi() )
+      #thetaPrime.append( icand.CosTheta() )
+
+   # Reflect if bottomSum > topSum and/or leftSum > rightSum
+   leftSum, rightSum = 0, 0
+   topSum, bottomSum = 0, 0
+   for icand in candArray :
+     
+      if icand.CosTheta() > 0 :
+         topSum += icand.E()
+      if icand.CosTheta() < 0 :
+         bottomSum += icand.E()
+
+      if icand.Phi() > 0 :
+         rightSum += icand.E()
+      if icand.Phi() < 0 :
+         leftSum += icand.E()
+
+   # store image info
+   for icand in candArray :
+
+      if bottomSum > topSum :
+         thetaPrime.append( -icand.CosTheta() )
+      if topSum > bottomSum :
+         thetaPrime.append( icand.CosTheta() )
+
+      if leftSum > rightSum :
+         phiPrime.append( -icand.Phi() )
+      if leftSum < rightSum :
+         phiPrime.append(icand.Phi() )
 
    return numpy.array(phiPrime), numpy.array(thetaPrime)
 
@@ -400,7 +428,7 @@ def prepareBoostedImages(candLV, jetArray, nbins, boostAxis ):
 
         # make the weight list into a numpy array
         totE = sum(weightList)
-        normWeight = [(weight / totE)*255 for weight in weightList] #normalize energy to that of the leading, multiply to be in pixel range (0 to 255)
+        normWeight = [(weight / totE)*10 for weight in weightList] #normalize energy to that of the leading, multiply to be in pixel range (0 to 255)
         weights = numpy.array(normWeight )
         #weights = numpy.array(weightList ) #normWeight )
 

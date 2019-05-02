@@ -79,11 +79,11 @@ print "Made candidate 4 vector arrays from the datasets"
 
 jetImagesDF = {}
 print "Creating boosted Jet Images for HH->bbbb"
-jetImagesDF['QCD'] = img.prepareBoostedImages(imgArrayQCD, arrayQCD, 30, boostAxis)
+jetImagesDF['QCD'] = img.prepareBoostedImages(imgArrayQCD, arrayQCD, 31, boostAxis)
 
 print "Made jet image data frames"
 
-h5f = h5py.File("images/QCDphiCosThetaBoostedJetImages.h5","w")
+h5f = h5py.File("images/QCDphiCosThetaBoostedJetImagesX10.h5","w")
 h5f.create_dataset('QCD', data=jetImagesDF['QCD'], compression='lzf')
 
 print "Saved QCD Boosted Jet Images"

@@ -43,7 +43,7 @@ savePNG = True
 #==================================================================================
 
 # access the TFiles
-fileHH4B = root.TFile("preprocess_HHESTIA_HH_4B.root", "READ")
+fileHH4B = root.TFile("preprocess_HHESTIA_HH_4B_all.root", "READ")
 
 # access the trees
 treeHH4B = fileHH4B.Get("run/jetTree")

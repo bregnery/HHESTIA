@@ -29,7 +29,7 @@ from os import environ
 environ["KERAS_BACKEND"] = "tensorflow" #must set backend before importing keras
 from keras.models import Sequential, Model
 from keras.optimizers import SGD
-from keras.layers import Input, Activation, Dense, Conv2D, MaxPool2D, BatchNormalization, Dropout, Flatten
+from keras.layers import Input, Activation, Dense, Conv2D, SeparableConv2D, MaxPool2D, BatchNormalization, Dropout, Flatten, MaxoutDense
 from keras.regularizers import l1,l2
 from keras.utils import np_utils, to_categorical, plot_model
 from keras.callbacks import EarlyStopping, ModelCheckpoint
@@ -51,13 +51,13 @@ savePNG = True
 # Load images from h5 file
 # put images in data frames
 jetImagesDF = {}
-QCD = h5py.File("images/QCDphiCosThetaBoostedJetImages.h5","r")
+QCD = h5py.File("images/QCDphiCosThetaBoostedJetImagesX10.h5","r")
 jetImagesDF['QCD'] = QCD['QCD'][()]
 QCD.close()
-HH4B = h5py.File("images/HH4BphiCosThetaBoostedJetImages.h5","r")
+HH4B = h5py.File("images/HH4BphiCosThetaBoostedJetImagesX10.h5","r")
 jetImagesDF['HH4B'] = HH4B['HH4B'][()]
 HH4B.close()
-HH4W = h5py.File("images/HH4WphiCosThetaBoostedJetImages.h5","r")
+HH4W = h5py.File("images/HH4WphiCosThetaBoostedJetImagesX10.h5","r")
 jetImagesDF['HH4W'] = HH4W['HH4W'][()]
 HH4W.close()
 
@@ -100,16 +100,18 @@ testTruth = to_categorical(testTruth, num_classes=3)
 # Define the Neural Network Structure
 print "NN input shape: ", trainData.shape[1], trainData.shape[2], trainData.shape[3]
 model_BESTNN = Sequential()
-model_BESTNN.add( Conv2D(32, (11,11), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01), input_shape=(trainData.shape[1], trainData.shape[2], trainData.shape[3]) ))
-#model_BESTNN.add( SeparableConv2D(64, (11,11), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01), input_shape=(trainData.shape[1], trainData.shape[2], trainData.shape[3]) ))
+model_BESTNN.add( SeparableConv2D(32, (11,11), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01), input_shape=(trainData.shape[1], trainData.shape[2], trainData.shape[3]) ))
+model_BESTNN.add( SeparableConv2D(32, (7,7), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
+model_BESTNN.add( SeparableConv2D(32, (5,5), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
 model_BESTNN.add( BatchNormalization(momentum = 0.6) )
 model_BESTNN.add( MaxPool2D(pool_size=(2,2) ) )
-model_BESTNN.add( Conv2D(32, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01), input_shape=(trainData.shape[1], trainData.shape[2], trainData.shape[3]) ))
-#model_BESTNN.add( SeparableConv2D(128, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
+model_BESTNN.add( SeparableConv2D(32, (7,7), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
+model_BESTNN.add( SeparableConv2D(32, (5,5), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
+model_BESTNN.add( SeparableConv2D(32, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
 model_BESTNN.add( BatchNormalization(momentum = 0.6) )
 model_BESTNN.add( MaxPool2D(pool_size=(2,2) ) )
-model_BESTNN.add( Conv2D(32, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01), input_shape=(trainData.shape[1], trainData.shape[2], trainData.shape[3]) ))
-#model_BESTNN.add( SeparableConv2D(128, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
+model_BESTNN.add( SeparableConv2D(32, (5,5), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
+model_BESTNN.add( SeparableConv2D(32, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
 model_BESTNN.add( BatchNormalization(momentum = 0.6) )
 model_BESTNN.add( MaxPool2D(pool_size=(2,2) ) )
 model_BESTNN.add( Flatten() )
@@ -135,7 +137,10 @@ print "Make predictions with the neural network!"
 #plt.figure()
 #plt.matshow(t
 
-# visualize cnn layers
+#==================================================================================
+# Visualize cnn layers ////////////////////////////////////////////////////////////
+#==================================================================================
+
 layer_outputs = [layer.output for layer in model_BESTNN.layers[:] ]
 activation_model = Model(inputs=model_BESTNN.input, outputs=layer_outputs)
 activations = activation_model.predict(testData)
@@ -145,11 +150,13 @@ print(first_layer_activation.shape)
 #plt.matshow(first_layer_activation[0, :, :, 4], cmap='viridis')
 
 layer_names = []
-for layer in model_BESTNN.layers[:9]:
+for layer in model_BESTNN.layers[:11]:
     layer_names.append(layer.name) # Names of the layers, so you can have them as part of your plot
-    
+
 images_per_row = 8
 for layer_name, layer_activation in zip(layer_names, activations): # Displays the feature maps
+
+    # plot layer activations    
     n_features = layer_activation.shape[-1] # Number of features in the feature map
     size = layer_activation.shape[1] #The feature map has shape (1, size, size, n_features).
     n_cols = n_features // images_per_row # Tiles the activation channels in this matrix
@@ -176,7 +183,27 @@ for layer_name, layer_activation in zip(layer_names, activations): # Displays th
     #plt.tight_layout() #make all the axis labels not get cutoff
     plt.close()
 
-# print model visualization
+    # plot filter patterns
+    margin = 5
+    results = numpy.zeros((4 * size + 3 * margin, 8 * size + 7 * margin, 3) ) # empty image to store results
+    for i in range(4): # rows of the results grid
+        for j in range(8): # columtns of the result grid
+            filter_img = tools.generate_pattern(model_BESTNN, layer_name, i + (j*4), size = size) 
+            
+            # Put the result in the (i,j) square of the results grid
+            horizontal_start = i * size + i * margin
+            horizontal_end = horizontal_start + size
+            vertical_start = j * size + j * margin
+            vertical_end = vertical_start + size
+            results[horizontal_start: horizontal_end,
+                    vertical_start: vertical_end, :] = filter_img
+
+    # Display results grid
+    plt.figure(figsize=(20,20) )
+    plt.imshow(results)
+    plt.savefig("plots/boost_CosTheta_FilterPattern_"+layer_name+".png")
+    plt.close()
+
 
 #==================================================================================
 # Plot Training Results ///////////////////////////////////////////////////////////

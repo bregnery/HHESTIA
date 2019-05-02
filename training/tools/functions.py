@@ -16,6 +16,11 @@ import types
 import tempfile
 import keras.models
 
+# grab some keras stuff
+from os import environ
+environ["KERAS_BACKEND"] = "tensorflow" #must set backend before importing keras
+import keras.backend as K
+
 # functions from modules
 from sklearn import svm, metrics, preprocessing, datasets
 from sklearn.model_selection import train_test_split
@@ -192,6 +197,64 @@ def plotProbabilities(probs):
          plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, ncol=6, mode="expand", borderaxespad=0.)
          plt.savefig("prob_" + probs[iProb][1] + ".pdf")
          plt.close()
+
+#==================================================================================
+# Generate Filter Visualizations //////////////////////////////////////////////////
+#----------------------------------------------------------------------------------
+# This function allows us to see what patterns each convolutional filter is -------
+#    trained to extract -----------------------------------------------------------
+#----------------------------------------------------------------------------------
+
+def generate_pattern(model,layer_name, filter_index, size):
+   
+   # build a loss function that maximizes the activation of the nth filter of the layer
+   layer_output = model.get_layer(layer_name).output
+   loss = K.mean(layer_output[:, :, :, filter_index])
+
+   # Compute the gradient of the input picture using this loss
+   grads = K.gradients(loss, model.input)[0]
+
+   # Normalize the gradient (nice trick)
+   grads /= (K.sqrt(K.mean(K.square(grads) ) ) + 1e-5)
+
+   # Get loss and grads for an input picture
+   iterate = K.function([model.input], [loss, grads] )
+
+   # Start with a grey image with some noise
+   input_img_data = numpy.random.random((1,size, size, 1)) * 20 + 128
+
+   # Run gradient ascent for 40 steps
+   step = 1
+   for i in range(40):
+      loss_value, grads_value = iterate([input_img_data])
+      input_img_data += grads_value * step
+
+   img = input_img_data[0]
+
+   return deprocess_image(img)
+
+#==================================================================================
+# Convert Tensor into an Image ////////////////////////////////////////////////////
+#----------------------------------------------------------------------------------
+# Utility function to convert a tensor into a valid image -------------------------
+#----------------------------------------------------------------------------------
+
+def deprocess_image(x):
+   
+   # Normalize the tensor
+   x -= x.mean()
+   x /= (x.std() + 1e-5)
+   x *= 0.1
+
+   # clip to [0,1]
+   x += 0.5
+   #x = numpy.clip(x, 0, 1)
+
+   # convert to RGB array
+   x *= 25.5
+   x = numpy.clip(x, 0, 255).astype('uint8')
+
+   return x
 
 #==================================================================================
 # Make Keras Picklable  ///////////////////////////////////////////////////////////

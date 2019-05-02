@@ -79,11 +79,11 @@ print "Made candidate 4 vector arrays from the datasets"
 
 jetImagesDF = {}
 print "Creating boosted Jet Images for HH->bbbb"
-jetImagesDF['HH4B'] = img.prepareBoostedImages(imgArrayHH4B, arrayHH4B, 30, boostAxis)
+jetImagesDF['HH4B'] = img.prepareBoostedImages(imgArrayHH4B, arrayHH4B, 31, boostAxis)
 
 print "Made jet image data frames"
 
-h5f = h5py.File("images/HH4BphiCosThetaBoostedJetImages.h5","w")
+h5f = h5py.File("images/HH4BphiCosThetaBoostedJetImagesX10.h5","w")
 h5f.create_dataset('HH4B', data=jetImagesDF['HH4B'], compression='lzf')
 
 print "Saved HH4B Boosted Jet Images"
