@@ -82,11 +82,11 @@ print "Made image dataframes"
 #==================================================================================
 
 # Store data and truth
-qcdImages = jetImagesDF['QCD'] 
+qcdImages = jetImagesDF['QCD_images'] 
 print "Number of QCD Jet Images: ", len(qcdImages)
-hh4bImages = jetImagesDF['HH4B']
+hh4bImages = jetImagesDF['HH4B_images']
 print "Number of H->bb Jet Images: ", len(hh4bImages)
-hh4wImages = jetImagesDF['HH4W']
+hh4wImages = jetImagesDF['HH4W_images']
 print "Number of H->WW Jet Images: ", len(hh4wImages)
 jetImages = numpy.concatenate([qcdImages, hh4bImages, hh4wImages ])
 jetLabels = numpy.concatenate([numpy.zeros(len(qcdImages) ), numpy.ones(len(hh4bImages) ), numpy.full(len(hh4wImages), 2)] )

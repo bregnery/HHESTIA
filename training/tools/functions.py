@@ -97,6 +97,38 @@ def getBranchNames(tree ):
    return treeVars
 
 #==================================================================================
+# Get BEST Branch Names ///////////////////////////////////////////////////////////
+#----------------------------------------------------------------------------------
+# tree is a TTree /////////////////////////////////////////////////////////////////
+#----------------------------------------------------------------------------------
+
+def getBestBranchNames(tree ):
+
+   # empty array to store names
+   treeVars = []
+
+   # loop over branches
+   for branch in tree.GetListOfBranches():
+      name = branch.GetName()
+      if 'nJets' in name:
+         continue
+      if 'SoftDropMass' in name:
+         continue
+      if 'mass' in name:
+         continue
+      if 'gen' in name:
+         continue
+      if 'pt' in name:
+         continue
+      if 'candidate' in name:
+         continue
+      if 'subjet' in name:
+         continue
+      treeVars.append(name)
+
+   return treeVars
+
+#==================================================================================
 # Append Arrays from trees ////////////////////////////////////////////////////////
 #----------------------------------------------------------------------------------
 # array is a numpy array made from a TTree ////////////////////////////////////////

@@ -74,17 +74,44 @@ imgArrayHH4W = img.makeBoostCandFourVector(arrayHH4W)
 print "Made candidate 4 vector arrays from the datasets"
 
 #==================================================================================
+# Store BEST Variables ////////////////////////////////////////////////////////////
+#==================================================================================
+
+# get BEST variable names from branches
+bestVars = tools.getBestBranchNames(treeHH4W)
+print "Boosted Event Shape Variables: ", bestVars
+
+# make arrays from the trees
+start, stop, step = 0, 167262, 1
+bestArrayHH4W = tree2array(treeHH4W, bestVars, sel, None, start, stop, step)
+bestArrayHH4W = tools.appendTreeArray(bestArrayHH4W)
+
+print "Made array with the Boosted Event Shape Variables"
+
+#==================================================================================
 # Make Jet Images /////////////////////////////////////////////////////////////////
 #==================================================================================
 
 jetImagesDF = {}
-print "Creating boosted Jet Images for HH->bbbb"
-jetImagesDF['HH4W'] = img.prepareBoostedImages(imgArrayHH4W, arrayHH4W, 31, boostAxis)
+print "Creating boosted Jet Images for HH->WWWW"
+jetImagesDF['HH4W_images'] = img.prepareBoostedImages(imgArrayHH4W, arrayHH4W, 31, boostAxis)
 
 print "Made jet image data frames"
 
+#==================================================================================
+# Store BEST Variables in DataFrame ///////////////////////////////////////////////
+#==================================================================================
+
+jetImagesDF['HH4W_BES_vars'] = bestArrayHH4W
+print "Stored BES variables"
+
+#==================================================================================
+# Store Data in h5 file ///////////////////////////////////////////////////////////
+#==================================================================================
+
 h5f = h5py.File("images/HH4WphiCosThetaBoostedJetImagesX10.h5","w")
-h5f.create_dataset('HH4W', data=jetImagesDF['HH4W'], compression='lzf')
+h5f.create_dataset('HH4W_images', data=jetImagesDF['HH4W_images'], compression='lzf')
+h5f.create_dataset('HH4W_BES_vars', data=jetImagesDF['HH4W_BES_vars'], compression='lzf')
 
 print "Saved HH4W Boosted Jet Images"
 
@@ -95,9 +122,9 @@ print "Saved HH4W Boosted Jet Images"
 # plot with python
 if plotJetImages == True:
    print "Plotting Average Boosted jet images"
-   img.plotAverageBoostedJetImage(jetImagesDF['HH4W'], 'boost_HH4W', savePNG, savePDF)
+   img.plotAverageBoostedJetImage(jetImagesDF['HH4W_images'], 'boost_HH4W', savePNG, savePDF)
 
-   img.plotThreeBoostedJetImages(jetImagesDF['HH4W'], 'boost_HH4W', savePNG, savePDF)
+   img.plotThreeBoostedJetImages(jetImagesDF['HH4W_images'], 'boost_HH4W', savePNG, savePDF)
 
    #img.plotMolleweideBoostedJetImage(jetImagesDF['HH4W'], 'boost_HH4W', savePNG, savePDF)
 print "Program was a great success!!!"

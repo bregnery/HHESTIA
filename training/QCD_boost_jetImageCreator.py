@@ -74,17 +74,44 @@ imgArrayQCD = img.makeBoostCandFourVector(arrayQCD)
 print "Made candidate 4 vector arrays from the datasets"
 
 #==================================================================================
+# Store BEST Variables ////////////////////////////////////////////////////////////
+#==================================================================================
+
+# get BEST variable names from branches
+bestVars = tools.getBestBranchNames(treeQCD)
+print "Boosted Event Shape Variables: ", bestVars
+
+# make arrays from the trees
+start, stop, step = 0, 167262, 1
+bestArrayQCD = tree2array(treeQCD, bestVars, sel, None, start, stop, step)
+bestArrayQCD = tools.appendTreeArray(bestArrayQCD)
+
+print "Made array with the Boosted Event Shape Variables"
+
+#==================================================================================
 # Make Jet Images /////////////////////////////////////////////////////////////////
 #==================================================================================
 
 jetImagesDF = {}
 print "Creating boosted Jet Images for HH->bbbb"
-jetImagesDF['QCD'] = img.prepareBoostedImages(imgArrayQCD, arrayQCD, 31, boostAxis)
+jetImagesDF['QCD_images'] = img.prepareBoostedImages(imgArrayQCD, arrayQCD, 31, boostAxis)
 
 print "Made jet image data frames"
 
+#==================================================================================
+# Store BEST Variables in DataFrame ///////////////////////////////////////////////
+#==================================================================================
+
+jetImagesDF['QCD_BES_vars'] = bestArrayQCD
+print "Stored BES variables"
+
+#==================================================================================
+# Store Data in h5 file ///////////////////////////////////////////////////////////
+#==================================================================================
+
 h5f = h5py.File("images/QCDphiCosThetaBoostedJetImagesX10.h5","w")
-h5f.create_dataset('QCD', data=jetImagesDF['QCD'], compression='lzf')
+h5f.create_dataset('QCD_images', data=jetImagesDF['QCD_images'], compression='lzf')
+h5f.create_dataset('QCD_BES_vars', data=jetImagesDF['QCD_BES_vars'], compression='lzf')
 
 print "Saved QCD Boosted Jet Images"
 
@@ -95,9 +122,9 @@ print "Saved QCD Boosted Jet Images"
 # plot with python
 if plotJetImages == True:
    print "Plotting Average Boosted jet images"
-   img.plotAverageBoostedJetImage(jetImagesDF['QCD'], 'boost_QCD', savePNG, savePDF)
+   img.plotAverageBoostedJetImage(jetImagesDF['QCD_images'], 'boost_QCD', savePNG, savePDF)
 
-   img.plotThreeBoostedJetImages(jetImagesDF['QCD'], 'boost_QCD', savePNG, savePDF)
+   img.plotThreeBoostedJetImages(jetImagesDF['QCD_images'], 'boost_QCD', savePNG, savePDF)
 
    #img.plotMolleweideBoostedJetImage(jetImagesDF['QCD'], 'boost_QCD', savePNG, savePDF)
 print "Program was a great success!!!"

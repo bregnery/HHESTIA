@@ -1,7 +1,7 @@
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# boost_jetImageCreator.py ////////////////////////////////////////////////////////
+# boost_jetImageTester.py /////////////////////////////////////////////////////////
 #==================================================================================
-# This program makes boosted frame cosTheta phi jet images ////////////////////////
+# Program to test functions that make boosted frame jet images (small scale)  /////
 #==================================================================================
 
 # modules
@@ -26,8 +26,6 @@ from os import environ
 environ["KERAS_BACKEND"] = "tensorflow" #must set backend before importing keras
 
 # user modules
-#import functions as tools
-#import imageOperations as img
 import tools.functions as tools
 import tools.imageOperations as img
 
@@ -52,6 +50,10 @@ treeHH4B = fileHH4B.Get("run/jetTree")
 
 print "Accessed the trees"
 
+#==================================================================================
+# Store Variables for Image Making ////////////////////////////////////////////////
+#==================================================================================
+
 # get input variable names from branches
 vars = img.getBoostCandBranchNames(treeHH4B)
 treeVars = vars
@@ -63,12 +65,9 @@ sel = "jetAK8_pt > 500 && jetAK8_mass > 50"
 #sel = "tau32 < 9999. && et > 500. && et < 2500. && bDisc1 > -0.05 && SDmass < 400"
 
 # make arrays from the trees
-start, stop, step = 0, 167262, 1
-arrayHH4B = tree2array(treeHH4B, treeVars, sel, None, start, stop, step )
+arrayHH4Blong = tree2array(treeHH4B, treeVars, sel)
+arrayHH4B = arrayHH4Blong[:4000]
 arrayHH4B = tools.appendTreeArray(arrayHH4B)
-
-print "Number of Jets that will be imaged: ", len(arrayHH4B)
-
 imgArrayHH4B = img.makeBoostCandFourVector(arrayHH4B)
 
 print "Made candidate 4 vector arrays from the datasets"
@@ -82,8 +81,8 @@ bestVars = tools.getBestBranchNames(treeHH4B)
 print "Boosted Event Shape Variables: ", bestVars
 
 # make arrays from the trees
-start, stop, step = 0, 167262, 1
-bestArrayHH4B = tree2array(treeHH4B, bestVars, sel, None, start, stop, step)
+bestArrayHH4Blong = tree2array(treeHH4B, bestVars, sel)
+bestArrayHH4B = bestArrayHH4Blong[:4000]
 bestArrayHH4B = tools.appendTreeArray(bestArrayHH4B)
 
 print "Made array with the Boosted Event Shape Variables"
@@ -94,7 +93,7 @@ print "Made array with the Boosted Event Shape Variables"
 
 jetImagesDF = {}
 print "Creating boosted Jet Images for HH->bbbb"
-jetImagesDF['HH4B_images'] = img.prepareBoostedImages(imgArrayHH4B, arrayHH4B, 31, boostAxis)
+jetImagesDF['HH4B_images'] = img.prepareBoostedImages(imgArrayHH4B, arrayHH4B, 30, boostAxis)
 
 print "Made jet image data frames"
 
@@ -102,18 +101,15 @@ print "Made jet image data frames"
 # Store BEST Variables in DataFrame ///////////////////////////////////////////////
 #==================================================================================
 
+#bestArrayHH4B = numpy.asarray(bestArrayHH4B)
 jetImagesDF['HH4B_BES_vars'] = bestArrayHH4B
-print "Stored BES variables"
 
-#==================================================================================
-# Store Data in h5 file ///////////////////////////////////////////////////////////
-#==================================================================================
 
-h5f = h5py.File("images/HH4BphiCosThetaBoostedJetImagesX10.h5","w")
+h5f = h5py.File("images/TESTphiCosThetaBoostedJetImagesX10.h5","w")
 h5f.create_dataset('HH4B_images', data=jetImagesDF['HH4B_images'], compression='lzf')
 h5f.create_dataset('HH4B_BES_vars', data=jetImagesDF['HH4B_BES_vars'], compression='lzf')
 
-print "Saved HH4B Boosted Jet Images"
+print "Stored BES variables"
 
 #==================================================================================
 # Plot Jet Images /////////////////////////////////////////////////////////////////
@@ -122,9 +118,9 @@ print "Saved HH4B Boosted Jet Images"
 # plot with python
 if plotJetImages == True:
    print "Plotting Average Boosted jet images"
-   img.plotAverageBoostedJetImage(jetImagesDF['HH4B_images'], 'boost_HH4B', savePNG, savePDF)
+   img.plotAverageBoostedJetImage(jetImagesDF['HH4B_images'], 'boost_HH4B_test', savePNG, savePDF)
 
-   img.plotThreeBoostedJetImages(jetImagesDF['HH4B_images'], 'boost_HH4B', savePNG, savePDF)
+   img.plotThreeBoostedJetImages(jetImagesDF['HH4B_images'], 'boost_HH4B_test', savePNG, savePDF)
 
    #img.plotMolleweideBoostedJetImage(jetImagesDF['HH4B'], 'boost_HH4B', savePNG, savePDF)
 print "Program was a great success!!!"
