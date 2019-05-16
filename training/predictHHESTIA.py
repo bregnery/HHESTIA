@@ -30,6 +30,7 @@ environ["KERAS_BACKEND"] = "tensorflow" #must set backend before importing keras
 from keras.models import Sequential, Model
 from keras.optimizers import SGD
 from keras.layers import Input, Activation, Dense, Conv2D, SeparableConv2D, MaxPool2D, BatchNormalization, Dropout, Flatten, MaxoutDense
+from keras.layers import concatenate
 from keras.regularizers import l1,l2
 from keras.utils import np_utils, to_categorical, plot_model
 from keras.callbacks import EarlyStopping, ModelCheckpoint
@@ -45,77 +46,93 @@ savePDF = False
 savePNG = True 
 
 #==================================================================================
-# Load Jet Images /////////////////////////////////////////////////////////////////
+# Load Test Data //////////////////////////////////////////////////////////////////
 #==================================================================================
 
 # Load images from h5 file
-# put images and labels in data frames
-testFile = h5py.File("images/HHESTIAimageOnlyTestData.h5","r")
+# put images and BES variables in data frames
+testFile = h5py.File("images/HHESTIAtestData.h5","r")
 testImages = testFile['test_images'][()]
+testBESvars = testFile['test_BES_vars'][()]
 testTruth = testFile['test_truth'][()]
 
-print "Accessed HHESTIA test data with Jet Images"
-
-print "Made image dataframes"
+print "Accessed test data with Jet Images and BES variables"
 
 #==================================================================================
 # Load the Neural Network ////////////////////////////////////////////////////////
 #==================================================================================
 
-# Define the Neural Network Structure
-print "NN input shape: ", trainData.shape[1], trainData.shape[2], trainData.shape[3]
-model_BESTNN = Sequential()
-model_BESTNN.add( SeparableConv2D(32, (11,11), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01), input_shape=(trainData.shape[1], trainData.shape[2], trainData.shape[3]) ))
-model_BESTNN.add( SeparableConv2D(32, (7,7), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
-model_BESTNN.add( SeparableConv2D(32, (5,5), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
-model_BESTNN.add( BatchNormalization(momentum = 0.6) )
-model_BESTNN.add( MaxPool2D(pool_size=(2,2) ) )
-model_BESTNN.add( SeparableConv2D(32, (7,7), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
-model_BESTNN.add( SeparableConv2D(32, (5,5), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
-model_BESTNN.add( SeparableConv2D(32, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
-model_BESTNN.add( BatchNormalization(momentum = 0.6) )
-model_BESTNN.add( MaxPool2D(pool_size=(2,2) ) )
-model_BESTNN.add( SeparableConv2D(32, (5,5), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
-model_BESTNN.add( SeparableConv2D(32, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
-model_BESTNN.add( BatchNormalization(momentum = 0.6) )
-model_BESTNN.add( MaxPool2D(pool_size=(2,2) ) )
-model_BESTNN.add( Flatten() )
-model_BESTNN.add( Dropout(0.20) )
-model_BESTNN.add( Dense(144, kernel_initializer="glorot_normal", activation="relu" ))
-model_BESTNN.add( Dense(72, kernel_initializer="glorot_normal", activation="relu" ))
-model_BESTNN.add( Dense(24, kernel_initializer="glorot_normal", activation="relu" ))
-model_BESTNN.add( Dropout(0.10) )
-model_BESTNN.add( Dense(3, kernel_initializer="glorot_normal", activation="softmax"))
+# Define the Neural Network Structure using functional API
+# Create the image portion
+imageInputs = Input( shape=(testImages.shape[1], testImages.shape[2], testImages.shape[3]) )
 
-# Load Weights
-model_BESTNN.load_weights("HHESTIA_imageOnly_model.h5")
+imageLayer = SeparableConv2D(32, (11,11), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) )(imageInputs)
+imageLayer = SeparableConv2D(32, (7,7), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) )(imageLayer)
+imageLayer = SeparableConv2D(32, (5,5), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) )(imageLayer)
+imageLayer = BatchNormalization(momentum = 0.6)(imageLayer)
+imageLayer = MaxPool2D(pool_size=(2,2) )(imageLayer)
+imageLayer = SeparableConv2D(32, (7,7), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) )(imageLayer)
+imageLayer = SeparableConv2D(32, (5,5), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) )(imageLayer)
+imageLayer = SeparableConv2D(32, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) )(imageLayer)
+imageLayer = BatchNormalization(momentum = 0.6)(imageLayer)
+imageLayer = MaxPool2D(pool_size=(2,2) )(imageLayer)
+imageLayer = SeparableConv2D(32, (5,5), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) )(imageLayer)
+imageLayer = SeparableConv2D(32, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) )(imageLayer)
+imageLayer = BatchNormalization(momentum = 0.6)(imageLayer)
+imageLayer = MaxPool2D(pool_size=(2,2) )(imageLayer) 
+imageLayer = Flatten()(imageLayer)
+imageLayer = Dropout(0.20)(imageLayer)
+imageLayer = Dense(144, kernel_initializer="glorot_normal", activation="relu" )(imageLayer)
+imageLayer = Dense(72, kernel_initializer="glorot_normal", activation="relu" )(imageLayer)
+imageLayer = Dense(24, kernel_initializer="glorot_normal", activation="relu" )(imageLayer)
+imageLayer = Dropout(0.10)(imageLayer)
+
+imageModel = Model(inputs = imageInputs, outputs = imageLayer)
+
+# Create the BES variable version
+besInputs = Input( shape=(testBESvars.shape[1], ) )
+besLayer = Dense(40, kernel_initializer="glorot_normal", activation="relu" )(besInputs)
+besLayer = Dense(40, kernel_initializer="glorot_normal", activation="relu" )(besInputs)
+
+besModel = Model(inputs = besInputs, outputs = besLayer)
+
+# Add BES variables to the network
+combined = concatenate([imageModel.output, besModel.output])
+
+combLayer = Dense(40, kernel_initializer="glorot_normal", activation="relu" )(combined)
+combLayer = Dense(40, kernel_initializer="glorot_normal", activation="relu" )(combLayer)
+combLayer = Dropout(0.10)(combLayer)
+outputHHESTIA = Dense(3, kernel_initializer="glorot_normal", activation="softmax")(combLayer)
 
 # compile the model
-model_BESTNN.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+model_HHESTIA = Model(inputs = [imageModel.input, besModel.input], outputs = outputHHESTIA)
+model_HHESTIA.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+
+# Load Weights
+model_HHESTIA.load_weights("boost_phiCosTheta_image_model.h5")
+
+# compile the model
+model_HHESTIA.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
 # print the model summary
-print(model_BESTNN.summary() )
+print(model_HHESTIA.summary() )
 
 print "Make predictions with the neural network!"
-
-# look at images before going through cnn
-#plt.figure()
-#plt.matshow(t
 
 #==================================================================================
 # Visualize cnn layers ////////////////////////////////////////////////////////////
 #==================================================================================
 
-layer_outputs = [layer.output for layer in model_BESTNN.layers[:] ]
-activation_model = Model(inputs=model_BESTNN.input, outputs=layer_outputs)
-activations = activation_model.predict(testData)
+layer_outputs = [layer.output for layer in model_HHESTIA.layers[:] ]
+activation_model = Model(inputs=imageModel.input, outputs=layer_outputs)
+activations = activation_model.predict(testImages)
 first_layer_activation = activations[0]
 print(first_layer_activation.shape)
 #plt.figure()
 #plt.matshow(first_layer_activation[0, :, :, 4], cmap='viridis')
 
 layer_names = []
-for layer in model_BESTNN.layers[:11]:
+for layer in model_HHESTIA.layers[:11]:
     layer_names.append(layer.name) # Names of the layers, so you can have them as part of your plot
 
 images_per_row = 8
@@ -153,7 +170,7 @@ for layer_name, layer_activation in zip(layer_names, activations): # Displays th
     results = numpy.zeros((4 * size + 3 * margin, 8 * size + 7 * margin, 3) ) # empty image to store results
     for i in range(4): # rows of the results grid
         for j in range(8): # columtns of the result grid
-            filter_img = tools.generate_pattern(model_BESTNN, layer_name, i + (j*4), size = size) 
+            filter_img = tools.generate_pattern(model_HHESTIA, layer_name, i + (j*4), size = size) 
             
             # Put the result in the (i,j) square of the results grid
             horizontal_start = i * size + i * margin
@@ -175,7 +192,7 @@ for layer_name, layer_activation in zip(layer_names, activations): # Displays th
 #==================================================================================
 
 # Confusion Matrix
-#cm = metrics.confusion_matrix(numpy.argmax(model_BESTNN.predict(testData[:]), axis=1), numpy.argmax(testTruth[:], axis=1) )
+#cm = metrics.confusion_matrix(numpy.argmax(model_HHESTIA.predict(testData[:]), axis=1), numpy.argmax(testTruth[:], axis=1) )
 #plt.figure()
 #targetNames = ['QCD', 'H->bb', 'H->WW']
 #tools.plot_confusion_matrix(cm.T, targetNames, normalize=True)
@@ -186,10 +203,10 @@ for layer_name, layer_activation in zip(layer_names, activations): # Displays th
 #plt.close()
 
 # score
-#print "Training Score: ", model_BESTNN.evaluate(testData[:], testTruth[:], batch_size=100)
+#print "Training Score: ", model_HHESTIA.evaluate(testData[:], testTruth[:], batch_size=100)
 
 # make file with probability results
-#joblib.dump(model_BESTNN, "HHESTIA_keras_CosTheta.pkl")
+#joblib.dump(model_HHESTIA, "HHESTIA_keras_CosTheta.pkl")
 #joblib.dump(scaler, "HHESTIA_scaler.pkl")
 
 print "Program was a great success!!!"

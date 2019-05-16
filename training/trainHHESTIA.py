@@ -157,7 +157,7 @@ imageModel = Model(inputs = imageInputs, outputs = imageLayer)
 # Create the BES variable version
 besInputs = Input( shape=(trainBESvars.shape[1], ) )
 besLayer = Dense(40, kernel_initializer="glorot_normal", activation="relu" )(besInputs)
-besLayer = Dense(40, kernel_initializer="glorot_normal", activation="relu" )(besInputs)
+besLayer = Dense(40, kernel_initializer="glorot_normal", activation="relu" )(besLayer)
 
 besModel = Model(inputs = besInputs, outputs = besLayer)
 
@@ -181,7 +181,7 @@ early_stopping = EarlyStopping(monitor='val_loss', min_delta=0.0001, patience=20
 
 # model checkpoint callback
 # this saves the model architecture + parameters into dense_model.h5
-model_checkpoint = ModelCheckpoint('boost_phiCosTheta_image_model.h5', monitor='val_loss', 
+model_checkpoint = ModelCheckpoint('HHESTIA_model.h5', monitor='val_loss', 
                                    verbose=0, save_best_only=True, 
                                    save_weights_only=False, mode='auto', 
                                    period=1)
@@ -193,6 +193,15 @@ print "Trained the neural network!"
 
 # print model visualization
 #plot_model(model_HHESTIA, to_file='plots/boost_CosTheta_NN_Vis.png')
+
+# save the test data
+h5f = h5py.File("images/HHESTIAtestData.h5","w")
+h5f.create_dataset('test_images', data=testImages, compression='lzf')
+h5f.create_dataset('test_BES_vars', data=testBESvars, compression='lzf')
+h5f.create_dataset('test_truth', data=testTruth, compression='lzf')
+
+print "Saved the testing data!"
+
 
 #==================================================================================
 # Plot Training Results ///////////////////////////////////////////////////////////

@@ -29,6 +29,7 @@ from keras.models import Sequential, Model
 from keras.optimizers import SGD
 from keras.layers import Input, Activation, Dense, SeparableConv2D, Conv2D, MaxPool2D, BatchNormalization, Dropout, Flatten, MaxoutDense
 from keras.layers import GRU, LSTM, ConvLSTM2D, Reshape
+from keras.layers import concatenate
 from keras.regularizers import l1,l2
 from keras.utils import np_utils, to_categorical, plot_model
 from keras.callbacks import EarlyStopping, ModelCheckpoint
@@ -59,19 +60,23 @@ savePNG = True
 # Load images from h5 file
 #h5f = h5py.File("images/phiCosThetaBoostedJetImages.h5","r")
 
-print "Accessed Jet Images"
-
-# put images in data frames
+# put images and BES variables in data frames
 jetImagesDF = {}
+jetBESvarsDF = {}
 QCD = h5py.File("images/QCDphiCosThetaBoostedJetImagesX10.h5","r")
 jetImagesDF['QCD'] = QCD['QCD_images'][()]
+jetBESvarsDF['QCD'] = QCD['QCD_BES_vars'][()]
 QCD.close()
 HH4B = h5py.File("images/HH4BphiCosThetaBoostedJetImagesX10.h5","r")
 jetImagesDF['HH4B'] = HH4B['HH4B_images'][()]
+jetBESvarsDF['HH4B'] = HH4B['HH4B_BES_vars'][()]
 HH4B.close()
 HH4W = h5py.File("images/HH4WphiCosThetaBoostedJetImagesX10.h5","r")
 jetImagesDF['HH4W'] = HH4W['HH4W_images'][()]
+jetBESvarsDF['HH4W'] = HH4W['HH4W_BES_vars'][()]
 HH4W.close()
+
+print "Accessed Jet Images and BES variables"
 
 #h5f.close()
 
@@ -83,22 +88,26 @@ print "Made image dataframes"
 
 # Store data and truth
 qcdImages = jetImagesDF['QCD'] 
+qcdBESvars = jetBESvarsDF['QCD']
 print "Number of QCD Jet Images: ", len(qcdImages)
 hh4bImages = jetImagesDF['HH4B']
+hh4bBESvars = jetBESvarsDF['HH4B']
 print "Number of H->bb Jet Images: ", len(hh4bImages)
 hh4wImages = jetImagesDF['HH4W']
+hh4wBESvars = jetBESvarsDF['HH4W']
 print "Number of H->WW Jet Images: ", len(hh4wImages)
 jetImages = numpy.concatenate([qcdImages, hh4bImages, hh4wImages ])
 jetLabels = numpy.concatenate([numpy.zeros(len(qcdImages) ), numpy.ones(len(hh4bImages) ), numpy.full(len(hh4wImages), 2)] )
+jetBESvars = numpy.concatenate([qcdBESvars, hh4bBESvars, hh4wBESvars])
 
 print "Stored data and truth information"
 
 # split the training and testing data
-trainData, testData, trainTruth, testTruth = train_test_split(jetImages, jetLabels, test_size=0.1)
-#data_tuple = list(zip(trainData,trainTruth))
+trainImages, testImages, trainBESvars, testBESvars, trainTruth, testTruth = train_test_split(jetImages, jetBESvars, jetLabels, test_size=0.1)
+#data_tuple = list(zip(trainImages,trainTruth))
 #random.shuffle(data_tuple)
-#trainData, trainTruth = zip(*data_tuple)
-#trainData=numpy.array(trainData)
+#trainImages, trainTruth = zip(*data_tuple)
+#trainImages=numpy.array(trainImages)
 #trainTruth=numpy.array(trainTruth)
 
 print "Number of QCD jets in training: ", numpy.sum(trainTruth == 0)
@@ -116,110 +125,76 @@ tools.make_keras_picklable()
 trainTruth = to_categorical(trainTruth, num_classes=3)
 testTruth = to_categorical(testTruth, num_classes=3)
 
-# Define the Neural Network Structure
-print "NN input shape: ", trainData.shape[1], trainData.shape[2], trainData.shape[3]
-#model_BESTNN = Sequential()
-#model_BESTNN.add( Conv2D(12, (11,11), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01), input_shape=(trainData.shape[1], trainData.shape[2], trainData.shape[3]) ))
-#model_BESTNN.add( BatchNormalization(momentum = 0.6) )
-#model_BESTNN.add( MaxPool2D(pool_size=(2,2) ) )
-#model_BESTNN.add( Conv2D(8, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
-#model_BESTNN.add( BatchNormalization(momentum = 0.6) )
-#model_BESTNN.add( MaxPool2D(pool_size=(2,2) ) )
-#model_BESTNN.add( Conv2D(8, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
-#model_BESTNN.add( BatchNormalization(momentum = 0.6) )
-#model_BESTNN.add( MaxPool2D(pool_size=(2,2) ) )
-#model_BESTNN.add( Flatten() )
-
-model_BESTNN = Sequential()
-model_BESTNN.add( SeparableConv2D(32, (11,11), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01), input_shape=(trainData.shape[1], trainData.shape[2], trainData.shape[3]) ))
-model_BESTNN.add( SeparableConv2D(32, (7,7), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
-model_BESTNN.add( SeparableConv2D(32, (5,5), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
-model_BESTNN.add( BatchNormalization(momentum = 0.6) )
-model_BESTNN.add( MaxPool2D(pool_size=(2,2) ) )
-#model_BESTNN.add( Dropout(0.10) )
-model_BESTNN.add( SeparableConv2D(32, (7,7), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
-model_BESTNN.add( SeparableConv2D(32, (5,5), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
-model_BESTNN.add( SeparableConv2D(32, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
-#model_BESTNN.add( SeparableConv2D(128, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
-model_BESTNN.add( BatchNormalization(momentum = 0.6) )
-model_BESTNN.add( MaxPool2D(pool_size=(2,2) ) )
-#model_BESTNN.add( Dropout(0.10) )
-model_BESTNN.add( SeparableConv2D(32, (5,5), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
-model_BESTNN.add( SeparableConv2D(32, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
-#model_BESTNN.add( SeparableConv2D(128, (2,2), strides=(1,1), padding="same", activation="relu", kernel_regularizer=l2(0.01) ))
-model_BESTNN.add( BatchNormalization(momentum = 0.6) )
-model_BESTNN.add( MaxPool2D(pool_size=(2,2) ) )
-model_BESTNN.add( Flatten() )
-model_BESTNN.add( Dropout(0.20) )
-#model_BESTNN.add( Reshape((1,288), input_shape=(None,288) ) )
-#model_BESTNN.add( GRU(72, dropout=0.1, recurrent_dropout=0.5, return_sequences=True) )
-#model_BESTNN.add( GRU(144, dropout=0.1, recurrent_dropout=0.5) )
-#model_BESTNN.add( MaxoutDense(144) )
-#model_BESTNN.add( LSTM(288, return_sequences=True, input_shape=(288,))) 
-model_BESTNN.add( Dense(144, kernel_initializer="glorot_normal", activation="relu" ))
-model_BESTNN.add( Dense(72, kernel_initializer="glorot_normal", activation="relu" ))
-model_BESTNN.add( Dense(24, kernel_initializer="glorot_normal", activation="relu" ))
-#model_BESTNN.add( Dense(24, kernel_initializer="glorot_normal", activation="relu" ))
-model_BESTNN.add( Dropout(0.10) )
-model_BESTNN.add( Dense(3, kernel_initializer="glorot_normal", activation="softmax"))
+# Define the Neural Network Structure using functional API
+# Create the BES variable version
+besInputs = Input( shape=(trainBESvars.shape[1], ) )
+besLayer = Dense(40, kernel_initializer="glorot_normal", activation="relu" )(besInputs)
+besLayer = Dropout(0.20)(besLayer)
+besLayer = Dense(40, kernel_initializer="glorot_normal", activation="relu" )(besLayer)
+besLayer = Dropout(0.20)(besLayer)
+besLayer = Dense(40, kernel_initializer="glorot_normal", activation="relu" )(besLayer)
+besLayer = Dropout(0.20)(besLayer)
+outputHHESTIA = Dense(3, kernel_initializer="glorot_normal", activation="softmax")(besLayer)
 
 # compile the model
-model_BESTNN.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+model_HHESTIA = Model(inputs = besInputs, outputs = outputHHESTIA)
+model_HHESTIA.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
 # print the model summary
-print(model_BESTNN.summary() )
+print(model_HHESTIA.summary() )
 
 # early stopping
 early_stopping = EarlyStopping(monitor='val_loss', min_delta=0.0001, patience=20, verbose=0, mode='auto')
 
 # model checkpoint callback
 # this saves the model architecture + parameters into dense_model.h5
-model_checkpoint = ModelCheckpoint('HHESTIA_imageOnly_model.h5', monitor='val_loss', 
+model_checkpoint = ModelCheckpoint('HHESTIA_BESonly_model.h5', monitor='val_loss', 
                                    verbose=0, save_best_only=True, 
                                    save_weights_only=False, mode='auto', 
                                    period=1)
 
 # train the neural network
-history = model_BESTNN.fit(trainData[:], trainTruth[:], batch_size=1000, epochs=200, callbacks=[early_stopping, model_checkpoint], validation_split = 0.15)
+history = model_HHESTIA.fit(trainBESvars[:], trainTruth[:], batch_size=1000, epochs=200, callbacks=[early_stopping, model_checkpoint], validation_split = 0.15)
 
 print "Trained the neural network!"
 
 # save the test data
-h5f = h5py.File("images/HHESTIAimageOnlyTestData.h5","w")
-h5f.create_dataset('test_images', data=testData, compression='lzf')
+h5f = h5py.File("images/BESonly_HHESTIAtestData.h5","w")
+h5f.create_dataset('test_BES_vars', data=testBESvars, compression='lzf')
 h5f.create_dataset('test_truth', data=testTruth, compression='lzf')
 
 print "Saved the testing data!"
 
+
 # print model visualization
-#plot_model(model_BESTNN, to_file='plots/boost_CosTheta_NN_Vis.png')
+#plot_model(model_HHESTIA, to_file='plots/boost_CosTheta_NN_Vis.png')
 
 #==================================================================================
 # Plot Training Results ///////////////////////////////////////////////////////////
 #==================================================================================
 
 # Confusion Matrix
-cm = metrics.confusion_matrix(numpy.argmax(model_BESTNN.predict(testData[:]), axis=1), numpy.argmax(testTruth[:], axis=1) )
+cm = metrics.confusion_matrix(numpy.argmax(model_HHESTIA.predict(testBESvars[:] ), axis=1), numpy.argmax(testTruth[:], axis=1) )
 plt.figure()
 targetNames = ['QCD', 'H->bb', 'H->WW']
 tools.plot_confusion_matrix(cm.T, targetNames, normalize=True)
 if savePDF == True:
-   plt.savefig('plots/boost_CosTheta_confusion_matrix.pdf')
+   plt.savefig('plots/HHESTIA_BESonly_confustion_matrix.pdf')
 if savePNG == True:
-   plt.savefig('plots/boost_CosTheta_confusion_matrix.png')
+   plt.savefig('plots/HHESTIA_BESonly_confusion_matrix.png')
 plt.close()
 
 # score
-print "Training Score: ", model_BESTNN.evaluate(testData[:], testTruth[:], batch_size=100)
+print "Training Score: ", model_HHESTIA.evaluate(testBESvars[:], testTruth[:], batch_size=100)
 
 # performance plots
 loss = [history.history['loss'], history.history['val_loss'] ]
 acc = [history.history['acc'], history.history['val_acc'] ]
-tools.plotPerformance(loss, acc, "boost_CosTheta")
+tools.plotPerformance(loss, acc, "HHESTIA_BESonly")
 print "plotted HESTIA training Performance"
 
 # make file with probability results
-#joblib.dump(model_BESTNN, "HHESTIA_keras_CosTheta.pkl")
+joblib.dump(model_HHESTIA, "HHESTIA_keras_BESonly.pkl")
 #joblib.dump(scaler, "HHESTIA_scaler.pkl")
 
 print "Made weights based on probability results"
