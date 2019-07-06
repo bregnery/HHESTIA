@@ -45,7 +45,7 @@ savePNG = True
 #==================================================================================
 
 # access the TFiles
-fileQCD = root.TFile("preprocess_HHESTIA_QCD_all.root", "READ")
+fileQCD = root.TFile("preprocess_HHESTIA_OpenData_QCD.root", "READ")
 
 # access the trees
 treeQCD = fileQCD.Get("run/jetTree")
@@ -109,7 +109,7 @@ print "Stored BES variables"
 # Store Data in h5 file ///////////////////////////////////////////////////////////
 #==================================================================================
 
-h5f = h5py.File("images/QCDphiCosThetaBoostedJetImagesX10.h5","w")
+h5f = h5py.File("images/OpenDataQCDphiCosThetaBoostedJetImagesX10.h5","w")
 h5f.create_dataset('QCD_images', data=jetImagesDF['QCD_images'], compression='lzf')
 h5f.create_dataset('QCD_BES_vars', data=jetImagesDF['QCD_BES_vars'], compression='lzf')
 
@@ -122,10 +122,10 @@ print "Saved QCD Boosted Jet Images"
 # plot with python
 if plotJetImages == True:
    print "Plotting Average Boosted jet images"
-   img.plotAverageBoostedJetImage(jetImagesDF['QCD_images'], 'boost_QCD', savePNG, savePDF)
+   img.plotAverageBoostedJetImage(jetImagesDF['QCD_images'], 'boost_QCD_OpenData', savePNG, savePDF)
 
-   img.plotThreeBoostedJetImages(jetImagesDF['QCD_images'], 'boost_QCD', savePNG, savePDF)
+   img.plotThreeBoostedJetImages(jetImagesDF['QCD_images'], 'boost_QCD_OpenData', savePNG, savePDF)
 
-   #img.plotMolleweideBoostedJetImage(jetImagesDF['QCD'], 'boost_QCD', savePNG, savePDF)
+   #img.plotMolleweideBoostedJetImage(jetImagesDF['QCD'], 'boost_QCD_OpenData', savePNG, savePDF)
 print "Program was a great success!!!"
 

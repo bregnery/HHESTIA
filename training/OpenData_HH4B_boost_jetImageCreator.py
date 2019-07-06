@@ -45,15 +45,15 @@ savePNG = True
 #==================================================================================
 
 # access the TFiles
-fileQCD = root.TFile("preprocess_HHESTIA_QCD_all.root", "READ")
+fileHH4B = root.TFile("preprocess_HHESTIA_OpenData_HH_4B.root", "READ")
 
 # access the trees
-treeQCD = fileQCD.Get("run/jetTree")
+treeHH4B = fileHH4B.Get("run/jetTree")
 
 print "Accessed the trees"
 
 # get input variable names from branches
-vars = img.getBoostCandBranchNames(treeQCD)
+vars = img.getBoostCandBranchNames(treeHH4B)
 treeVars = vars
 print "Variables for jet image creation: ", vars
 
@@ -64,12 +64,12 @@ sel = "jetAK8_pt > 500 && jetAK8_mass > 50"
 
 # make arrays from the trees
 start, stop, step = 0, 167262, 1
-arrayQCD = tree2array(treeQCD, treeVars, sel, None, start, stop, step )
-arrayQCD = tools.appendTreeArray(arrayQCD)
+arrayHH4B = tree2array(treeHH4B, treeVars, sel, None, start, stop, step )
+arrayHH4B = tools.appendTreeArray(arrayHH4B)
 
-print "Number of Jets that will be imaged: ", len(arrayQCD)
+print "Number of Jets that will be imaged: ", len(arrayHH4B)
 
-imgArrayQCD = img.makeBoostCandFourVector(arrayQCD)
+imgArrayHH4B = img.makeBoostCandFourVector(arrayHH4B)
 
 print "Made candidate 4 vector arrays from the datasets"
 
@@ -78,13 +78,13 @@ print "Made candidate 4 vector arrays from the datasets"
 #==================================================================================
 
 # get BEST variable names from branches
-bestVars = tools.getBestBranchNames(treeQCD)
+bestVars = tools.getBestBranchNames(treeHH4B)
 print "Boosted Event Shape Variables: ", bestVars
 
 # make arrays from the trees
 start, stop, step = 0, 167262, 1
-bestArrayQCD = tree2array(treeQCD, bestVars, sel, None, start, stop, step)
-bestArrayQCD = tools.appendTreeArray(bestArrayQCD)
+bestArrayHH4B = tree2array(treeHH4B, bestVars, sel, None, start, stop, step)
+bestArrayHH4B = tools.appendTreeArray(bestArrayHH4B)
 
 print "Made array with the Boosted Event Shape Variables"
 
@@ -93,8 +93,8 @@ print "Made array with the Boosted Event Shape Variables"
 #==================================================================================
 
 jetImagesDF = {}
-print "Creating boosted Jet Images for QCD"
-jetImagesDF['QCD_images'] = img.prepareBoostedImages(imgArrayQCD, arrayQCD, 31, boostAxis)
+print "Creating boosted Jet Images for HH->bbbb"
+jetImagesDF['HH4B_images'] = img.prepareBoostedImages(imgArrayHH4B, arrayHH4B, 31, boostAxis)
 
 print "Made jet image data frames"
 
@@ -102,18 +102,18 @@ print "Made jet image data frames"
 # Store BEST Variables in DataFrame ///////////////////////////////////////////////
 #==================================================================================
 
-jetImagesDF['QCD_BES_vars'] = bestArrayQCD
+jetImagesDF['HH4B_BES_vars'] = bestArrayHH4B
 print "Stored BES variables"
 
 #==================================================================================
 # Store Data in h5 file ///////////////////////////////////////////////////////////
 #==================================================================================
 
-h5f = h5py.File("images/QCDphiCosThetaBoostedJetImagesX10.h5","w")
-h5f.create_dataset('QCD_images', data=jetImagesDF['QCD_images'], compression='lzf')
-h5f.create_dataset('QCD_BES_vars', data=jetImagesDF['QCD_BES_vars'], compression='lzf')
+h5f = h5py.File("images/OpenDataHH4BphiCosThetaBoostedJetImagesX10.h5","w")
+h5f.create_dataset('HH4B_images', data=jetImagesDF['HH4B_images'], compression='lzf')
+h5f.create_dataset('HH4B_BES_vars', data=jetImagesDF['HH4B_BES_vars'], compression='lzf')
 
-print "Saved QCD Boosted Jet Images"
+print "Saved HH4B Boosted Jet Images"
 
 #==================================================================================
 # Plot Jet Images /////////////////////////////////////////////////////////////////
@@ -122,10 +122,10 @@ print "Saved QCD Boosted Jet Images"
 # plot with python
 if plotJetImages == True:
    print "Plotting Average Boosted jet images"
-   img.plotAverageBoostedJetImage(jetImagesDF['QCD_images'], 'boost_QCD', savePNG, savePDF)
+   img.plotAverageBoostedJetImage(jetImagesDF['HH4B_images'], 'boost_HH4B_OpenData', savePNG, savePDF)
 
-   img.plotThreeBoostedJetImages(jetImagesDF['QCD_images'], 'boost_QCD', savePNG, savePDF)
+   img.plotThreeBoostedJetImages(jetImagesDF['HH4B_images'], 'boost_HH4B_OpenData', savePNG, savePDF)
 
-   #img.plotMolleweideBoostedJetImage(jetImagesDF['QCD'], 'boost_QCD', savePNG, savePDF)
+   #img.plotMolleweideBoostedJetImage(jetImagesDF['HH4B'], 'boost_HH4B_OpenData', savePNG, savePDF)
 print "Program was a great success!!!"
 
