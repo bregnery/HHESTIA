@@ -1,6 +1,6 @@
-# Training HHESTIA
+# Training BEST
 
-The programs in this directory train the HHESTIA.
+The programs in this directory train BEST.
 
 ## Instructions for HHESTIA without images
 
