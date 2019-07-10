@@ -5,7 +5,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
 
 // make sure the functions are not declared more than once
-#ifndef EDANALYZERTOOLS_H 
+#ifndef EDANALYZERTOOLS_H
 #define EDANALYZERTOOLS_H
 
 // include files
@@ -36,17 +36,20 @@ int FWMoments(std::vector<TLorentzVector> particles, double (&outputs)[5] );
 
 // get jet's constituents
 void getJetDaughters(std::vector<reco::Candidate * > &daughtersOfJet, std::vector<pat::Jet>::const_iterator jet,
-                     std::map<std::string, std::vector<float> > &jetPFcand ); 
+                     std::map<std::string, std::vector<float> > &jetPFcand );
 
 // store the jet variables
-void storeJetVariables(std::map<std::string, float> &treeVars, std::vector<pat::Jet>::const_iterator jet); 
+void storeJetVariables(std::map<std::string, float> &treeVars, std::vector<pat::Jet>::const_iterator jet);
 
 // store the secondary vertex variables
-void storeSecVertexVariables(std::map<std::string, float> &treeVars, TLorentzVector jet, 
+void storeSecVertexVariables(std::map<std::string, float> &treeVars, TLorentzVector jet,
                              std::vector<reco::VertexCompositePtrCandidate> secVertices);
 
 // store the Higgs frame variables
 void storeHiggsFrameVariables(std::map<std::string, float> &treeVars, std::vector<reco::Candidate *> daughtersOfJet,
-                              std::vector<pat::Jet>::const_iterator jet, std::map<std::string, std::vector<float> > &jetPFcand ); 
+                              std::vector<pat::Jet>::const_iterator jet, std::map<std::string, std::vector<float> > &jetPFcand );
+
+// make rest frame z axis the boost axis
+void pboost( TVector3 pbeam, TVector3 plab, TLorentzVector &pboo );
 
 #endif
