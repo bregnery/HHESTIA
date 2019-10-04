@@ -45,9 +45,10 @@ void storeJetVariables(std::map<std::string, float> &treeVars, std::vector<pat::
 void storeSecVertexVariables(std::map<std::string, float> &treeVars, TLorentzVector jet,
                              std::vector<reco::VertexCompositePtrCandidate> secVertices);
 
-// store the Higgs frame variables
-void storeHiggsFrameVariables(std::map<std::string, float> &treeVars, std::vector<reco::Candidate *> daughtersOfJet,
-                              std::vector<pat::Jet>::const_iterator jet, std::map<std::string, std::vector<float> > &jetPFcand );
+// store the rest frame variables
+void storeRestFrameVariables(std::map<std::string, float> &treeVars, std::vector<reco::Candidate *> daughtersOfJet,
+                             std::vector<pat::Jet>::const_iterator jet, std::map<std::string, std::vector<float> > &jetPFcand,
+                             std::string frame, std::float mass);
 
 // make rest frame z axis the boost axis
 void pboost( TVector3 pbeam, TVector3 plab, TLorentzVector &pboo );

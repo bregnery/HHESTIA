@@ -175,29 +175,30 @@ void storeSecVertexVariables(std::map<std::string, float> &treeVars, TLorentzVec
 }
 
 //========================================================================================
-// Store Higgs Rest Frame Variables ------------------------------------------------------
+// Store Rest Frame Variables ------------------------------------------------------------
 //----------------------------------------------------------------------------------------
-// This boosts an ak8 jet (and all of its constituents) into the higgs rest frame --------
+// This boosts an ak8 jet (and all of its constituents) into heavy object rest frame -----
 // and then uses it to calculate FoxWolfram moments, Event Shape Variables, --------------
 // and assymmetry variables --------------------------------------------------------------
 //----------------------------------------------------------------------------------------
 
-void storeHiggsFrameVariables(std::map<std::string, float> &treeVars, std::vector<reco::Candidate *> daughtersOfJet,
-                              std::vector<pat::Jet>::const_iterator jet, std::map<std::string, std::vector<float> > &jetPFcand ){
+void storeRestFrameVariables(std::map<std::string, float> &treeVars, std::vector<reco::Candidate *> daughtersOfJet,
+                            std::vector<pat::Jet>::const_iterator jet, std::map<std::string, std::vector<float> > &jetPFcand,
+                            std::string frame, std::float mass){
 
    using namespace std;
    using namespace fastjet;
 
-   // get 4 vector for Higgs rest frame
+   // get 4 vector for heavy object rest frame
    typedef reco::Candidate::PolarLorentzVector fourv;
    fourv thisJet = jet->polarP4();
-   TLorentzVector thisJetLV_H(0.,0.,0.,0.);
-   thisJetLV_H.SetPtEtaPhiM(thisJet.Pt(), thisJet.Eta(), thisJet.Phi(), 125. );
+   TLorentzVector thisJetLV(0.,0.,0.,0.);
+   thisJetLV.SetPtEtaPhiM(thisJet.Pt(), thisJet.Eta(), thisJet.Phi(), 125. );
 
-   std::vector<TLorentzVector> particles_H;
-   std::vector<math::XYZVector> particles2_H;
-   std::vector<reco::LeafCandidate> particles3_H;
-   vector<fastjet::PseudoJet> HFJparticles;
+   std::vector<TLorentzVector> particles;
+   std::vector<math::XYZVector> particles2;
+   std::vector<reco::LeafCandidate> particles3;
+   vector<fastjet::PseudoJet> FJparticles;
 
    double sumPz = 0;
    double sumP = 0;
@@ -208,57 +209,61 @@ void storeHiggsFrameVariables(std::map<std::string, float> &treeVars, std::vecto
       if (daughtersOfJet[i]->pt() < 0.5) continue;
 
       // Create 4 vector to boost to Higgs frame
-      TLorentzVector thisParticleLV_H( daughtersOfJet[i]->px(), daughtersOfJet[i]->py(), daughtersOfJet[i]->pz(), daughtersOfJet[i]->energy() );
+      TLorentzVector thisParticleLV( daughtersOfJet[i]->px(), daughtersOfJet[i]->py(), daughtersOfJet[i]->pz(), daughtersOfJet[i]->energy() );
 
       // Boost to Higgs rest frame
-      thisParticleLV_H.Boost( -thisJetLV_H.BoostVector() );
-      jetPFcand["HiggsFrame_PF_candidate_px"].push_back(thisParticleLV_H.Px() );
-      jetPFcand["HiggsFrame_PF_candidate_py"].push_back(thisParticleLV_H.Py() );
-      jetPFcand["HiggsFrame_PF_candidate_pz"].push_back(thisParticleLV_H.Pz() );
-      jetPFcand["HiggsFrame_PF_candidate_energy"].push_back(thisParticleLV_H.E() );
-      particles_H.push_back( thisParticleLV_H );
-      particles2_H.push_back( math::XYZVector( thisParticleLV_H.X(), thisParticleLV_H.Y(), thisParticleLV_H.Z() ));
-      particles3_H.push_back( reco::LeafCandidate(+1, reco::Candidate::LorentzVector( thisParticleLV_H.X(), thisParticleLV_H.Y(),
-                                                                                      thisParticleLV_H.Z(), thisParticleLV_H.T() ) ));
-      HFJparticles.push_back( PseudoJet( thisParticleLV_H.X(), thisParticleLV_H.Y(), thisParticleLV_H.Z(), thisParticleLV_H.T() ) );
+      thisParticleLV.Boost( -thisJetLV_H.BoostVector() );
+      jetPFcand[frame+"Frame_PF_candidate_px"].push_back(thisParticleLV.Px() );
+      jetPFcand[frame+"Frame_PF_candidate_py"].push_back(thisParticleLV.Py() );
+      jetPFcand[frame+"Frame_PF_candidate_pz"].push_back(thisParticleLV.Pz() );
+      jetPFcand[frame+"Frame_PF_candidate_energy"].push_back(thisParticleLV.E() );
+
+      // Now that PF candidates are stored, make the boost axis the Z-axis
+      // Important for BES variables
+      pboost( thisJetLV_H.Vect(), thisParticleLV.Vect(), thisParticleLV);
+      particles.push_back( thisParticleLV );
+      particles2.push_back( math::XYZVector( thisParticleLV.X(), thisParticleLV.Y(), thisParticleLV.Z() ));
+      particles3.push_back( reco::LeafCandidate(+1, reco::Candidate::LorentzVector( thisParticleLV.X(), thisParticleLV.Y(),
+                                                                                      thisParticleLV.Z(), thisParticleLV.T() ) ));
+      FJparticles.push_back( PseudoJet( thisParticleLV.X(), thisParticleLV.Y(), thisParticleLV.Z(), thisParticleLV.T() ) );
 
       // Sum rest frame momenta for asymmetry calculation
       if (daughtersOfJet[i]->pt() < 10) continue;
-      sumPz += thisParticleLV_H.Pz();
-      sumP += abs( thisParticleLV_H.P() );
+      sumPz += thisParticleLV.Pz();
+      sumP += abs( thisParticleLV.P() );
    }
 
    // Fox Wolfram Moments
-   double fwm_H[5] = { 0.0, 0.0 ,0.0 ,0.0,0.0};
-   FWMoments( particles_H, fwm_H);
-   treeVars["FoxWolfH1_Higgs"] = fwm_H[1];
-   treeVars["FoxWolfH2_Higgs"] = fwm_H[2];
-   treeVars["FoxWolfH3_Higgs"] = fwm_H[3];
-   treeVars["FoxWolfH4_Higgs"] = fwm_H[4];
+   double fwm[5] = { 0.0, 0.0 ,0.0 ,0.0,0.0};
+   FWMoments( particles, fwm);
+   treeVars["FoxWolfH1_"+frame] = fwm[1];
+   treeVars["FoxWolfH2_"+frame] = fwm[2];
+   treeVars["FoxWolfH3_"+frame] = fwm[3];
+   treeVars["FoxWolfH4_"+frame] = fwm[4];
 
    // Event Shape Variables
-   EventShapeVariables eventShapes_H( particles2_H );
-   Thrust thrustCalculator_H( particles3_H.begin(), particles3_H.end() );
-   treeVars["isotropy_Higgs"] = eventShapes_H.isotropy();
-   treeVars["sphericity_Higgs"] = eventShapes_H.sphericity(2);
-   treeVars["aplanarity_Higgs"] = eventShapes_H.aplanarity(2);
-   treeVars["thrust_Higgs"] = thrustCalculator_H.thrust();
+   EventShapeVariables eventShapes( particles2 );
+   Thrust thrustCalculator( particles3.begin(), particles3.end() );
+   treeVars["isotropy_"+frame]   = eventShapes.isotropy();
+   treeVars["sphericity_"+frame] = eventShapes.sphericity(2);
+   treeVars["aplanarity_"+frame] = eventShapes.aplanarity(2);
+   treeVars["thrust_"+frame]     = thrustCalculator.thrust();
 
    // Jet Asymmetry
-   double asymmetry = sumPz/sumP;
-   treeVars["asymmetry_Higgs"] = asymmetry;
+   double asymmetry             = sumPz/sumP;
+   treeVars["asymmetry_"+frame] = asymmetry;
 
    // Recluster the jets in the Higgs rest frame
    JetDefinition jet_def(antikt_algorithm, 0.4);
-   ClusterSequence cs_H(HFJparticles, jet_def);
-   vector<PseudoJet> jetsFJ_H = sorted_by_pt(cs_H.inclusive_jets(20.0));
+   ClusterSequence cs(FJparticles, jet_def);
+   vector<PseudoJet> jetsFJ = sorted_by_pt(cs.inclusive_jets(20.0));
 
    // Store recluster jet info
-   for(unsigned int i = 0; i < jetsFJ_H.size(); i++){
-      jetPFcand["HiggsFrame_subjet_px"].push_back(jetsFJ_H[i].px());
-      jetPFcand["HiggsFrame_subjet_py"].push_back(jetsFJ_H[i].py());
-      jetPFcand["HiggsFrame_subjet_pz"].push_back(jetsFJ_H[i].pz());
-      jetPFcand["HiggsFrame_subjet_energy"].push_back(jetsFJ_H[i].e());
+   for(unsigned int i = 0; i < jetsFJ.size(); i++){
+      jetPFcand[frame+"Frame_subjet_px"].push_back(jetsFJ[i].px());
+      jetPFcand[frame+"Frame_subjet_py"].push_back(jetsFJ[i].py());
+      jetPFcand[frame+"Frame_subjet_pz"].push_back(jetsFJ[i].pz());
+      jetPFcand[frame+"Frame_subjet_energy"].push_back(jetsFJ[i].e());
    }
 
 }
