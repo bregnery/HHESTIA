@@ -18,11 +18,11 @@ process.load("RecoBTag.Configuration.RecoBTag_cff")
 
 process.GlobalTag = GlobalTag(process.GlobalTag, '80X_mcRun2_asymptotic_v4')
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1),
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(200),
                                         allowUnscheduled = cms.untracked.bool(True))
 
 # Get file names with unix pattern expander
-files = glob.glob("/uscms_data/d3/bregnery/HHstudies/MC/HH4W/*.root")
+files = glob.glob("/uscms_data/d3/bregnery/HHstudies/MC/HH4W/Radion_hh_wwww_M3500_MiniAOD_1.root")
 # Add to the beginning of each filename
 for ifile in range(len(files)):
     files[ifile] = "file:" + files[ifile]
@@ -33,7 +33,7 @@ process.source = cms.Source("PoolSource",
         files
 	)
 )
-process.MessageLogger.cerr.FwkReport.reportEvery = 1000
+process.MessageLogger.cerr.FwkReport.reportEvery = 100
 
 #================================================================================
 # Remake the Jet Collections ////////////////////////////////////////////////////
@@ -71,7 +71,7 @@ process.run = cms.EDProducer('HHESTIAProducer',
         isSignal = cms.bool(True)
 )
 
-process.TFileService = cms.Service("TFileService", fileName = cms.string("preprocess_TEST.root") )
+process.TFileService = cms.Service("TFileService", fileName = cms.string("preprocess_BEST_TEST.root") )
 
 process.out = cms.OutputModule("PoolOutputModule",
                                fileName = cms.untracked.string("ana_out.root"),

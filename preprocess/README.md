@@ -1,4 +1,4 @@
-# Preprocessing for BEST
+# Preprocessing for HHESTIA
 
 This ED Producer preprocesses CMS Monte Carlo samples. After preprocessing, these datasets 
 can be used to train HHESTIA.

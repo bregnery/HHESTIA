@@ -1,17 +1,17 @@
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// edanalyzerTools.cpp ------------------------------------------------------------
-//=================================================================================
-// C++ file containing functions for use with CMS EDAnalyzer and EDProducer -------
-///////////////////////////////////////////////////////////////////////////////////
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// edanalyzerTools.cpp -------------------------------------------------------------------
+//========================================================================================
+// C++ file containing functions for use with CMS EDAnalyzer and EDProducer --------------
+//////////////////////////////////////////////////////////////////////////////////////////
 
 #include "edanalyzerTools.h"
 
-//=================================================================================
-// Calculate Legendre Polynomials -------------------------------------------------
-//---------------------------------------------------------------------------------
-// Simple Legendre polynomial function that can calculate up to order 4 -----------
-// Inputs: argument of the polynomial and order desired ---------------------------
-//---------------------------------------------------------------------------------
+//========================================================================================
+// Calculate Legendre Polynomials --------------------------------------------------------
+//----------------------------------------------------------------------------------------
+// Simple Legendre polynomial function that can calculate up to order 4 ------------------
+// Inputs: argument of the polynomial and order desired ----------------------------------
+//----------------------------------------------------------------------------------------
 
 float LegendreP(float x, int order){
    if (order == 0) return 1;
@@ -22,17 +22,17 @@ float LegendreP(float x, int order){
    else return 0;
 }
 
-//=================================================================================
-// Calculate Fox Wolfram Moments --------------------------------------------------
-//---------------------------------------------------------------------------------
-// This function calculates the Fox Wolfram moments for jet constituents ----------
-// in various rest frames. --------------------------------------------------------
-// Inputs: particles (jet constiuents boosted to rest frame) and empty array that -
-//         that will store the FW moments -----------------------------------------
-//---------------------------------------------------------------------------------
+//========================================================================================
+// Calculate Fox Wolfram Moments ---------------------------------------------------------
+//----------------------------------------------------------------------------------------
+// This function calculates the Fox Wolfram moments for jet constituents -----------------
+// in various rest frames. ---------------------------------------------------------------
+// Inputs: particles (jet constiuents boosted to rest frame) and empty array that --------
+//         that will store the FW moments ------------------------------------------------
+//----------------------------------------------------------------------------------------
 
 int FWMoments(std::vector<TLorentzVector> particles, double (&outputs)[5] ){
-   
+
    // get number of particles to loop over
    int numParticles = particles.size();
 
@@ -53,7 +53,7 @@ int FWMoments(std::vector<TLorentzVector> particles, double (&outputs)[5] ){
    	for (int j = i; j < numParticles; j++){
 
                 // calculate cos of jet constituent angles
-   		float costh = ( particles[i].Px() * particles[j].Px() + particles[i].Py() * particles[j].Py() 
+   		float costh = ( particles[i].Px() * particles[j].Px() + particles[i].Py() * particles[j].Py()
                                    + particles[i].Pz() * particles[j].Pz() ) / ( particles[i].P() * particles[j].P() );
    		float w1 = particles[i].P();
    		float w2 = particles[j].P();
@@ -86,15 +86,15 @@ int FWMoments(std::vector<TLorentzVector> particles, double (&outputs)[5] ){
    return 0;
 }
 
-//=================================================================================
-// Get All Jet Constituents -------------------------------------------------------
-//---------------------------------------------------------------------------------
-// This gets all the jet constituents (daughters) and stores them as a standard ---
-// vector -------------------------------------------------------------------------
-//---------------------------------------------------------------------------------
+//========================================================================================
+// Get All Jet Constituents --------------------------------------------------------------
+//----------------------------------------------------------------------------------------
+// This gets all the jet constituents (daughters) and stores them as a standard ----------
+// vector --------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------
 
 void getJetDaughters(std::vector<reco::Candidate * > &daughtersOfJet, std::vector<pat::Jet>::const_iterator jet,
-                     std::map<std::string, std::vector<float> > &jetPFcand ){ 
+                     std::map<std::string, std::vector<float> > &jetPFcand ){
    // First get all daughters for the first Soft Drop Subjet
    for (unsigned int i = 0; i < jet->daughter(0)->numberOfDaughters(); i++){
       daughtersOfJet.push_back( (reco::Candidate *) jet->daughter(0)->daughter(i) );
@@ -118,20 +118,20 @@ void getJetDaughters(std::vector<reco::Candidate * > &daughtersOfJet, std::vecto
    }
 }
 
-//=================================================================================
-// Store Jet Variables ------------------------------------------------------------
-//---------------------------------------------------------------------------------
-// This takes various jet quantaties and stores them on the map used to fill ------
-// the jet tree -------------------------------------------------------------------
-//---------------------------------------------------------------------------------  
+//========================================================================================
+// Store Jet Variables -------------------------------------------------------------------
+//----------------------------------------------------------------------------------------
+// This takes various jet quantaties and stores them on the map used to fill -------------
+// the jet tree --------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------
 
-void storeJetVariables(std::map<std::string, float> &treeVars, std::vector<pat::Jet>::const_iterator jet){ 
+void storeJetVariables(std::map<std::string, float> &treeVars, std::vector<pat::Jet>::const_iterator jet){
                        // pasing a variable with & is pass-by-reference which keeps changes in this func
    // Jet four vector and Soft Drop info
    treeVars["jetAK8_phi"] = jet->phi();
-   treeVars["jetAK8_eta"] = jet->eta(); 
-   treeVars["jetAK8_pt"] = jet->pt(); 
-   treeVars["jetAK8_mass"] = jet->mass(); 
+   treeVars["jetAK8_eta"] = jet->eta();
+   treeVars["jetAK8_pt"] = jet->pt();
+   treeVars["jetAK8_mass"] = jet->mass();
    treeVars["jetAK8_SoftDropMass"] = jet->userFloat("ak8PFJetsCHSSoftDropMass");
 
    // Store Subjettiness info
@@ -141,18 +141,18 @@ void storeJetVariables(std::map<std::string, float> &treeVars, std::vector<pat::
    treeVars["jetAK8_Tau1"] = jet->userFloat("NjettinessAK8:tau1");
 }
 
-//=================================================================================
-// Store Secondary Vertex Information ---------------------------------------------
-//---------------------------------------------------------------------------------
-// This takes various secondary vertex quantities and stores them on the map ------
-// used to fill the tree ----------------------------------------------------------
-//---------------------------------------------------------------------------------
+//========================================================================================
+// Store Secondary Vertex Information ----------------------------------------------------
+//----------------------------------------------------------------------------------------
+// This takes various secondary vertex quantities and stores them on the map -------------
+// used to fill the tree -----------------------------------------------------------------
+//----------------------------------------------------------------------------------------
 
-void storeSecVertexVariables(std::map<std::string, float> &treeVars, TLorentzVector jet, 
+void storeSecVertexVariables(std::map<std::string, float> &treeVars, TLorentzVector jet,
                              std::vector<reco::VertexCompositePtrCandidate> secVertices){
 
    int numMatched = 0; // counts number of secondary vertices
-   for(std::vector<reco::VertexCompositePtrCandidate>::const_iterator vertBegin = secVertices.begin(), 
+   for(std::vector<reco::VertexCompositePtrCandidate>::const_iterator vertBegin = secVertices.begin(),
               vertEnd = secVertices.end(), ivert = vertBegin; ivert != vertEnd; ivert++){
       TLorentzVector vert(ivert->px(), ivert->py(), ivert->pz(), ivert->energy() );
       // match vertices to jet
@@ -174,31 +174,32 @@ void storeSecVertexVariables(std::map<std::string, float> &treeVars, TLorentzVec
    treeVars["nSecondaryVertices"] = numMatched;
 }
 
-//=================================================================================
-// Store Higgs Rest Frame Variables -----------------------------------------------
-//---------------------------------------------------------------------------------
-// This boosts an ak8 jet (and all of its constituents) into the higgs rest frame -
-// and then uses it to calculate FoxWolfram moments, Event Shape Variables, -------
-// and assymmetry variables -------------------------------------------------------
-//---------------------------------------------------------------------------------
+//========================================================================================
+// Store Rest Frame Variables ------------------------------------------------------------
+//----------------------------------------------------------------------------------------
+// This boosts an ak8 jet (and all of its constituents) into heavy object rest frame -----
+// and then uses it to calculate FoxWolfram moments, Event Shape Variables, --------------
+// and assymmetry variables --------------------------------------------------------------
+//----------------------------------------------------------------------------------------
 
-void storeHiggsFrameVariables(std::map<std::string, float> &treeVars, std::vector<reco::Candidate *> daughtersOfJet,
-                              std::vector<pat::Jet>::const_iterator jet, std::map<std::string, std::vector<float> > &jetPFcand ){ 
+void storeRestFrameVariables(std::map<std::string, float> &treeVars, std::vector<reco::Candidate *> daughtersOfJet,
+                            std::vector<pat::Jet>::const_iterator jet, std::map<std::string, std::vector<float> > &jetPFcand,
+                            std::string frame, float mass){
 
    using namespace std;
    using namespace fastjet;
 
-   // get 4 vector for Higgs rest frame
+   // get 4 vector for heavy object rest frame
    typedef reco::Candidate::PolarLorentzVector fourv;
    fourv thisJet = jet->polarP4();
-   TLorentzVector thisJetLV_H(0.,0.,0.,0.);
-   thisJetLV_H.SetPtEtaPhiM(thisJet.Pt(), thisJet.Eta(), thisJet.Phi(), 125. );
+   TLorentzVector thisJetLV(0.,0.,0.,0.);
+   thisJetLV.SetPtEtaPhiM(thisJet.Pt(), thisJet.Eta(), thisJet.Phi(), mass );
 
-   std::vector<TLorentzVector> particles_H;
-   std::vector<math::XYZVector> particles2_H;
-   std::vector<reco::LeafCandidate> particles3_H;
-   vector<fastjet::PseudoJet> HFJparticles;
-   
+   std::vector<TLorentzVector> particles;
+   std::vector<math::XYZVector> particles2;
+   std::vector<reco::LeafCandidate> particles3;
+   vector<fastjet::PseudoJet> FJparticles;
+
    double sumPz = 0;
    double sumP = 0;
 
@@ -206,59 +207,97 @@ void storeHiggsFrameVariables(std::map<std::string, float> &treeVars, std::vecto
    for(unsigned int i = 0; i < daughtersOfJet.size(); i++){
       // Do not include low mass subjets
       if (daughtersOfJet[i]->pt() < 0.5) continue;
-   
+
       // Create 4 vector to boost to Higgs frame
-      TLorentzVector thisParticleLV_H( daughtersOfJet[i]->px(), daughtersOfJet[i]->py(), daughtersOfJet[i]->pz(), daughtersOfJet[i]->energy() );
-   
+      TLorentzVector thisParticleLV( daughtersOfJet[i]->px(), daughtersOfJet[i]->py(), daughtersOfJet[i]->pz(), daughtersOfJet[i]->energy() );
+
       // Boost to Higgs rest frame
-      thisParticleLV_H.Boost( -thisJetLV_H.BoostVector() );
-      jetPFcand["HiggsFrame_PF_candidate_px"].push_back(thisParticleLV_H.Px() );
-      jetPFcand["HiggsFrame_PF_candidate_py"].push_back(thisParticleLV_H.Py() );
-      jetPFcand["HiggsFrame_PF_candidate_pz"].push_back(thisParticleLV_H.Pz() );
-      jetPFcand["HiggsFrame_PF_candidate_energy"].push_back(thisParticleLV_H.E() );
-      particles_H.push_back( thisParticleLV_H );	
-      particles2_H.push_back( math::XYZVector( thisParticleLV_H.X(), thisParticleLV_H.Y(), thisParticleLV_H.Z() ));
-      particles3_H.push_back( reco::LeafCandidate(+1, reco::Candidate::LorentzVector( thisParticleLV_H.X(), thisParticleLV_H.Y(), 
-                                                                                      thisParticleLV_H.Z(), thisParticleLV_H.T() ) ));
-      HFJparticles.push_back( PseudoJet( thisParticleLV_H.X(), thisParticleLV_H.Y(), thisParticleLV_H.Z(), thisParticleLV_H.T() ) );
+      thisParticleLV.Boost( -thisJetLV.BoostVector() );
+      jetPFcand[frame+"Frame_PF_candidate_px"].push_back(thisParticleLV.Px() );
+      jetPFcand[frame+"Frame_PF_candidate_py"].push_back(thisParticleLV.Py() );
+      jetPFcand[frame+"Frame_PF_candidate_pz"].push_back(thisParticleLV.Pz() );
+      jetPFcand[frame+"Frame_PF_candidate_energy"].push_back(thisParticleLV.E() );
+
+      // Now that PF candidates are stored, make the boost axis the Z-axis
+      // Important for BES variables
+      pboost( thisJetLV.Vect(), thisParticleLV.Vect(), thisParticleLV);
+      particles.push_back( thisParticleLV );
+      particles2.push_back( math::XYZVector( thisParticleLV.X(), thisParticleLV.Y(), thisParticleLV.Z() ));
+      particles3.push_back( reco::LeafCandidate(+1, reco::Candidate::LorentzVector( thisParticleLV.X(), thisParticleLV.Y(),
+                                                                                      thisParticleLV.Z(), thisParticleLV.T() ) ));
+      FJparticles.push_back( PseudoJet( thisParticleLV.X(), thisParticleLV.Y(), thisParticleLV.Z(), thisParticleLV.T() ) );
 
       // Sum rest frame momenta for asymmetry calculation
       if (daughtersOfJet[i]->pt() < 10) continue;
-      sumPz += thisParticleLV_H.Pz();
-      sumP += abs( thisParticleLV_H.P() );
+      sumPz += thisParticleLV.Pz();
+      sumP += abs( thisParticleLV.P() );
    }
-   
+
    // Fox Wolfram Moments
-   double fwm_H[5] = { 0.0, 0.0 ,0.0 ,0.0,0.0};
-   FWMoments( particles_H, fwm_H);
-   treeVars["FoxWolfH1_Higgs"] = fwm_H[1];
-   treeVars["FoxWolfH2_Higgs"] = fwm_H[2];
-   treeVars["FoxWolfH3_Higgs"] = fwm_H[3];
-   treeVars["FoxWolfH4_Higgs"] = fwm_H[4];
-   
+   double fwm[5] = { 0.0, 0.0 ,0.0 ,0.0,0.0};
+   FWMoments( particles, fwm);
+   treeVars["FoxWolfH1_"+frame] = fwm[1];
+   treeVars["FoxWolfH2_"+frame] = fwm[2];
+   treeVars["FoxWolfH3_"+frame] = fwm[3];
+   treeVars["FoxWolfH4_"+frame] = fwm[4];
+
    // Event Shape Variables
-   EventShapeVariables eventShapes_H( particles2_H );
-   Thrust thrustCalculator_H( particles3_H.begin(), particles3_H.end() );
-   treeVars["isotropy_Higgs"] = eventShapes_H.isotropy();
-   treeVars["sphericity_Higgs"] = eventShapes_H.sphericity(2);
-   treeVars["aplanarity_Higgs"] = eventShapes_H.aplanarity(2);
-   treeVars["thrust_Higgs"] = thrustCalculator_H.thrust();
+   EventShapeVariables eventShapes( particles2 );
+   Thrust thrustCalculator( particles3.begin(), particles3.end() );
+   treeVars["isotropy_"+frame]   = eventShapes.isotropy();
+   treeVars["sphericity_"+frame] = eventShapes.sphericity(2);
+   treeVars["aplanarity_"+frame] = eventShapes.aplanarity(2);
+   treeVars["thrust_"+frame]     = thrustCalculator.thrust();
 
    // Jet Asymmetry
-   double asymmetry = sumPz/sumP;
-   treeVars["asymmetry_Higgs"] = asymmetry;
+   double asymmetry             = sumPz/sumP;
+   treeVars["asymmetry_"+frame] = asymmetry;
 
    // Recluster the jets in the Higgs rest frame
    JetDefinition jet_def(antikt_algorithm, 0.4);
-   ClusterSequence cs_H(HFJparticles, jet_def);
-   vector<PseudoJet> jetsFJ_H = sorted_by_pt(cs_H.inclusive_jets(20.0)); 
+   ClusterSequence cs(FJparticles, jet_def);
+   vector<PseudoJet> jetsFJ = sorted_by_pt(cs.inclusive_jets(20.0));
 
    // Store recluster jet info
-   for(unsigned int i = 0; i < jetsFJ_H.size(); i++){
-      jetPFcand["HiggsFrame_subjet_px"].push_back(jetsFJ_H[i].px()); 
-      jetPFcand["HiggsFrame_subjet_py"].push_back(jetsFJ_H[i].py()); 
-      jetPFcand["HiggsFrame_subjet_pz"].push_back(jetsFJ_H[i].pz()); 
-      jetPFcand["HiggsFrame_subjet_energy"].push_back(jetsFJ_H[i].e());
+   for(unsigned int i = 0; i < jetsFJ.size(); i++){
+      jetPFcand[frame+"Frame_subjet_px"].push_back(jetsFJ[i].px());
+      jetPFcand[frame+"Frame_subjet_py"].push_back(jetsFJ[i].py());
+      jetPFcand[frame+"Frame_subjet_pz"].push_back(jetsFJ[i].pz());
+      jetPFcand[frame+"Frame_subjet_energy"].push_back(jetsFJ[i].e());
    }
- 
+
+}
+
+//========================================================================================
+// Make boost axis the rest frame z axis -------------------------------------------------
+//----------------------------------------------------------------------------------------
+// Given jet constituent lab momentum, find momentum relative to beam direction pbeam ----
+// plab = Particle 3-vector in Boost Frame -----------------------------------------------
+// pbeam = Lab Jet 3-vector --------------------------------------------------------------
+//----------------------------------------------------------------------------------------
+
+void pboost( TVector3 pbeam, TVector3 plab, TLorentzVector &pboo ){
+
+   double pl = plab.Dot(pbeam);
+   pl *= double(1. / pbeam.Mag());
+
+   // set x axis direction along pbeam x (0,0,1)
+   TVector3 pbx;
+
+   pbx.SetX(pbeam.Y());
+   pbx.SetY(-pbeam.X());
+   pbx.SetZ(0.0);
+
+   pbx *= double(1. / pbx.Mag());
+
+   // set y axis direction along -pbx x pbeam
+   TVector3 pby;
+
+   pby = -pbx.Cross(pbeam);
+   pby *= double(1. / pby.Mag());
+
+   pboo.SetX((plab.Dot(pbx)));
+   pboo.SetY((plab.Dot(pby)));
+   pboo.SetZ(pl);
+
 }

@@ -1,4 +1,4 @@
-# BEST: Boosted Event Shape Tagger
+# HHESTIA
 
 ## Dependencies
 
