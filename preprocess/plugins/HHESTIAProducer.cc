@@ -409,7 +409,7 @@ HHESTIAProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
          storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "W", 80.4);
 
          // Z Rest Frame Variables
-         storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Top", 91.2);
+         storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Z", 91.2);
 
          // Fill the jet entry tree
          jetTree->Fill();
@@ -449,7 +449,7 @@ HHESTIAProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
                storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "W", 80.4);
 
                // Z Rest Frame Variables
-               storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Top", 91.2);
+               storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Z", 91.2);
 
                // Fill the jet entry tree
                jetTree->Fill();

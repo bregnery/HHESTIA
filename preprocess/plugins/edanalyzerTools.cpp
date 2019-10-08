@@ -193,7 +193,7 @@ void storeRestFrameVariables(std::map<std::string, float> &treeVars, std::vector
    typedef reco::Candidate::PolarLorentzVector fourv;
    fourv thisJet = jet->polarP4();
    TLorentzVector thisJetLV(0.,0.,0.,0.);
-   thisJetLV.SetPtEtaPhiM(thisJet.Pt(), thisJet.Eta(), thisJet.Phi(), 125. );
+   thisJetLV.SetPtEtaPhiM(thisJet.Pt(), thisJet.Eta(), thisJet.Phi(), mass );
 
    std::vector<TLorentzVector> particles;
    std::vector<math::XYZVector> particles2;
