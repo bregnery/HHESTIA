@@ -22,7 +22,7 @@ process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1),
                                         allowUnscheduled = cms.untracked.bool(True))
 
 # Get file names with unix pattern expander
-files = glob.glob("/uscms_data/d3/bregnery/HHstudies/MC/HH4W/*.root")
+files = glob.glob("/afs/cern.ch/work/b/bregnery/public/HHwwwwMCgenerator/CMSSW_8_0_21/src/hhMCgenerator/RootFiles/M3500/*.root")
 # Add to the beginning of each filename
 for ifile in range(len(files)):
     files[ifile] = "file:" + files[ifile]
@@ -71,7 +71,7 @@ process.run = cms.EDProducer('HHESTIAProducer',
         isSignal = cms.bool(True)
 )
 
-process.TFileService = cms.Service("TFileService", fileName = cms.string("preprocess_TEST.root") )
+process.TFileService = cms.Service("TFileService", fileName = cms.string("preprocess_HHESTIA_HH.root") )
 
 process.out = cms.OutputModule("PoolOutputModule",
                                fileName = cms.untracked.string("ana_out.root"),
