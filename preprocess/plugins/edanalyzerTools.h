@@ -48,7 +48,7 @@ void storeSecVertexVariables(std::map<std::string, float> &treeVars, TLorentzVec
 // store the rest frame variables
 void storeRestFrameVariables(std::map<std::string, float> &treeVars, std::vector<reco::Candidate *> daughtersOfJet,
                              std::vector<pat::Jet>::const_iterator jet, std::map<std::string, std::vector<float> > &jetPFcand,
-                             std::string frame, std::float mass);
+                             std::string frame, float mass);
 
 // make rest frame z axis the boost axis
 void pboost( TVector3 pbeam, TVector3 plab, TLorentzVector &pboo );

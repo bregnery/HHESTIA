@@ -184,7 +184,7 @@ void storeSecVertexVariables(std::map<std::string, float> &treeVars, TLorentzVec
 
 void storeRestFrameVariables(std::map<std::string, float> &treeVars, std::vector<reco::Candidate *> daughtersOfJet,
                             std::vector<pat::Jet>::const_iterator jet, std::map<std::string, std::vector<float> > &jetPFcand,
-                            std::string frame, std::float mass){
+                            std::string frame, float mass){
 
    using namespace std;
    using namespace fastjet;
@@ -212,7 +212,7 @@ void storeRestFrameVariables(std::map<std::string, float> &treeVars, std::vector
       TLorentzVector thisParticleLV( daughtersOfJet[i]->px(), daughtersOfJet[i]->py(), daughtersOfJet[i]->pz(), daughtersOfJet[i]->energy() );
 
       // Boost to Higgs rest frame
-      thisParticleLV.Boost( -thisJetLV_H.BoostVector() );
+      thisParticleLV.Boost( -thisJetLV.BoostVector() );
       jetPFcand[frame+"Frame_PF_candidate_px"].push_back(thisParticleLV.Px() );
       jetPFcand[frame+"Frame_PF_candidate_py"].push_back(thisParticleLV.Py() );
       jetPFcand[frame+"Frame_PF_candidate_pz"].push_back(thisParticleLV.Pz() );
@@ -220,7 +220,7 @@ void storeRestFrameVariables(std::map<std::string, float> &treeVars, std::vector
 
       // Now that PF candidates are stored, make the boost axis the Z-axis
       // Important for BES variables
-      pboost( thisJetLV_H.Vect(), thisParticleLV.Vect(), thisParticleLV);
+      pboost( thisJetLV.Vect(), thisParticleLV.Vect(), thisParticleLV);
       particles.push_back( thisParticleLV );
       particles2.push_back( math::XYZVector( thisParticleLV.X(), thisParticleLV.Y(), thisParticleLV.Z() ));
       particles3.push_back( reco::LeafCandidate(+1, reco::Candidate::LorentzVector( thisParticleLV.X(), thisParticleLV.Y(),

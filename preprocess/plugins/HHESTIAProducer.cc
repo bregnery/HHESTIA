@@ -19,6 +19,8 @@
 
 // system include files
 #include <memory>
+#include <thread>
+#include <iostream>
 
 // FWCore include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
@@ -77,7 +79,7 @@ class HHESTIAProducer : public edm::stream::EDProducer<> {
 
       //float LegP(float x, int order);
       //int FWMoments( std::vector<TLorentzVector> particles, double (&outputs)[5] );
-      //void pboost( TVector3 pbeam, TVector3 plab, TLorentzVector &pboo );	
+      //void pboost( TVector3 pbeam, TVector3 plab, TLorentzVector &pboo );
 
    private:
       virtual void beginStream(edm::StreamID) override;
@@ -144,7 +146,7 @@ HHESTIAProducer::HHESTIAProducer(const edm::ParameterSet& iConfig):
 
    // AK8 jet variables
    listOfVars.push_back("nJets");
- 
+
    listOfVars.push_back("jetAK8_phi");
    listOfVars.push_back("jetAK8_eta");
    listOfVars.push_back("jetAK8_pt");
@@ -189,19 +191,53 @@ HHESTIAProducer::HHESTIAProducer(const edm::ParameterSet& iConfig):
    listOfVars.push_back("FoxWolfH3_Higgs");
    listOfVars.push_back("FoxWolfH4_Higgs");
 
+   listOfVars.push_back("FoxWolfH1_Top");
+   listOfVars.push_back("FoxWolfH2_Top");
+   listOfVars.push_back("FoxWolfH3_Top");
+   listOfVars.push_back("FoxWolfH4_Top");
+
+   listOfVars.push_back("FoxWolfH1_W");
+   listOfVars.push_back("FoxWolfH2_W");
+   listOfVars.push_back("FoxWolfH3_W");
+   listOfVars.push_back("FoxWolfH4_W");
+
+   listOfVars.push_back("FoxWolfH1_Z");
+   listOfVars.push_back("FoxWolfH2_Z");
+   listOfVars.push_back("FoxWolfH3_Z");
+   listOfVars.push_back("FoxWolfH4_Z");
+
    // Event Shape Variables
    listOfVars.push_back("isotropy_Higgs");
    listOfVars.push_back("sphericity_Higgs");
    listOfVars.push_back("aplanarity_Higgs");
    listOfVars.push_back("thrust_Higgs");
 
+   listOfVars.push_back("isotropy_Top");
+   listOfVars.push_back("sphericity_Top");
+   listOfVars.push_back("aplanarity_Top");
+   listOfVars.push_back("thrust_Top");
+
+   listOfVars.push_back("isotropy_W");
+   listOfVars.push_back("sphericity_W");
+   listOfVars.push_back("aplanarity_W");
+   listOfVars.push_back("thrust_W");
+
+   listOfVars.push_back("isotropy_Z");
+   listOfVars.push_back("sphericity_Z");
+   listOfVars.push_back("aplanarity_Z");
+   listOfVars.push_back("thrust_Z");
+
    // Jet Asymmetry
    listOfVars.push_back("asymmetry_Higgs");
+   listOfVars.push_back("asymmetry_Top");
+   listOfVars.push_back("asymmetry_W");
+   listOfVars.push_back("asymmetry_Z");
 
    // Jet PF Candidate Variables
    listOfJetPFvars.push_back("jet_PF_candidate_pt");
    listOfJetPFvars.push_back("jet_PF_candidate_phi");
    listOfJetPFvars.push_back("jet_PF_candidate_eta");
+
    listOfJetPFvars.push_back("HiggsFrame_PF_candidate_px");
    listOfJetPFvars.push_back("HiggsFrame_PF_candidate_py");
    listOfJetPFvars.push_back("HiggsFrame_PF_candidate_pz");
@@ -210,6 +246,33 @@ HHESTIAProducer::HHESTIAProducer(const edm::ParameterSet& iConfig):
    listOfJetPFvars.push_back("HiggsFrame_subjet_py");
    listOfJetPFvars.push_back("HiggsFrame_subjet_pz");
    listOfJetPFvars.push_back("HiggsFrame_subjet_energy");
+
+   listOfJetPFvars.push_back("TopFrame_PF_candidate_px");
+   listOfJetPFvars.push_back("TopFrame_PF_candidate_py");
+   listOfJetPFvars.push_back("TopFrame_PF_candidate_pz");
+   listOfJetPFvars.push_back("TopFrame_PF_candidate_energy");
+   listOfJetPFvars.push_back("TopFrame_subjet_px");
+   listOfJetPFvars.push_back("TopFrame_subjet_py");
+   listOfJetPFvars.push_back("TopFrame_subjet_pz");
+   listOfJetPFvars.push_back("TopFrame_subjet_energy");
+
+   listOfJetPFvars.push_back("WFrame_PF_candidate_px");
+   listOfJetPFvars.push_back("WFrame_PF_candidate_py");
+   listOfJetPFvars.push_back("WFrame_PF_candidate_pz");
+   listOfJetPFvars.push_back("WFrame_PF_candidate_energy");
+   listOfJetPFvars.push_back("WFrame_subjet_px");
+   listOfJetPFvars.push_back("WFrame_subjet_py");
+   listOfJetPFvars.push_back("WFrame_subjet_pz");
+   listOfJetPFvars.push_back("WFrame_subjet_energy");
+
+   listOfJetPFvars.push_back("ZFrame_PF_candidate_px");
+   listOfJetPFvars.push_back("ZFrame_PF_candidate_py");
+   listOfJetPFvars.push_back("ZFrame_PF_candidate_pz");
+   listOfJetPFvars.push_back("ZFrame_PF_candidate_energy");
+   listOfJetPFvars.push_back("ZFrame_subjet_px");
+   listOfJetPFvars.push_back("ZFrame_subjet_py");
+   listOfJetPFvars.push_back("ZFrame_subjet_pz");
+   listOfJetPFvars.push_back("ZFrame_subjet_energy");
 
    // Make Branches for each variable
    for (unsigned i = 0; i < listOfVars.size(); i++){
@@ -234,7 +297,7 @@ HHESTIAProducer::HHESTIAProducer(const edm::ParameterSet& iConfig):
 
    // Gen Particles
    edm::InputTag genPartTag_;
-   genPartTag_ = edm::InputTag("prunedGenParticles", "", "PAT"); 
+   genPartTag_ = edm::InputTag("prunedGenParticles", "", "PAT");
    genPartToken_ = consumes<std::vector<reco::GenParticle> >(genPartTag_);
 
    // Primary Vertices
@@ -257,7 +320,7 @@ HHESTIAProducer::~HHESTIAProducer()
 
    // do anything that needs to be done at destruction time
    // (eg. close files, deallocate, resources etc.)
- 
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -280,12 +343,12 @@ HHESTIAProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    //------------------------------------------------------------------------------
    // Create miniAOD object collections -------------------------------------------
    //------------------------------------------------------------------------------
-   
+
    // Find objects corresponding to the token and link to the handle
    Handle< std::vector<pat::Jet> > ak8JetsCollection;
    iEvent.getByToken(ak8JetsToken_, ak8JetsCollection);
    vector<pat::Jet> ak8Jets = *ak8JetsCollection.product();
- 
+
    Handle< std::vector<reco::GenParticle> > genPartCollection;
    iEvent.getByToken(genPartToken_, genPartCollection);
    vector<reco::GenParticle> genPart = *genPartCollection.product();
@@ -337,22 +400,31 @@ HHESTIAProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
          getJetDaughters(daughtersOfJet, ijet, jetPFcand);
 
          // Higgs Rest Frame Variables
-         storeHiggsFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand);
+         storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Higgs", 125.);
+
+         // Top Rest Frame Variables
+         storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Top", 172.5);
+
+         // W Rest Frame Variables
+         storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "W", 80.4);
+
+         // Z Rest Frame Variables
+         storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Top", 91.2);
 
          // Fill the jet entry tree
          jetTree->Fill();
       }
 
       //-------------------------------------------------------------------------------
-      // AK8 Jets of interest from signal samples -------------------------------------
+      // AK8 Jets of interest from Higgs samples --------------------------------------
       //-------------------------------------------------------------------------------
       int numJet = 0;
       if(ijet->numberOfDaughters() >= 2 && ijet->pt() >= 500 && ijet->userFloat("ak8PFJetsCHSSoftDropMass") > 40 && isSignal_ == true){
          // gen Higgs loop
          for (size_t iHiggs = 0; iHiggs < genHiggs.size(); iHiggs++){
             TLorentzVector jet(ijet->px(), ijet->py(), ijet->pz(), ijet->energy() );
-           
-            numJet++; 
+
+            numJet++;
             // match Jet to Higgs
             if(jet.DeltaR(genHiggs[iHiggs]) < 0.1){
 
@@ -368,8 +440,17 @@ HHESTIAProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
                getJetDaughters(daughtersOfJet, ijet, jetPFcand);
 
                // Higgs Rest Frame Variables
-               storeHiggsFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand);
- 
+               storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Higgs", 125.);
+
+               // Top Rest Frame Variables
+               storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Top", 172.5);
+
+               // W Rest Frame Variables
+               storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "W", 80.4);
+
+               // Z Rest Frame Variables
+               storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Top", 91.2);
+
                // Fill the jet entry tree
                jetTree->Fill();
             }
@@ -392,7 +473,7 @@ HHESTIAProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 // Method called once each job just before starting event loop  -------------------
 //=================================================================================
 
-void 
+void
 HHESTIAProducer::beginStream(edm::StreamID)
 {
 }
@@ -401,8 +482,8 @@ HHESTIAProducer::beginStream(edm::StreamID)
 // Method called once each job just after ending the event loop  ------------------
 //=================================================================================
 
-void 
-HHESTIAProducer::endStream() 
+void
+HHESTIAProducer::endStream()
 {
 }
 
