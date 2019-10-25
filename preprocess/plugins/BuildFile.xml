@@ -10,4 +10,5 @@
 <use name="clhep"/>
 <use name="ROOT"/>
 
+<flags CXXFLAGS="-O0 -g3 -fno-inline"/>
 <flags EDM_PLUGIN="1"/>
