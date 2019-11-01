@@ -220,7 +220,7 @@ void storeRestFrameVariables(std::map<std::string, float> &treeVars, std::vector
 
       // Now that PF candidates are stored, make the boost axis the Z-axis
       // Important for BES variables
-      pboost( thisJetLV.Vect(), thisParticleLV.Vect(), thisParticleLV);
+      //pboost( thisJetLV.Vect(), thisParticleLV.Vect(), thisParticleLV);
       particles.push_back( thisParticleLV );
       particles2.push_back( math::XYZVector( thisParticleLV.X(), thisParticleLV.Y(), thisParticleLV.Z() ));
       particles3.push_back( reco::LeafCandidate(+1, reco::Candidate::LorentzVector( thisParticleLV.X(), thisParticleLV.Y(),
@@ -253,7 +253,7 @@ void storeRestFrameVariables(std::map<std::string, float> &treeVars, std::vector
    double asymmetry             = sumPz/sumP;
    treeVars["asymmetry_"+frame] = asymmetry;
 
-   // Recluster the jets in the Higgs rest frame
+   // Recluster the jets in the heavy object rest frame
    JetDefinition jet_def(antikt_algorithm, 0.4);
    ClusterSequence cs(FJparticles, jet_def);
    vector<PseudoJet> jetsFJ = sorted_by_pt(cs.inclusive_jets(20.0));
@@ -278,26 +278,31 @@ void storeRestFrameVariables(std::map<std::string, float> &treeVars, std::vector
 
 void pboost( TVector3 pbeam, TVector3 plab, TLorentzVector &pboo ){
 
-   double pl = plab.Dot(pbeam);
-   pl *= double(1. / pbeam.Mag());
+    double pl = plab.Dot(pbeam);
+    pl *= double(1. / pbeam.Mag());
 
-   // set x axis direction along pbeam x (0,0,1)
-   TVector3 pbx;
+    // set x axis direction along pbeam x (0,0,1)
+    TVector3 pbx;
 
-   pbx.SetX(pbeam.Y());
-   pbx.SetY(-pbeam.X());
-   pbx.SetZ(0.0);
+    pbx.SetX(pbeam.Y());
+    pbx.SetY(-pbeam.X());
+    pbx.SetZ(0.0);
 
-   pbx *= double(1. / pbx.Mag());
+    pbx *= double(1. / pbx.Mag());
 
-   // set y axis direction along -pbx x pbeam
-   TVector3 pby;
+    // set y axis direction along -pbx x pbeam
+    TVector3 pby;
 
-   pby = -pbx.Cross(pbeam);
-   pby *= double(1. / pby.Mag());
+    pby = -pbx.Cross(pbeam);
+    pby *= double(1. / pby.Mag());
 
-   pboo.SetX((plab.Dot(pbx)));
-   pboo.SetY((plab.Dot(pby)));
-   pboo.SetZ(pl);
+    pboo.SetX((plab.Dot(pbx)));
+    pboo.SetY((plab.Dot(pby)));
+    pboo.SetZ(pl);
+
+    // Check for errors
+    if(pboo.M() <= 0.0){
+        std::cout << "ERROR: PF Candidates have negative or zero mass!!!!!" << std::endl;
+    }
 
 }

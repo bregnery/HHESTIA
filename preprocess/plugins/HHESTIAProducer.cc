@@ -63,6 +63,50 @@
 #include "edanalyzerTools.h"
 
 ///////////////////////////////////////////////////////////////////////////////////
+// Define a namespace -------------------------------------------------------------
+///////////////////////////////////////////////////////////////////////////////////
+
+namespace best {
+
+    // enumerate possible jet types
+    enum JetType { H, t, W, Z, Q};
+
+    // create a struct to help with mapping string label to enum value
+    struct JetTypeStringToEnum {
+        const char label;
+        JetType value;
+    };
+
+    // Create a mapping from the input jetType to enum
+    JetType jetTypeFromString(const std::string& label) {
+        static const JetTypeStringToEnum jetTypeStringToEnumMap[] = {
+            {'H', H},
+            {'t', t},
+            {'W', W},
+            {'Z', Z},
+            {'Q', Q}
+        };
+
+        JetType value = (JetType)-1;
+        bool found = false;
+        for (int i = 0; jetTypeStringToEnumMap[i].label && (!found); ++i){
+            if (!strcmp(label.c_str(), &jetTypeStringToEnumMap[i].label) ) {
+                found = true;
+                value = jetTypeStringToEnumMap[i].value;
+            }
+        }
+
+        // Throw an error if user inputs an unrecognized type
+        if (!found){
+            throw cms::Exception("JetTypeError") << label << " is not a recognized JetType";
+        }
+
+        return value;
+    }
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////
 // Class declaration --------------------------------------------------------------
 ///////////////////////////////////////////////////////////////////////////////////
 
@@ -92,7 +136,7 @@ class HHESTIAProducer : public edm::stream::EDProducer<> {
 
       // Input variables
       std::string inputJetColl_;
-      bool isSignal_;
+      best::JetType jetType_;
 
       // Tree variables
       TTree *jetTree;
@@ -129,186 +173,188 @@ class HHESTIAProducer : public edm::stream::EDProducer<> {
 ///////////////////////////////////////////////////////////////////////////////////
 
 HHESTIAProducer::HHESTIAProducer(const edm::ParameterSet& iConfig):
-   inputJetColl_ (iConfig.getParameter<std::string>("inputJetColl")),
-   isSignal_ (iConfig.getParameter<bool>("isSignal"))
+    inputJetColl_ (iConfig.getParameter<std::string>("inputJetColl")),
+    jetType_ (best::jetTypeFromString(iConfig.getParameter<std::string>("jetType")))
 {
 
-   //------------------------------------------------------------------------------
-   // Prepare TFile Service -------------------------------------------------------
-   //------------------------------------------------------------------------------
+    std::cout << "Jet Type: " << jetType_ << " Type: " << typeid(jetType_).name() << std::endl;
 
-   edm::Service<TFileService> fs;
-   jetTree = fs->make<TTree>("jetTree","jetTree");
+    //------------------------------------------------------------------------------
+    // Prepare TFile Service -------------------------------------------------------
+    //------------------------------------------------------------------------------
 
-   //------------------------------------------------------------------------------
-   // Create tree variables and branches ------------------------------------------
-   //------------------------------------------------------------------------------
+    edm::Service<TFileService> fs;
+    jetTree = fs->make<TTree>("jetTree","jetTree");
 
-   // AK8 jet variables
-   listOfVars.push_back("nJets");
+    //------------------------------------------------------------------------------
+    // Create tree variables and branches ------------------------------------------
+    //------------------------------------------------------------------------------
 
-   listOfVars.push_back("jetAK8_phi");
-   listOfVars.push_back("jetAK8_eta");
-   listOfVars.push_back("jetAK8_pt");
-   listOfVars.push_back("jetAK8_mass");
-   listOfVars.push_back("jetAK8_SoftDropMass");
+    // AK8 jet variables
+    listOfVars.push_back("nJets");
 
-   // Vertex Variables
-   listOfVars.push_back("nSecondaryVertices");
-   listOfVars.push_back("SV_1_pt");
-   listOfVars.push_back("SV_1_eta");
-   listOfVars.push_back("SV_1_phi");
-   listOfVars.push_back("SV_1_mass");
-   listOfVars.push_back("SV_1_nTracks");
-   listOfVars.push_back("SV_1_chi2");
-   listOfVars.push_back("SV_1_Ndof");
+    listOfVars.push_back("jetAK8_phi");
+    listOfVars.push_back("jetAK8_eta");
+    listOfVars.push_back("jetAK8_pt");
+    listOfVars.push_back("jetAK8_mass");
+    listOfVars.push_back("jetAK8_SoftDropMass");
 
-   listOfVars.push_back("SV_2_pt");
-   listOfVars.push_back("SV_2_eta");
-   listOfVars.push_back("SV_2_phi");
-   listOfVars.push_back("SV_2_mass");
-   listOfVars.push_back("SV_2_nTracks");
-   listOfVars.push_back("SV_2_chi2");
-   listOfVars.push_back("SV_2_Ndof");
+    // Vertex Variables
+    listOfVars.push_back("nSecondaryVertices");
+    listOfVars.push_back("SV_1_pt");
+    listOfVars.push_back("SV_1_eta");
+    listOfVars.push_back("SV_1_phi");
+    listOfVars.push_back("SV_1_mass");
+    listOfVars.push_back("SV_1_nTracks");
+    listOfVars.push_back("SV_1_chi2");
+    listOfVars.push_back("SV_1_Ndof");
 
-   listOfVars.push_back("SV_3_pt");
-   listOfVars.push_back("SV_3_eta");
-   listOfVars.push_back("SV_3_phi");
-   listOfVars.push_back("SV_3_mass");
-   listOfVars.push_back("SV_3_nTracks");
-   listOfVars.push_back("SV_3_chi2");
-   listOfVars.push_back("SV_3_Ndof");
+    listOfVars.push_back("SV_2_pt");
+    listOfVars.push_back("SV_2_eta");
+    listOfVars.push_back("SV_2_phi");
+    listOfVars.push_back("SV_2_mass");
+    listOfVars.push_back("SV_2_nTracks");
+    listOfVars.push_back("SV_2_chi2");
+    listOfVars.push_back("SV_2_Ndof");
 
-   // nsubjettiness
-   listOfVars.push_back("jetAK8_Tau4");
-   listOfVars.push_back("jetAK8_Tau3");
-   listOfVars.push_back("jetAK8_Tau2");
-   listOfVars.push_back("jetAK8_Tau1");
+    listOfVars.push_back("SV_3_pt");
+    listOfVars.push_back("SV_3_eta");
+    listOfVars.push_back("SV_3_phi");
+    listOfVars.push_back("SV_3_mass");
+    listOfVars.push_back("SV_3_nTracks");
+    listOfVars.push_back("SV_3_chi2");
+    listOfVars.push_back("SV_3_Ndof");
 
-   // Fox Wolfram Moments
-   listOfVars.push_back("FoxWolfH1_Higgs");
-   listOfVars.push_back("FoxWolfH2_Higgs");
-   listOfVars.push_back("FoxWolfH3_Higgs");
-   listOfVars.push_back("FoxWolfH4_Higgs");
+    // nsubjettiness
+    listOfVars.push_back("jetAK8_Tau4");
+    listOfVars.push_back("jetAK8_Tau3");
+    listOfVars.push_back("jetAK8_Tau2");
+    listOfVars.push_back("jetAK8_Tau1");
 
-   listOfVars.push_back("FoxWolfH1_Top");
-   listOfVars.push_back("FoxWolfH2_Top");
-   listOfVars.push_back("FoxWolfH3_Top");
-   listOfVars.push_back("FoxWolfH4_Top");
+    // Fox Wolfram Moments
+    listOfVars.push_back("FoxWolfH1_Higgs");
+    listOfVars.push_back("FoxWolfH2_Higgs");
+    listOfVars.push_back("FoxWolfH3_Higgs");
+    listOfVars.push_back("FoxWolfH4_Higgs");
 
-   listOfVars.push_back("FoxWolfH1_W");
-   listOfVars.push_back("FoxWolfH2_W");
-   listOfVars.push_back("FoxWolfH3_W");
-   listOfVars.push_back("FoxWolfH4_W");
+    listOfVars.push_back("FoxWolfH1_Top");
+    listOfVars.push_back("FoxWolfH2_Top");
+    listOfVars.push_back("FoxWolfH3_Top");
+    listOfVars.push_back("FoxWolfH4_Top");
 
-   listOfVars.push_back("FoxWolfH1_Z");
-   listOfVars.push_back("FoxWolfH2_Z");
-   listOfVars.push_back("FoxWolfH3_Z");
-   listOfVars.push_back("FoxWolfH4_Z");
+    listOfVars.push_back("FoxWolfH1_W");
+    listOfVars.push_back("FoxWolfH2_W");
+    listOfVars.push_back("FoxWolfH3_W");
+    listOfVars.push_back("FoxWolfH4_W");
 
-   // Event Shape Variables
-   listOfVars.push_back("isotropy_Higgs");
-   listOfVars.push_back("sphericity_Higgs");
-   listOfVars.push_back("aplanarity_Higgs");
-   listOfVars.push_back("thrust_Higgs");
+    listOfVars.push_back("FoxWolfH1_Z");
+    listOfVars.push_back("FoxWolfH2_Z");
+    listOfVars.push_back("FoxWolfH3_Z");
+    listOfVars.push_back("FoxWolfH4_Z");
 
-   listOfVars.push_back("isotropy_Top");
-   listOfVars.push_back("sphericity_Top");
-   listOfVars.push_back("aplanarity_Top");
-   listOfVars.push_back("thrust_Top");
+    // Event Shape Variables
+    listOfVars.push_back("isotropy_Higgs");
+    listOfVars.push_back("sphericity_Higgs");
+    listOfVars.push_back("aplanarity_Higgs");
+    listOfVars.push_back("thrust_Higgs");
 
-   listOfVars.push_back("isotropy_W");
-   listOfVars.push_back("sphericity_W");
-   listOfVars.push_back("aplanarity_W");
-   listOfVars.push_back("thrust_W");
+    listOfVars.push_back("isotropy_Top");
+    listOfVars.push_back("sphericity_Top");
+    listOfVars.push_back("aplanarity_Top");
+    listOfVars.push_back("thrust_Top");
 
-   listOfVars.push_back("isotropy_Z");
-   listOfVars.push_back("sphericity_Z");
-   listOfVars.push_back("aplanarity_Z");
-   listOfVars.push_back("thrust_Z");
+    listOfVars.push_back("isotropy_W");
+    listOfVars.push_back("sphericity_W");
+    listOfVars.push_back("aplanarity_W");
+    listOfVars.push_back("thrust_W");
 
-   // Jet Asymmetry
-   listOfVars.push_back("asymmetry_Higgs");
-   listOfVars.push_back("asymmetry_Top");
-   listOfVars.push_back("asymmetry_W");
-   listOfVars.push_back("asymmetry_Z");
+    listOfVars.push_back("isotropy_Z");
+    listOfVars.push_back("sphericity_Z");
+    listOfVars.push_back("aplanarity_Z");
+    listOfVars.push_back("thrust_Z");
 
-   // Jet PF Candidate Variables
-   listOfJetPFvars.push_back("jet_PF_candidate_pt");
-   listOfJetPFvars.push_back("jet_PF_candidate_phi");
-   listOfJetPFvars.push_back("jet_PF_candidate_eta");
+    // Jet Asymmetry
+    listOfVars.push_back("asymmetry_Higgs");
+    listOfVars.push_back("asymmetry_Top");
+    listOfVars.push_back("asymmetry_W");
+    listOfVars.push_back("asymmetry_Z");
 
-   listOfJetPFvars.push_back("HiggsFrame_PF_candidate_px");
-   listOfJetPFvars.push_back("HiggsFrame_PF_candidate_py");
-   listOfJetPFvars.push_back("HiggsFrame_PF_candidate_pz");
-   listOfJetPFvars.push_back("HiggsFrame_PF_candidate_energy");
-   listOfJetPFvars.push_back("HiggsFrame_subjet_px");
-   listOfJetPFvars.push_back("HiggsFrame_subjet_py");
-   listOfJetPFvars.push_back("HiggsFrame_subjet_pz");
-   listOfJetPFvars.push_back("HiggsFrame_subjet_energy");
+    // Jet PF Candidate Variables
+    listOfJetPFvars.push_back("jet_PF_candidate_pt");
+    listOfJetPFvars.push_back("jet_PF_candidate_phi");
+    listOfJetPFvars.push_back("jet_PF_candidate_eta");
 
-   listOfJetPFvars.push_back("TopFrame_PF_candidate_px");
-   listOfJetPFvars.push_back("TopFrame_PF_candidate_py");
-   listOfJetPFvars.push_back("TopFrame_PF_candidate_pz");
-   listOfJetPFvars.push_back("TopFrame_PF_candidate_energy");
-   listOfJetPFvars.push_back("TopFrame_subjet_px");
-   listOfJetPFvars.push_back("TopFrame_subjet_py");
-   listOfJetPFvars.push_back("TopFrame_subjet_pz");
-   listOfJetPFvars.push_back("TopFrame_subjet_energy");
+    listOfJetPFvars.push_back("HiggsFrame_PF_candidate_px");
+    listOfJetPFvars.push_back("HiggsFrame_PF_candidate_py");
+    listOfJetPFvars.push_back("HiggsFrame_PF_candidate_pz");
+    listOfJetPFvars.push_back("HiggsFrame_PF_candidate_energy");
+    listOfJetPFvars.push_back("HiggsFrame_subjet_px");
+    listOfJetPFvars.push_back("HiggsFrame_subjet_py");
+    listOfJetPFvars.push_back("HiggsFrame_subjet_pz");
+    listOfJetPFvars.push_back("HiggsFrame_subjet_energy");
 
-   listOfJetPFvars.push_back("WFrame_PF_candidate_px");
-   listOfJetPFvars.push_back("WFrame_PF_candidate_py");
-   listOfJetPFvars.push_back("WFrame_PF_candidate_pz");
-   listOfJetPFvars.push_back("WFrame_PF_candidate_energy");
-   listOfJetPFvars.push_back("WFrame_subjet_px");
-   listOfJetPFvars.push_back("WFrame_subjet_py");
-   listOfJetPFvars.push_back("WFrame_subjet_pz");
-   listOfJetPFvars.push_back("WFrame_subjet_energy");
+    listOfJetPFvars.push_back("TopFrame_PF_candidate_px");
+    listOfJetPFvars.push_back("TopFrame_PF_candidate_py");
+    listOfJetPFvars.push_back("TopFrame_PF_candidate_pz");
+    listOfJetPFvars.push_back("TopFrame_PF_candidate_energy");
+    listOfJetPFvars.push_back("TopFrame_subjet_px");
+    listOfJetPFvars.push_back("TopFrame_subjet_py");
+    listOfJetPFvars.push_back("TopFrame_subjet_pz");
+    listOfJetPFvars.push_back("TopFrame_subjet_energy");
 
-   listOfJetPFvars.push_back("ZFrame_PF_candidate_px");
-   listOfJetPFvars.push_back("ZFrame_PF_candidate_py");
-   listOfJetPFvars.push_back("ZFrame_PF_candidate_pz");
-   listOfJetPFvars.push_back("ZFrame_PF_candidate_energy");
-   listOfJetPFvars.push_back("ZFrame_subjet_px");
-   listOfJetPFvars.push_back("ZFrame_subjet_py");
-   listOfJetPFvars.push_back("ZFrame_subjet_pz");
-   listOfJetPFvars.push_back("ZFrame_subjet_energy");
+    listOfJetPFvars.push_back("WFrame_PF_candidate_px");
+    listOfJetPFvars.push_back("WFrame_PF_candidate_py");
+    listOfJetPFvars.push_back("WFrame_PF_candidate_pz");
+    listOfJetPFvars.push_back("WFrame_PF_candidate_energy");
+    listOfJetPFvars.push_back("WFrame_subjet_px");
+    listOfJetPFvars.push_back("WFrame_subjet_py");
+    listOfJetPFvars.push_back("WFrame_subjet_pz");
+    listOfJetPFvars.push_back("WFrame_subjet_energy");
 
-   // Make Branches for each variable
-   for (unsigned i = 0; i < listOfVars.size(); i++){
-      treeVars[ listOfVars[i] ] = -999.99;
-      jetTree->Branch( (listOfVars[i]).c_str() , &(treeVars[ listOfVars[i] ]), (listOfVars[i]+"/F").c_str() );
-   }
+    listOfJetPFvars.push_back("ZFrame_PF_candidate_px");
+    listOfJetPFvars.push_back("ZFrame_PF_candidate_py");
+    listOfJetPFvars.push_back("ZFrame_PF_candidate_pz");
+    listOfJetPFvars.push_back("ZFrame_PF_candidate_energy");
+    listOfJetPFvars.push_back("ZFrame_subjet_px");
+    listOfJetPFvars.push_back("ZFrame_subjet_py");
+    listOfJetPFvars.push_back("ZFrame_subjet_pz");
+    listOfJetPFvars.push_back("ZFrame_subjet_energy");
 
-   // Make Branches for each of the jet constituents' variables
-   for (unsigned i = 0; i < listOfJetPFvars.size(); i++){
-      jetTree->Branch( (listOfJetPFvars[i]).c_str() , &(jetPFcand[ listOfJetPFvars[i] ]) );
-   }
+    // Make Branches for each variable
+    for (unsigned i = 0; i < listOfVars.size(); i++){
+        treeVars[ listOfVars[i] ] = -999.99;
+        jetTree->Branch( (listOfVars[i]).c_str() , &(treeVars[ listOfVars[i] ]), (listOfVars[i]+"/F").c_str() );
+    }
 
-   //------------------------------------------------------------------------------
-   // Define input tags -----------------------------------------------------------
-   //------------------------------------------------------------------------------
+    // Make Branches for each of the jet constituents' variables
+    for (unsigned i = 0; i < listOfJetPFvars.size(); i++){
+        jetTree->Branch( (listOfJetPFvars[i]).c_str() , &(jetPFcand[ listOfJetPFvars[i] ]) );
+    }
 
-   // AK8 Jets
-   edm::InputTag ak8JetsTag_;
-   //ak8JetsTag_ = edm::InputTag("slimmedJetsAK8", "", "PAT");
-   ak8JetsTag_ = edm::InputTag(inputJetColl_, "", "run");
-   ak8JetsToken_ = consumes<std::vector<pat::Jet> >(ak8JetsTag_);
+    //------------------------------------------------------------------------------
+    // Define input tags -----------------------------------------------------------
+    //------------------------------------------------------------------------------
 
-   // Gen Particles
-   edm::InputTag genPartTag_;
-   genPartTag_ = edm::InputTag("prunedGenParticles", "", "PAT");
-   genPartToken_ = consumes<std::vector<reco::GenParticle> >(genPartTag_);
+    // AK8 Jets
+    edm::InputTag ak8JetsTag_;
+    //ak8JetsTag_ = edm::InputTag("slimmedJetsAK8", "", "PAT");
+    ak8JetsTag_ = edm::InputTag(inputJetColl_, "", "run");
+    ak8JetsToken_ = consumes<std::vector<pat::Jet> >(ak8JetsTag_);
 
-   // Primary Vertices
-   edm::InputTag verticesTag_;
-   verticesTag_ = edm::InputTag("offlineSlimmedPrimaryVertices", "", "PAT");
-   verticesToken_ = consumes<std::vector<reco::Vertex> >(verticesTag_);
+    // Gen Particles
+    edm::InputTag genPartTag_;
+    genPartTag_ = edm::InputTag("prunedGenParticles", "", "PAT");
+    genPartToken_ = consumes<std::vector<reco::GenParticle> >(genPartTag_);
 
-   // Secondary Vertices
-   edm::InputTag secVerticesTag_;
-   secVerticesTag_ = edm::InputTag("slimmedSecondaryVertices", "", "PAT");
-   secVerticesToken_ = consumes<std::vector<reco::VertexCompositePtrCandidate> >(secVerticesTag_);
+    // Primary Vertices
+    edm::InputTag verticesTag_;
+    verticesTag_ = edm::InputTag("offlineSlimmedPrimaryVertices", "", "PAT");
+    verticesToken_ = consumes<std::vector<reco::Vertex> >(verticesTag_);
+
+    // Secondary Vertices
+    edm::InputTag secVerticesTag_;
+    secVerticesTag_ = edm::InputTag("slimmedSecondaryVertices", "", "PAT");
+    secVerticesToken_ = consumes<std::vector<reco::VertexCompositePtrCandidate> >(secVerticesTag_);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -318,8 +364,8 @@ HHESTIAProducer::HHESTIAProducer(const edm::ParameterSet& iConfig):
 HHESTIAProducer::~HHESTIAProducer()
 {
 
-   // do anything that needs to be done at destruction time
-   // (eg. close files, deallocate, resources etc.)
+    // do anything that needs to be done at destruction time
+    // (eg. close files, deallocate, resources etc.)
 
 }
 
@@ -334,138 +380,304 @@ HHESTIAProducer::~HHESTIAProducer()
 void
 HHESTIAProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
-   using namespace edm;
-   using namespace fastjet;
-   using namespace std;
+    using namespace edm;
+    using namespace fastjet;
+    using namespace std;
 
-   typedef reco::Candidate::PolarLorentzVector fourv;
+    typedef reco::Candidate::PolarLorentzVector fourv;
 
-   //------------------------------------------------------------------------------
-   // Create miniAOD object collections -------------------------------------------
-   //------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------
+    // Create miniAOD object collections -------------------------------------------
+    //------------------------------------------------------------------------------
 
-   // Find objects corresponding to the token and link to the handle
-   Handle< std::vector<pat::Jet> > ak8JetsCollection;
-   iEvent.getByToken(ak8JetsToken_, ak8JetsCollection);
-   vector<pat::Jet> ak8Jets = *ak8JetsCollection.product();
+    // Find objects corresponding to the token and link to the handle
+    Handle< std::vector<pat::Jet> > ak8JetsCollection;
+    iEvent.getByToken(ak8JetsToken_, ak8JetsCollection);
+    vector<pat::Jet> ak8Jets = *ak8JetsCollection.product();
 
-   Handle< std::vector<reco::GenParticle> > genPartCollection;
-   iEvent.getByToken(genPartToken_, genPartCollection);
-   vector<reco::GenParticle> genPart = *genPartCollection.product();
+    Handle< std::vector<reco::GenParticle> > genPartCollection;
+    iEvent.getByToken(genPartToken_, genPartCollection);
+    vector<reco::GenParticle> genPart = *genPartCollection.product();
 
-   Handle< std::vector<reco::Vertex> > vertexCollection;
-   iEvent.getByToken(verticesToken_, vertexCollection);
-   vector<reco::Vertex> pVertices = *vertexCollection.product();
+    Handle< std::vector<reco::Vertex> > vertexCollection;
+    iEvent.getByToken(verticesToken_, vertexCollection);
+    vector<reco::Vertex> pVertices = *vertexCollection.product();
 
-   Handle< std::vector<reco::VertexCompositePtrCandidate> > secVertexCollection;
-   iEvent.getByToken(secVerticesToken_, secVertexCollection);
-   vector<reco::VertexCompositePtrCandidate> secVertices = *secVertexCollection.product();
+    Handle< std::vector<reco::VertexCompositePtrCandidate> > secVertexCollection;
+    iEvent.getByToken(secVerticesToken_, secVertexCollection);
+    vector<reco::VertexCompositePtrCandidate> secVertices = *secVertexCollection.product();
 
-   //------------------------------------------------------------------------------
-   // Gen Particles Loop ----------------------------------------------------------
-   //------------------------------------------------------------------------------
-   // This makes a TLorentz Vector for each generator Higgs to use for jet matching
-   //------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------
+    // Gen Particles Loop ----------------------------------------------------------
+    //------------------------------------------------------------------------------
+    // This makes a TLorentz Vector for each generator Heavy Object to use for jet
+    // matching
+    //------------------------------------------------------------------------------
+    // Please note that the Jet Type has been enumerated:
+    // H -> 0, t -> 1, W -> 2, Z -> 3, Q -> 4
+    //------------------------------------------------------------------------------
 
-   std::vector<TLorentzVector> genHiggs;
-   for (vector<reco::GenParticle>::const_iterator genBegin = genPart.begin(), genEnd = genPart.end(), ipart = genBegin; ipart != genEnd; ++ipart){
-      if(abs(ipart->pdgId() ) == 25){
-         genHiggs.push_back( TLorentzVector(ipart->px(), ipart->py(), ipart->pz(), ipart->energy() ) );
-      }
-   }
-
-   //------------------------------------------------------------------------------
-   // AK8 Jet Loop ----------------------------------------------------------------
-   //------------------------------------------------------------------------------
-   // This loop makes a tree entry for each jet of interest -----------------------
-   //------------------------------------------------------------------------------
-
-   for (vector<pat::Jet>::const_iterator jetBegin = ak8Jets.begin(), jetEnd = ak8Jets.end(), ijet = jetBegin; ijet != jetEnd; ++ijet){
-
-      //-------------------------------------------------------------------------------
-      // AK8 Jets of interest from non-signal samples ---------------------------------
-      //-------------------------------------------------------------------------------
-      if(ijet->numberOfDaughters() >= 2 && ijet->pt() >= 500 && ijet->userFloat("ak8PFJetsCHSSoftDropMass") > 40 && isSignal_ == false){
-
-         // Store Jet Variables
-         treeVars["nJets"] = ak8Jets.size();
-         storeJetVariables(treeVars, ijet);
-
-         // Secondary Vertex Variables
-         TLorentzVector jet(ijet->px(), ijet->py(), ijet->pz(), ijet->energy() );
-         storeSecVertexVariables(treeVars, jet, secVertices);
-
-         // Get all of the Jet's daughters
-         vector<reco::Candidate * > daughtersOfJet;
-         getJetDaughters(daughtersOfJet, ijet, jetPFcand);
-
-         // Higgs Rest Frame Variables
-         storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Higgs", 125.);
-
-         // Top Rest Frame Variables
-         storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Top", 172.5);
-
-         // W Rest Frame Variables
-         storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "W", 80.4);
-
-         // Z Rest Frame Variables
-         storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Z", 91.2);
-
-         // Fill the jet entry tree
-         jetTree->Fill();
-      }
-
-      //-------------------------------------------------------------------------------
-      // AK8 Jets of interest from Higgs samples --------------------------------------
-      //-------------------------------------------------------------------------------
-      int numJet = 0;
-      if(ijet->numberOfDaughters() >= 2 && ijet->pt() >= 500 && ijet->userFloat("ak8PFJetsCHSSoftDropMass") > 40 && isSignal_ == true){
-         // gen Higgs loop
-         for (size_t iHiggs = 0; iHiggs < genHiggs.size(); iHiggs++){
-            TLorentzVector jet(ijet->px(), ijet->py(), ijet->pz(), ijet->energy() );
-
-            numJet++;
-            // match Jet to Higgs
-            if(jet.DeltaR(genHiggs[iHiggs]) < 0.1){
-
-               // Store Jet Variables
-               treeVars["nJets"] = ak8Jets.size();
-               storeJetVariables(treeVars, ijet);
-
-               // Secondary Vertex Variables
-               storeSecVertexVariables(treeVars, jet, secVertices);
-
-               // Get all of the Jet's daughters
-               vector<reco::Candidate * > daughtersOfJet;
-               getJetDaughters(daughtersOfJet, ijet, jetPFcand);
-
-               // Higgs Rest Frame Variables
-               storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Higgs", 125.);
-
-               // Top Rest Frame Variables
-               storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Top", 172.5);
-
-               // W Rest Frame Variables
-               storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "W", 80.4);
-
-               // Z Rest Frame Variables
-               storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Z", 91.2);
-
-               // Fill the jet entry tree
-               jetTree->Fill();
+    // Higgs
+    std::vector<TLorentzVector> genHiggs;
+    if(jetType_ == 0){
+        for (vector<reco::GenParticle>::const_iterator genBegin = genPart.begin(), genEnd = genPart.end(), ipart = genBegin; ipart != genEnd; ++ipart){
+            if(abs(ipart->pdgId() ) == 25){
+                genHiggs.push_back( TLorentzVector(ipart->px(), ipart->py(), ipart->pz(), ipart->energy() ) );
             }
-          }
-      }
-      //-------------------------------------------------------------------------------
-      // Clear and Reset all tree variables -------------------------------------------
-      //-------------------------------------------------------------------------------
-      for (unsigned i = 0; i < listOfVars.size(); i++){
-         treeVars[ listOfVars[i] ] = -999.99;
-      }
-      for (unsigned i = 0; i < listOfJetPFvars.size(); i++){
-         jetPFcand[ listOfJetPFvars[i] ] = vector<float>();
-      }
+        }
     }
+
+    // Top
+    std::vector<TLorentzVector> genTop;
+    if(jetType_ == 1){
+        for (vector<reco::GenParticle>::const_iterator genBegin = genPart.begin(), genEnd = genPart.end(), ipart = genBegin; ipart != genEnd; ++ipart){
+            if(abs(ipart->pdgId() ) == 6){
+                genTop.push_back( TLorentzVector(ipart->px(), ipart->py(), ipart->pz(), ipart->energy() ) );
+            }
+        }
+    }
+
+    // W
+    std::vector<TLorentzVector> genW;
+    if(jetType_ == 2){
+        for (vector<reco::GenParticle>::const_iterator genBegin = genPart.begin(), genEnd = genPart.end(), ipart = genBegin; ipart != genEnd; ++ipart){
+            if(abs(ipart->pdgId() ) == 24){
+                genW.push_back( TLorentzVector(ipart->px(), ipart->py(), ipart->pz(), ipart->energy() ) );
+            }
+        }
+    }
+
+    // Z
+    std::vector<TLorentzVector> genZ;
+    if(jetType_ == 3){
+        for (vector<reco::GenParticle>::const_iterator genBegin = genPart.begin(), genEnd = genPart.end(), ipart = genBegin; ipart != genEnd; ++ipart){
+            if(abs(ipart->pdgId() ) == 23){
+                genZ.push_back( TLorentzVector(ipart->px(), ipart->py(), ipart->pz(), ipart->energy() ) );
+            }
+        }
+    }
+
+
+
+    //------------------------------------------------------------------------------
+    // AK8 Jet Loop ----------------------------------------------------------------
+    //------------------------------------------------------------------------------
+    // This loop makes a tree entry for each jet of interest -----------------------
+    //------------------------------------------------------------------------------
+
+    for (vector<pat::Jet>::const_iterator jetBegin = ak8Jets.begin(), jetEnd = ak8Jets.end(), ijet = jetBegin; ijet != jetEnd; ++ijet){
+
+        //-------------------------------------------------------------------------------
+        // AK8 Jets of interest from QCD samples -------=======--------------------------
+        //-------------------------------------------------------------------------------
+        if(ijet->numberOfDaughters() >= 2 && ijet->pt() >= 500 && ijet->userFloat("ak8PFJetsCHSSoftDropMass") > 40 && jetType_ == 4){
+
+            // Store Jet Variables
+            treeVars["nJets"] = ak8Jets.size();
+            storeJetVariables(treeVars, ijet);
+
+            // Secondary Vertex Variables
+            TLorentzVector jet(ijet->px(), ijet->py(), ijet->pz(), ijet->energy() );
+            storeSecVertexVariables(treeVars, jet, secVertices);
+
+            // Get all of the Jet's daughters
+            vector<reco::Candidate * > daughtersOfJet;
+            getJetDaughters(daughtersOfJet, ijet, jetPFcand);
+
+            // Higgs Rest Frame Variables
+            storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Higgs", 125.);
+
+            // Top Rest Frame Variables
+            storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Top", 172.5);
+
+            // W Rest Frame Variables
+            storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "W", 80.4);
+
+            // Z Rest Frame Variables
+            storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Z", 91.2);
+
+            // Fill the jet entry tree
+            jetTree->Fill();
+        }
+
+        //-------------------------------------------------------------------------------
+        // AK8 Jets of interest from Higgs samples --------------------------------------
+        //-------------------------------------------------------------------------------
+        int numJet = 0;
+        if(ijet->numberOfDaughters() >= 2 && ijet->pt() >= 500 && ijet->userFloat("ak8PFJetsCHSSoftDropMass") > 40 && jetType_ == 0){
+            // gen Higgs loop
+            for (size_t iHiggs = 0; iHiggs < genHiggs.size(); iHiggs++){
+                TLorentzVector jet(ijet->px(), ijet->py(), ijet->pz(), ijet->energy() );
+
+                numJet++;
+                // match Jet to Higgs
+                if(jet.DeltaR(genHiggs[iHiggs]) < 0.1){
+
+                    // Store Jet Variables
+                    treeVars["nJets"] = ak8Jets.size();
+                    storeJetVariables(treeVars, ijet);
+
+                    // Secondary Vertex Variables
+                    storeSecVertexVariables(treeVars, jet, secVertices);
+
+                    // Get all of the Jet's daughters
+                    vector<reco::Candidate * > daughtersOfJet;
+                    getJetDaughters(daughtersOfJet, ijet, jetPFcand);
+
+                    // Higgs Rest Frame Variables
+                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Higgs", 125.);
+
+                    // Top Rest Frame Variables
+                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Top", 172.5);
+
+                    // W Rest Frame Variables
+                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "W", 80.4);
+
+                    // Z Rest Frame Variables
+                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Z", 91.2);
+
+                    // Fill the jet entry tree
+                    jetTree->Fill();
+                }
+             }
+        }
+
+        //-------------------------------------------------------------------------------
+        // AK8 Jets of interest from Top samples ----------------------------------------
+        //-------------------------------------------------------------------------------
+        numJet = 0;
+        if(ijet->numberOfDaughters() >= 2 && ijet->pt() >= 500 && ijet->userFloat("ak8PFJetsCHSSoftDropMass") > 40 && jetType_ == 1){
+            // gen Top loop
+            for (size_t iTop = 0; iTop < genTop.size(); iTop++){
+                TLorentzVector jet(ijet->px(), ijet->py(), ijet->pz(), ijet->energy() );
+
+                numJet++;
+                // match Jet to Top
+                if(jet.DeltaR(genTop[iTop]) < 0.1){
+
+                    // Store Jet Variables
+                    treeVars["nJets"] = ak8Jets.size();
+                    storeJetVariables(treeVars, ijet);
+
+                    // Secondary Vertex Variables
+                    storeSecVertexVariables(treeVars, jet, secVertices);
+
+                    // Get all of the Jet's daughters
+                    vector<reco::Candidate * > daughtersOfJet;
+                    getJetDaughters(daughtersOfJet, ijet, jetPFcand);
+
+                    // Higgs Rest Frame Variables
+                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Higgs", 125.);
+
+                    // Top Rest Frame Variables
+                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Top", 172.5);
+
+                    // W Rest Frame Variables
+                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "W", 80.4);
+
+                    // Z Rest Frame Variables
+                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Z", 91.2);
+
+                    // Fill the jet entry tree
+                    jetTree->Fill();
+                }
+             }
+        }
+
+        //-------------------------------------------------------------------------------
+        // AK8 Jets of interest from W samples ------------------------------------------
+        //-------------------------------------------------------------------------------
+        numJet = 0;
+        if(ijet->numberOfDaughters() >= 2 && ijet->pt() >= 500 && ijet->userFloat("ak8PFJetsCHSSoftDropMass") > 40 && jetType_ == 2){
+            // gen W loop
+            for (size_t iW = 0; iW < genW.size(); iW++){
+                TLorentzVector jet(ijet->px(), ijet->py(), ijet->pz(), ijet->energy() );
+
+                numJet++;
+                // match Jet to W
+                if(jet.DeltaR(genW[iW]) < 0.1){
+
+                    // Store Jet Variables
+                    treeVars["nJets"] = ak8Jets.size();
+                    storeJetVariables(treeVars, ijet);
+
+                    // Secondary Vertex Variables
+                    storeSecVertexVariables(treeVars, jet, secVertices);
+
+                    // Get all of the Jet's daughters
+                    vector<reco::Candidate * > daughtersOfJet;
+                    getJetDaughters(daughtersOfJet, ijet, jetPFcand);
+
+                    // Higgs Rest Frame Variables
+                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Higgs", 125.);
+
+                    // Top Rest Frame Variables
+                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Top", 172.5);
+
+                    // W Rest Frame Variables
+                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "W", 80.4);
+
+                    // Z Rest Frame Variables
+                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Z", 91.2);
+
+                    // Fill the jet entry tree
+                    jetTree->Fill();
+                }
+             }
+         }
+
+        //-------------------------------------------------------------------------------
+        // AK8 Jets of interest from Z samples --------------------------------------
+        //-------------------------------------------------------------------------------
+        numJet = 0;
+        if(ijet->numberOfDaughters() >= 2 && ijet->pt() >= 500 && ijet->userFloat("ak8PFJetsCHSSoftDropMass") > 40 && jetType_ == 3){
+            // gen Z loop
+            for (size_t iZ = 0; iZ < genZ.size(); iZ++){
+                TLorentzVector jet(ijet->px(), ijet->py(), ijet->pz(), ijet->energy() );
+
+                numJet++;
+                // match Jet to Z
+                if(jet.DeltaR(genZ[iZ]) < 0.1){
+
+                    // Store Jet Variables
+                    treeVars["nJets"] = ak8Jets.size();
+                    storeJetVariables(treeVars, ijet);
+
+                    // Secondary Vertex Variables
+                    storeSecVertexVariables(treeVars, jet, secVertices);
+
+                    // Get all of the Jet's daughters
+                    vector<reco::Candidate * > daughtersOfJet;
+                    getJetDaughters(daughtersOfJet, ijet, jetPFcand);
+
+                    // Higgs Rest Frame Variables
+                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Higgs", 125.);
+
+                    // Top Rest Frame Variables
+                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Top", 172.5);
+
+                    // W Rest Frame Variables
+                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "W", 80.4);
+
+                    // Z Rest Frame Variables
+                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Z", 91.2);
+
+                    // Fill the jet entry tree
+                    jetTree->Fill();
+                }
+             }
+        }
+
+        //-------------------------------------------------------------------------------
+        // Clear and Reset all tree variables -------------------------------------------
+        //-------------------------------------------------------------------------------
+        for (unsigned i = 0; i < listOfVars.size(); i++){
+            treeVars[ listOfVars[i] ] = -999.99;
+        }
+        for (unsigned i = 0; i < listOfJetPFvars.size(); i++){
+            jetPFcand[ listOfJetPFvars[i] ] = vector<float>();
+        }
+     }
 }
 
 
