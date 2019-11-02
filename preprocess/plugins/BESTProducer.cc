@@ -1,17 +1,17 @@
 // -*- C++ -*-
 //========================================================================================
-// Package:    HHESTIA/preprocess                  ---------------------------------------
-// Class:      HHESTIAProducer                     ---------------------------------------
+// Package:    BEST/preprocess                  ---------------------------------------
+// Class:      BESTProducer                     ---------------------------------------
 //----------------------------------------------------------------------------------------
-/**\class HHESTIAProducer HHESTIAProducer.cc HHESTIA/preprocess/plugins/HHESTIAProducer.cc
+/**\class BESTProducer BESTProducer.cc BEST/preprocess/plugins/BESTProducer.cc
 ------------------------------------------------------------------------------------------
- Description: This class preprocesses MC samples so that they can be used with HHESTIA ---
+ Description: This class preprocesses MC samples so that they can be used with BEST ---
  -----------------------------------------------------------------------------------------
  Implementation:                                                                       ---
      This EDProducer is meant to be used with CMSSW_9_4_8                              ---
 */
 //========================================================================================
-// Authors:  Brendan Regnery, Justin Pilot         ---------------------------------------
+// Authors:  Brendan Regnery, Justin Pilot, Reyer Band, Devin Taylor ---------------------
 //         Created:  WED, 8 Aug 2018 21:00:28 GMT  ---------------------------------------
 //========================================================================================
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -60,7 +60,7 @@
 #include "TCanvas.h"
 
 // user made files
-#include "edanalyzerTools.h"
+#include "BESTtoolbox.h"
 
 ///////////////////////////////////////////////////////////////////////////////////
 // Define a namespace -------------------------------------------------------------
@@ -110,10 +110,10 @@ namespace best {
 // Class declaration --------------------------------------------------------------
 ///////////////////////////////////////////////////////////////////////////////////
 
-class HHESTIAProducer : public edm::stream::EDProducer<> {
+class BESTProducer : public edm::stream::EDProducer<> {
    public:
-      explicit HHESTIAProducer(const edm::ParameterSet&);
-      ~HHESTIAProducer();
+      explicit BESTProducer(const edm::ParameterSet&);
+      ~BESTProducer();
 
       static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 
@@ -172,12 +172,10 @@ class HHESTIAProducer : public edm::stream::EDProducer<> {
 // Constructors -------------------------------------------------------------------
 ///////////////////////////////////////////////////////////////////////////////////
 
-HHESTIAProducer::HHESTIAProducer(const edm::ParameterSet& iConfig):
+BESTProducer::BESTProducer(const edm::ParameterSet& iConfig):
     inputJetColl_ (iConfig.getParameter<std::string>("inputJetColl")),
     jetType_ (best::jetTypeFromString(iConfig.getParameter<std::string>("jetType")))
 {
-
-    std::cout << "Jet Type: " << jetType_ << " Type: " << typeid(jetType_).name() << std::endl;
 
     //------------------------------------------------------------------------------
     // Prepare TFile Service -------------------------------------------------------
@@ -361,7 +359,7 @@ HHESTIAProducer::HHESTIAProducer(const edm::ParameterSet& iConfig):
 // Destructor ---------------------------------------------------------------------
 ///////////////////////////////////////////////////////////////////////////////////
 
-HHESTIAProducer::~HHESTIAProducer()
+BESTProducer::~BESTProducer()
 {
 
     // do anything that needs to be done at destruction time
@@ -378,7 +376,7 @@ HHESTIAProducer::~HHESTIAProducer()
 //=================================================================================
 
 void
-HHESTIAProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
+BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
     using namespace edm;
     using namespace fastjet;
@@ -686,7 +684,7 @@ HHESTIAProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 //=================================================================================
 
 void
-HHESTIAProducer::beginStream(edm::StreamID)
+BESTProducer::beginStream(edm::StreamID)
 {
 }
 
@@ -695,7 +693,7 @@ HHESTIAProducer::beginStream(edm::StreamID)
 //=================================================================================
 
 void
-HHESTIAProducer::endStream()
+BESTProducer::endStream()
 {
 }
 
@@ -704,7 +702,7 @@ HHESTIAProducer::endStream()
 //=================================================================================
 
 void
-HHESTIAProducer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
+BESTProducer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   //The following says we do not know what parameters are allowed so do no validation
   // Please change this to state exactly what you do use, even if it is no parameters
   edm::ParameterSetDescription desc;
@@ -713,4 +711,4 @@ HHESTIAProducer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) 
 }
 
 //define this as a plug-in
-DEFINE_FWK_MODULE(HHESTIAProducer);
+DEFINE_FWK_MODULE(BESTProducer);

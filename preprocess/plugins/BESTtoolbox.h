@@ -1,12 +1,12 @@
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// edanalyzerTools.h --------------------------------------------------------------
+// BESTtoolbox.h --------------------------------------------------------------
 //=================================================================================
 // Header file containing functions for use with CMS EDAnalyzer and EDProducer ----
 ///////////////////////////////////////////////////////////////////////////////////
 
 // make sure the functions are not declared more than once
-#ifndef EDANALYZERTOOLS_H
-#define EDANALYZERTOOLS_H
+#ifndef BESTtoolbox_H
+#define BESTtoolbox_H
 
 // include files
 #include "DataFormats/PatCandidates/interface/Jet.h"
