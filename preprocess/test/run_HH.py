@@ -66,7 +66,7 @@ process.countAK8Jets = cms.EDFilter("PATCandViewCountFilter",
 )
 
 # Run the producer
-process.run = cms.EDProducer('HHESTIAProducer',
+process.run = cms.EDProducer('BESTProducer',
 	inputJetColl = cms.string('selectedAK8Jets'),
         isSignal = cms.bool(True)
 )

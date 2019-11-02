@@ -72,12 +72,12 @@ process.countAK8Jets = cms.EDFilter("PATCandViewCountFilter",
 )
 
 # Run the producer
-process.run = cms.EDProducer('HHESTIAProducer',
+process.run = cms.EDProducer('BESTProducer',
 	inputJetColl = cms.string('selectedAK8Jets'),
         isSignal = cms.bool(False)
 )
 
-process.TFileService = cms.Service("TFileService", fileName = cms.string("preprocess_HHESTIA_OpenData_QCD.root") )
+process.TFileService = cms.Service("TFileService", fileName = cms.string("preprocess_BEST_OpenData_QCD.root") )
 
 process.out = cms.OutputModule("PoolOutputModule",
                                fileName = cms.untracked.string("ana_out.root"),
