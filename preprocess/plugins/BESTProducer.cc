@@ -501,13 +501,11 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
         //-------------------------------------------------------------------------------
         // AK8 Jets of interest from Higgs samples --------------------------------------
         //-------------------------------------------------------------------------------
-        int numJet = 0;
         if(ijet->numberOfDaughters() >= 2 && ijet->pt() >= 500 && ijet->userFloat("ak8PFJetsCHSSoftDropMass") > 40 && jetType_ == 0){
             // gen Higgs loop
             for (size_t iHiggs = 0; iHiggs < genHiggs.size(); iHiggs++){
                 TLorentzVector jet(ijet->px(), ijet->py(), ijet->pz(), ijet->energy() );
 
-                numJet++;
                 // match Jet to Higgs
                 if(jet.DeltaR(genHiggs[iHiggs]) < 0.1){
 
@@ -543,13 +541,11 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
         //-------------------------------------------------------------------------------
         // AK8 Jets of interest from Top samples ----------------------------------------
         //-------------------------------------------------------------------------------
-        numJet = 0;
         if(ijet->numberOfDaughters() >= 2 && ijet->pt() >= 500 && ijet->userFloat("ak8PFJetsCHSSoftDropMass") > 40 && jetType_ == 1){
             // gen Top loop
             for (size_t iTop = 0; iTop < genTop.size(); iTop++){
                 TLorentzVector jet(ijet->px(), ijet->py(), ijet->pz(), ijet->energy() );
 
-                numJet++;
                 // match Jet to Top
                 if(jet.DeltaR(genTop[iTop]) < 0.1){
 
@@ -585,13 +581,11 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
         //-------------------------------------------------------------------------------
         // AK8 Jets of interest from W samples ------------------------------------------
         //-------------------------------------------------------------------------------
-        numJet = 0;
         if(ijet->numberOfDaughters() >= 2 && ijet->pt() >= 500 && ijet->userFloat("ak8PFJetsCHSSoftDropMass") > 40 && jetType_ == 2){
             // gen W loop
             for (size_t iW = 0; iW < genW.size(); iW++){
                 TLorentzVector jet(ijet->px(), ijet->py(), ijet->pz(), ijet->energy() );
 
-                numJet++;
                 // match Jet to W
                 if(jet.DeltaR(genW[iW]) < 0.1){
 
@@ -627,13 +621,11 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
         //-------------------------------------------------------------------------------
         // AK8 Jets of interest from Z samples --------------------------------------
         //-------------------------------------------------------------------------------
-        numJet = 0;
         if(ijet->numberOfDaughters() >= 2 && ijet->pt() >= 500 && ijet->userFloat("ak8PFJetsCHSSoftDropMass") > 40 && jetType_ == 3){
             // gen Z loop
             for (size_t iZ = 0; iZ < genZ.size(); iZ++){
                 TLorentzVector jet(ijet->px(), ijet->py(), ijet->pz(), ijet->energy() );
 
-                numJet++;
                 // match Jet to Z
                 if(jet.DeltaR(genZ[iZ]) < 0.1){
 
