@@ -36,7 +36,7 @@ int FWMoments(std::vector<TLorentzVector> particles, double (&outputs)[5] );
 
 // get jet's constituents
 void getJetDaughters(std::vector<reco::Candidate * > &daughtersOfJet, std::vector<pat::Jet>::const_iterator jet,
-                     std::map<std::string, std::vector<float> > &jetPFcand );
+                     std::map<std::string, std::vector<float> > &jetVecVars );
 
 // store the jet variables
 void storeJetVariables(std::map<std::string, float> &treeVars, std::vector<pat::Jet>::const_iterator jet);
@@ -47,7 +47,7 @@ void storeSecVertexVariables(std::map<std::string, float> &treeVars, TLorentzVec
 
 // store the rest frame variables
 void storeRestFrameVariables(std::map<std::string, float> &treeVars, std::vector<reco::Candidate *> daughtersOfJet,
-                             std::vector<pat::Jet>::const_iterator jet, std::map<std::string, std::vector<float> > &jetPFcand,
+                             std::vector<pat::Jet>::const_iterator jet, std::map<std::string, std::vector<float> > &jetVecVars,
                              std::string frame, float mass);
 
 // make rest frame z axis the boost axis

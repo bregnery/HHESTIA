@@ -121,10 +121,6 @@ class BESTProducer : public edm::stream::EDProducer<> {
       // User functions -----------------------------------------------------------
       //===========================================================================
 
-      //float LegP(float x, int order);
-      //int FWMoments( std::vector<TLorentzVector> particles, double (&outputs)[5] );
-      //void pboost( TVector3 pbeam, TVector3 plab, TLorentzVector &pboo );
-
    private:
       virtual void beginStream(edm::StreamID) override;
       virtual void produce(edm::Event&, const edm::EventSetup&) override;
@@ -142,8 +138,8 @@ class BESTProducer : public edm::stream::EDProducer<> {
       TTree *jetTree;
       std::map<std::string, float> treeVars;
       std::vector<std::string> listOfVars;
-      std::map<std::string, std::vector<float> > jetPFcand;
-      std::vector<std::string> listOfJetPFvars;
+      std::map<std::string, std::vector<float> > jetVecVars;
+      std::vector<std::string> listOfVecVars;
 
       // Tokens
       //edm::EDGetTokenT<std::vector<pat::PackedCandidate> > pfCandsToken_;
@@ -187,6 +183,9 @@ BESTProducer::BESTProducer(const edm::ParameterSet& iConfig):
     //------------------------------------------------------------------------------
     // Create tree variables and branches ------------------------------------------
     //------------------------------------------------------------------------------
+    // listOfVars is the flat part of the TTree ------------------------------------
+    // listOfVecVars is the vector part of the TTree -------------------------------
+    //------------------------------------------------------------------------------
 
     // AK8 jet variables
     listOfVars.push_back("nJets");
@@ -222,6 +221,11 @@ BESTProducer::BESTProducer(const edm::ParameterSet& iConfig):
     listOfVars.push_back("SV_3_nTracks");
     listOfVars.push_back("SV_3_chi2");
     listOfVars.push_back("SV_3_Ndof");
+
+    // Deep Jet b Discriminants
+    //listOfVars.push_back("bDisc");
+    //listOfVars.push_back("bDisc1");
+    //listOfVars.push_back("bDisc2");
 
     // nsubjettiness
     listOfVars.push_back("jetAK8_Tau4");
@@ -271,6 +275,27 @@ BESTProducer::BESTProducer(const edm::ParameterSet& iConfig):
     listOfVars.push_back("aplanarity_Z");
     listOfVars.push_back("thrust_Z");
 
+    // Jet Mass
+    listOfVars.push_back("subjet12_mass_Higgs");
+    listOfVars.push_back("subjet23_mass_Higgs");
+    listOfVars.push_back("subjet13_mass_Higgs");
+    listOfVars.push_back("subjet1234_mass_Higgs");
+
+    listOfVars.push_back("subjet12_mass_Top");
+    listOfVars.push_back("subjet23_mass_Top");
+    listOfVars.push_back("subjet13_mass_Top");
+    listOfVars.push_back("subjet1234_mass_Top");
+
+    listOfVars.push_back("subjet12_mass_W");
+    listOfVars.push_back("subjet23_mass_W");
+    listOfVars.push_back("subjet13_mass_W");
+    listOfVars.push_back("subjet1234_mass_W");
+
+    listOfVars.push_back("subjet12_mass_Z");
+    listOfVars.push_back("subjet23_mass_Z");
+    listOfVars.push_back("subjet13_mass_Z");
+    listOfVars.push_back("subjet1234_mass_Z");
+
     // Jet Asymmetry
     listOfVars.push_back("asymmetry_Higgs");
     listOfVars.push_back("asymmetry_Top");
@@ -278,45 +303,50 @@ BESTProducer::BESTProducer(const edm::ParameterSet& iConfig):
     listOfVars.push_back("asymmetry_Z");
 
     // Jet PF Candidate Variables
-    listOfJetPFvars.push_back("jet_PF_candidate_pt");
-    listOfJetPFvars.push_back("jet_PF_candidate_phi");
-    listOfJetPFvars.push_back("jet_PF_candidate_eta");
+    listOfVecVars.push_back("jet_PF_candidate_pt");
+    listOfVecVars.push_back("jet_PF_candidate_phi");
+    listOfVecVars.push_back("jet_PF_candidate_eta");
 
-    listOfJetPFvars.push_back("HiggsFrame_PF_candidate_px");
-    listOfJetPFvars.push_back("HiggsFrame_PF_candidate_py");
-    listOfJetPFvars.push_back("HiggsFrame_PF_candidate_pz");
-    listOfJetPFvars.push_back("HiggsFrame_PF_candidate_energy");
-    listOfJetPFvars.push_back("HiggsFrame_subjet_px");
-    listOfJetPFvars.push_back("HiggsFrame_subjet_py");
-    listOfJetPFvars.push_back("HiggsFrame_subjet_pz");
-    listOfJetPFvars.push_back("HiggsFrame_subjet_energy");
+    listOfVecVars.push_back("HiggsFrame_PF_candidate_px");
+    listOfVecVars.push_back("HiggsFrame_PF_candidate_py");
+    listOfVecVars.push_back("HiggsFrame_PF_candidate_pz");
+    listOfVecVars.push_back("HiggsFrame_PF_candidate_energy");
 
-    listOfJetPFvars.push_back("TopFrame_PF_candidate_px");
-    listOfJetPFvars.push_back("TopFrame_PF_candidate_py");
-    listOfJetPFvars.push_back("TopFrame_PF_candidate_pz");
-    listOfJetPFvars.push_back("TopFrame_PF_candidate_energy");
-    listOfJetPFvars.push_back("TopFrame_subjet_px");
-    listOfJetPFvars.push_back("TopFrame_subjet_py");
-    listOfJetPFvars.push_back("TopFrame_subjet_pz");
-    listOfJetPFvars.push_back("TopFrame_subjet_energy");
+    listOfVecVars.push_back("TopFrame_PF_candidate_px");
+    listOfVecVars.push_back("TopFrame_PF_candidate_py");
+    listOfVecVars.push_back("TopFrame_PF_candidate_pz");
+    listOfVecVars.push_back("TopFrame_PF_candidate_energy");
 
-    listOfJetPFvars.push_back("WFrame_PF_candidate_px");
-    listOfJetPFvars.push_back("WFrame_PF_candidate_py");
-    listOfJetPFvars.push_back("WFrame_PF_candidate_pz");
-    listOfJetPFvars.push_back("WFrame_PF_candidate_energy");
-    listOfJetPFvars.push_back("WFrame_subjet_px");
-    listOfJetPFvars.push_back("WFrame_subjet_py");
-    listOfJetPFvars.push_back("WFrame_subjet_pz");
-    listOfJetPFvars.push_back("WFrame_subjet_energy");
+    listOfVecVars.push_back("WFrame_PF_candidate_px");
+    listOfVecVars.push_back("WFrame_PF_candidate_py");
+    listOfVecVars.push_back("WFrame_PF_candidate_pz");
+    listOfVecVars.push_back("WFrame_PF_candidate_energy");
 
-    listOfJetPFvars.push_back("ZFrame_PF_candidate_px");
-    listOfJetPFvars.push_back("ZFrame_PF_candidate_py");
-    listOfJetPFvars.push_back("ZFrame_PF_candidate_pz");
-    listOfJetPFvars.push_back("ZFrame_PF_candidate_energy");
-    listOfJetPFvars.push_back("ZFrame_subjet_px");
-    listOfJetPFvars.push_back("ZFrame_subjet_py");
-    listOfJetPFvars.push_back("ZFrame_subjet_pz");
-    listOfJetPFvars.push_back("ZFrame_subjet_energy");
+    listOfVecVars.push_back("ZFrame_PF_candidate_px");
+    listOfVecVars.push_back("ZFrame_PF_candidate_py");
+    listOfVecVars.push_back("ZFrame_PF_candidate_pz");
+    listOfVecVars.push_back("ZFrame_PF_candidate_energy");
+
+    // rest frame subjet variables
+    listOfVecVars.push_back("HiggsFrame_subjet_px");
+    listOfVecVars.push_back("HiggsFrame_subjet_py");
+    listOfVecVars.push_back("HiggsFrame_subjet_pz");
+    listOfVecVars.push_back("HiggsFrame_subjet_energy");
+
+    listOfVecVars.push_back("TopFrame_subjet_px");
+    listOfVecVars.push_back("TopFrame_subjet_py");
+    listOfVecVars.push_back("TopFrame_subjet_pz");
+    listOfVecVars.push_back("TopFrame_subjet_energy");
+
+    listOfVecVars.push_back("WFrame_subjet_px");
+    listOfVecVars.push_back("WFrame_subjet_py");
+    listOfVecVars.push_back("WFrame_subjet_pz");
+    listOfVecVars.push_back("WFrame_subjet_energy");
+
+    listOfVecVars.push_back("ZFrame_subjet_px");
+    listOfVecVars.push_back("ZFrame_subjet_py");
+    listOfVecVars.push_back("ZFrame_subjet_pz");
+    listOfVecVars.push_back("ZFrame_subjet_energy");
 
     // Make Branches for each variable
     for (unsigned i = 0; i < listOfVars.size(); i++){
@@ -325,8 +355,8 @@ BESTProducer::BESTProducer(const edm::ParameterSet& iConfig):
     }
 
     // Make Branches for each of the jet constituents' variables
-    for (unsigned i = 0; i < listOfJetPFvars.size(); i++){
-        jetTree->Branch( (listOfJetPFvars[i]).c_str() , &(jetPFcand[ listOfJetPFvars[i] ]) );
+    for (unsigned i = 0; i < listOfVecVars.size(); i++){
+        jetTree->Branch( (listOfVecVars[i]).c_str() , &(jetVecVars[ listOfVecVars[i] ]) );
     }
 
     //------------------------------------------------------------------------------
@@ -480,19 +510,19 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
             // Get all of the Jet's daughters
             vector<reco::Candidate * > daughtersOfJet;
-            getJetDaughters(daughtersOfJet, ijet, jetPFcand);
+            getJetDaughters(daughtersOfJet, ijet, jetVecVars);
 
             // Higgs Rest Frame Variables
-            storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Higgs", 125.);
+            storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetVecVars, "Higgs", 125.);
 
             // Top Rest Frame Variables
-            storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Top", 172.5);
+            storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetVecVars, "Top", 172.5);
 
             // W Rest Frame Variables
-            storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "W", 80.4);
+            storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetVecVars, "W", 80.4);
 
             // Z Rest Frame Variables
-            storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Z", 91.2);
+            storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetVecVars, "Z", 91.2);
 
             // Fill the jet entry tree
             jetTree->Fill();
@@ -518,19 +548,19 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
                     // Get all of the Jet's daughters
                     vector<reco::Candidate * > daughtersOfJet;
-                    getJetDaughters(daughtersOfJet, ijet, jetPFcand);
+                    getJetDaughters(daughtersOfJet, ijet, jetVecVars);
 
                     // Higgs Rest Frame Variables
-                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Higgs", 125.);
+                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetVecVars, "Higgs", 125.);
 
                     // Top Rest Frame Variables
-                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Top", 172.5);
+                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetVecVars, "Top", 172.5);
 
                     // W Rest Frame Variables
-                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "W", 80.4);
+                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetVecVars, "W", 80.4);
 
                     // Z Rest Frame Variables
-                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Z", 91.2);
+                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetVecVars, "Z", 91.2);
 
                     // Fill the jet entry tree
                     jetTree->Fill();
@@ -558,19 +588,19 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
                     // Get all of the Jet's daughters
                     vector<reco::Candidate * > daughtersOfJet;
-                    getJetDaughters(daughtersOfJet, ijet, jetPFcand);
+                    getJetDaughters(daughtersOfJet, ijet, jetVecVars);
 
                     // Higgs Rest Frame Variables
-                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Higgs", 125.);
+                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetVecVars, "Higgs", 125.);
 
                     // Top Rest Frame Variables
-                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Top", 172.5);
+                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetVecVars, "Top", 172.5);
 
                     // W Rest Frame Variables
-                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "W", 80.4);
+                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetVecVars, "W", 80.4);
 
                     // Z Rest Frame Variables
-                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Z", 91.2);
+                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetVecVars, "Z", 91.2);
 
                     // Fill the jet entry tree
                     jetTree->Fill();
@@ -598,19 +628,19 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
                     // Get all of the Jet's daughters
                     vector<reco::Candidate * > daughtersOfJet;
-                    getJetDaughters(daughtersOfJet, ijet, jetPFcand);
+                    getJetDaughters(daughtersOfJet, ijet, jetVecVars);
 
                     // Higgs Rest Frame Variables
-                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Higgs", 125.);
+                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetVecVars, "Higgs", 125.);
 
                     // Top Rest Frame Variables
-                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Top", 172.5);
+                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetVecVars, "Top", 172.5);
 
                     // W Rest Frame Variables
-                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "W", 80.4);
+                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetVecVars, "W", 80.4);
 
                     // Z Rest Frame Variables
-                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Z", 91.2);
+                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetVecVars, "Z", 91.2);
 
                     // Fill the jet entry tree
                     jetTree->Fill();
@@ -638,19 +668,19 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
                     // Get all of the Jet's daughters
                     vector<reco::Candidate * > daughtersOfJet;
-                    getJetDaughters(daughtersOfJet, ijet, jetPFcand);
+                    getJetDaughters(daughtersOfJet, ijet, jetVecVars);
 
                     // Higgs Rest Frame Variables
-                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Higgs", 125.);
+                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetVecVars, "Higgs", 125.);
 
                     // Top Rest Frame Variables
-                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Top", 172.5);
+                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetVecVars, "Top", 172.5);
 
                     // W Rest Frame Variables
-                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "W", 80.4);
+                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetVecVars, "W", 80.4);
 
                     // Z Rest Frame Variables
-                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetPFcand, "Z", 91.2);
+                    storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetVecVars, "Z", 91.2);
 
                     // Fill the jet entry tree
                     jetTree->Fill();
@@ -664,8 +694,8 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
         for (unsigned i = 0; i < listOfVars.size(); i++){
             treeVars[ listOfVars[i] ] = -999.99;
         }
-        for (unsigned i = 0; i < listOfJetPFvars.size(); i++){
-            jetPFcand[ listOfJetPFvars[i] ] = vector<float>();
+        for (unsigned i = 0; i < listOfVecVars.size(); i++){
+            jetVecVars[ listOfVecVars[i] ] = vector<float>();
         }
      }
 }

@@ -94,27 +94,27 @@ int FWMoments(std::vector<TLorentzVector> particles, double (&outputs)[5] ){
 //----------------------------------------------------------------------------------------
 
 void getJetDaughters(std::vector<reco::Candidate * > &daughtersOfJet, std::vector<pat::Jet>::const_iterator jet,
-                     std::map<std::string, std::vector<float> > &jetPFcand ){
+                     std::map<std::string, std::vector<float> > &jetVecVars ){
    // First get all daughters for the first Soft Drop Subjet
    for (unsigned int i = 0; i < jet->daughter(0)->numberOfDaughters(); i++){
       daughtersOfJet.push_back( (reco::Candidate *) jet->daughter(0)->daughter(i) );
-      jetPFcand["jet_PF_candidate_pt"].push_back(jet->daughter(0)->daughter(i)->pt() );
-      jetPFcand["jet_PF_candidate_phi"].push_back(jet->daughter(0)->daughter(i)->phi() );
-      jetPFcand["jet_PF_candidate_eta"].push_back(jet->daughter(0)->daughter(i)->eta() );
+      jetVecVars["jet_PF_candidate_pt"].push_back(jet->daughter(0)->daughter(i)->pt() );
+      jetVecVars["jet_PF_candidate_phi"].push_back(jet->daughter(0)->daughter(i)->phi() );
+      jetVecVars["jet_PF_candidate_eta"].push_back(jet->daughter(0)->daughter(i)->eta() );
    }
    // Get all daughters for the second Soft Drop Subjet
    for (unsigned int i = 0; i < jet->daughter(1)->numberOfDaughters(); i++){
       daughtersOfJet.push_back( (reco::Candidate *) jet->daughter(1)->daughter(i));
-      jetPFcand["jet_PF_candidate_pt"].push_back(jet->daughter(1)->daughter(i)->pt() );
-      jetPFcand["jet_PF_candidate_phi"].push_back(jet->daughter(1)->daughter(i)->phi() );
-      jetPFcand["jet_PF_candidate_eta"].push_back(jet->daughter(1)->daughter(i)->eta() );
+      jetVecVars["jet_PF_candidate_pt"].push_back(jet->daughter(1)->daughter(i)->pt() );
+      jetVecVars["jet_PF_candidate_phi"].push_back(jet->daughter(1)->daughter(i)->phi() );
+      jetVecVars["jet_PF_candidate_eta"].push_back(jet->daughter(1)->daughter(i)->eta() );
    }
    // Get all daughters not included in Soft Drop
    for (unsigned int i = 2; i< jet->numberOfDaughters(); i++){
       daughtersOfJet.push_back( (reco::Candidate *) jet->daughter(i) );
-      jetPFcand["jet_PF_candidate_pt"].push_back(jet->daughter(i)->pt() );
-      jetPFcand["jet_PF_candidate_phi"].push_back(jet->daughter(i)->phi() );
-      jetPFcand["jet_PF_candidate_eta"].push_back(jet->daughter(i)->eta() );
+      jetVecVars["jet_PF_candidate_pt"].push_back(jet->daughter(i)->pt() );
+      jetVecVars["jet_PF_candidate_phi"].push_back(jet->daughter(i)->phi() );
+      jetVecVars["jet_PF_candidate_eta"].push_back(jet->daughter(i)->eta() );
    }
 }
 
@@ -183,88 +183,125 @@ void storeSecVertexVariables(std::map<std::string, float> &treeVars, TLorentzVec
 //----------------------------------------------------------------------------------------
 
 void storeRestFrameVariables(std::map<std::string, float> &treeVars, std::vector<reco::Candidate *> daughtersOfJet,
-                            std::vector<pat::Jet>::const_iterator jet, std::map<std::string, std::vector<float> > &jetPFcand,
+                            std::vector<pat::Jet>::const_iterator jet, std::map<std::string, std::vector<float> > &jetVecVars,
                             std::string frame, float mass){
 
-   using namespace std;
-   using namespace fastjet;
+    using namespace std;
+    using namespace fastjet;
 
-   // get 4 vector for heavy object rest frame
-   typedef reco::Candidate::PolarLorentzVector fourv;
-   fourv thisJet = jet->polarP4();
-   TLorentzVector thisJetLV(0.,0.,0.,0.);
-   thisJetLV.SetPtEtaPhiM(thisJet.Pt(), thisJet.Eta(), thisJet.Phi(), mass );
+    // get 4 vector for heavy object rest frame
+    typedef reco::Candidate::PolarLorentzVector fourv;
+    fourv thisJet = jet->polarP4();
+    TLorentzVector thisJetLV(0.,0.,0.,0.);
+    thisJetLV.SetPtEtaPhiM(thisJet.Pt(), thisJet.Eta(), thisJet.Phi(), mass );
 
-   std::vector<TLorentzVector> particles;
-   std::vector<math::XYZVector> particles2;
-   std::vector<reco::LeafCandidate> particles3;
-   vector<fastjet::PseudoJet> FJparticles;
+    std::vector<TLorentzVector> particles;
+    std::vector<math::XYZVector> particles2;
+    std::vector<reco::LeafCandidate> particles3;
+    vector<fastjet::PseudoJet> FJparticles;
 
-   double sumPz = 0;
-   double sumP = 0;
+    // 4 vectors to be filled with subjet additions
+    TLorentzVector subjet12LV(0.,0.,0.,0.);
+    TLorentzVector subjet13LV(0.,0.,0.,0.);
+    TLorentzVector subjet23LV(0.,0.,0.,0.);
+    TLorentzVector subjet1234LV(0.,0.,0.,0.);
 
-   // Boost to Higgs rest frame
-   for(unsigned int i = 0; i < daughtersOfJet.size(); i++){
-      // Do not include low mass subjets
-      if (daughtersOfJet[i]->pt() < 0.5) continue;
+    double sumPz = 0;
+    double sumP = 0;
 
-      // Create 4 vector to boost to Higgs frame
-      TLorentzVector thisParticleLV( daughtersOfJet[i]->px(), daughtersOfJet[i]->py(), daughtersOfJet[i]->pz(), daughtersOfJet[i]->energy() );
+    // Boost to object rest frame
+    for(unsigned int i = 0; i < daughtersOfJet.size(); i++){
+        // Do not include low mass subjets
+        if (daughtersOfJet[i]->pt() < 0.5) continue;
 
-      // Boost to Higgs rest frame
-      thisParticleLV.Boost( -thisJetLV.BoostVector() );
-      jetPFcand[frame+"Frame_PF_candidate_px"].push_back(thisParticleLV.Px() );
-      jetPFcand[frame+"Frame_PF_candidate_py"].push_back(thisParticleLV.Py() );
-      jetPFcand[frame+"Frame_PF_candidate_pz"].push_back(thisParticleLV.Pz() );
-      jetPFcand[frame+"Frame_PF_candidate_energy"].push_back(thisParticleLV.E() );
+        // Create 4 vector to boost to Higgs frame
+        TLorentzVector thisParticleLV( daughtersOfJet[i]->px(), daughtersOfJet[i]->py(), daughtersOfJet[i]->pz(), daughtersOfJet[i]->energy() );
 
-      // Now that PF candidates are stored, make the boost axis the Z-axis
-      // Important for BES variables
-      //pboost( thisJetLV.Vect(), thisParticleLV.Vect(), thisParticleLV);
-      particles.push_back( thisParticleLV );
-      particles2.push_back( math::XYZVector( thisParticleLV.X(), thisParticleLV.Y(), thisParticleLV.Z() ));
-      particles3.push_back( reco::LeafCandidate(+1, reco::Candidate::LorentzVector( thisParticleLV.X(), thisParticleLV.Y(),
-                                                                                      thisParticleLV.Z(), thisParticleLV.T() ) ));
-      FJparticles.push_back( PseudoJet( thisParticleLV.X(), thisParticleLV.Y(), thisParticleLV.Z(), thisParticleLV.T() ) );
+        // Boost to Higgs rest frame
+        thisParticleLV.Boost( -thisJetLV.BoostVector() );
+        jetVecVars[frame+"Frame_PF_candidate_px"].push_back(thisParticleLV.Px() );
+        jetVecVars[frame+"Frame_PF_candidate_py"].push_back(thisParticleLV.Py() );
+        jetVecVars[frame+"Frame_PF_candidate_pz"].push_back(thisParticleLV.Pz() );
+        jetVecVars[frame+"Frame_PF_candidate_energy"].push_back(thisParticleLV.E() );
 
-      // Sum rest frame momenta for asymmetry calculation
-      if (daughtersOfJet[i]->pt() < 10) continue;
-      sumPz += thisParticleLV.Pz();
-      sumP += abs( thisParticleLV.P() );
-   }
+        // Now that PF candidates are stored, make the boost axis the Z-axis
+        // Important for BES variables
+        pboost( thisJetLV.Vect(), thisParticleLV.Vect(), thisParticleLV);
+        particles.push_back( thisParticleLV );
+        particles2.push_back( math::XYZVector( thisParticleLV.X(), thisParticleLV.Y(), thisParticleLV.Z() ));
+        particles3.push_back( reco::LeafCandidate(+1, reco::Candidate::LorentzVector( thisParticleLV.X(), thisParticleLV.Y(),
+                                                                                        thisParticleLV.Z(), thisParticleLV.T() ) ));
+        FJparticles.push_back( PseudoJet( thisParticleLV.X(), thisParticleLV.Y(), thisParticleLV.Z(), thisParticleLV.T() ) );
 
-   // Fox Wolfram Moments
-   double fwm[5] = { 0.0, 0.0 ,0.0 ,0.0,0.0};
-   FWMoments( particles, fwm);
-   treeVars["FoxWolfH1_"+frame] = fwm[1];
-   treeVars["FoxWolfH2_"+frame] = fwm[2];
-   treeVars["FoxWolfH3_"+frame] = fwm[3];
-   treeVars["FoxWolfH4_"+frame] = fwm[4];
+        // Sum rest frame momenta for asymmetry calculation, but only for pt > 10
+        if (daughtersOfJet[i]->pt() < 10) continue;
+        sumPz += thisParticleLV.Pz();
+        sumP += abs( thisParticleLV.P() );
+    }
 
-   // Event Shape Variables
-   EventShapeVariables eventShapes( particles2 );
-   Thrust thrustCalculator( particles3.begin(), particles3.end() );
-   treeVars["isotropy_"+frame]   = eventShapes.isotropy();
-   treeVars["sphericity_"+frame] = eventShapes.sphericity(2);
-   treeVars["aplanarity_"+frame] = eventShapes.aplanarity(2);
-   treeVars["thrust_"+frame]     = thrustCalculator.thrust();
+    // Fox Wolfram Moments
+    double fwm[5] = { 0.0, 0.0 ,0.0 ,0.0,0.0};
+    FWMoments( particles, fwm);
+    treeVars["FoxWolfH1_"+frame] = fwm[1];
+    treeVars["FoxWolfH2_"+frame] = fwm[2];
+    treeVars["FoxWolfH3_"+frame] = fwm[3];
+    treeVars["FoxWolfH4_"+frame] = fwm[4];
 
-   // Jet Asymmetry
-   double asymmetry             = sumPz/sumP;
-   treeVars["asymmetry_"+frame] = asymmetry;
+    // Event Shape Variables
+    EventShapeVariables eventShapes( particles2 );
+    Thrust thrustCalculator( particles3.begin(), particles3.end() );
+    treeVars["isotropy_"+frame]   = eventShapes.isotropy();
+    treeVars["sphericity_"+frame] = eventShapes.sphericity(2);
+    treeVars["aplanarity_"+frame] = eventShapes.aplanarity(2);
+    treeVars["thrust_"+frame]     = thrustCalculator.thrust();
 
-   // Recluster the jets in the heavy object rest frame
-   JetDefinition jet_def(antikt_algorithm, 0.4);
-   ClusterSequence cs(FJparticles, jet_def);
-   vector<PseudoJet> jetsFJ = sorted_by_pt(cs.inclusive_jets(20.0));
+    // Jet Asymmetry
+    double asymmetry             = sumPz/sumP;
+    treeVars["asymmetry_"+frame] = asymmetry;
 
-   // Store recluster jet info
-   for(unsigned int i = 0; i < jetsFJ.size(); i++){
-      jetPFcand[frame+"Frame_subjet_px"].push_back(jetsFJ[i].px());
-      jetPFcand[frame+"Frame_subjet_py"].push_back(jetsFJ[i].py());
-      jetPFcand[frame+"Frame_subjet_pz"].push_back(jetsFJ[i].pz());
-      jetPFcand[frame+"Frame_subjet_energy"].push_back(jetsFJ[i].e());
-   }
+    // Recluster the jets in the heavy object rest frame
+    JetDefinition jet_def(antikt_algorithm, 0.4);
+    ClusterSequence cs(FJparticles, jet_def);
+    vector<PseudoJet> jetsFJ = sorted_by_pt(cs.inclusive_jets(20.0));
+
+    // Store recluster jet info
+    for(unsigned int i = 0; i < jetsFJ.size(); i++){
+        jetVecVars[frame+"Frame_subjet_px"].push_back(jetsFJ[i].px());
+        jetVecVars[frame+"Frame_subjet_py"].push_back(jetsFJ[i].py());
+        jetVecVars[frame+"Frame_subjet_pz"].push_back(jetsFJ[i].pz());
+        jetVecVars[frame+"Frame_subjet_energy"].push_back(jetsFJ[i].e());
+
+        // make a TLorentzVector for the current clustered subjet
+        TLorentzVector iSubjetLV(jetsFJ[i].px(), jetsFJ[i].py(), jetsFJ[i].pz(), jetsFJ[i].e() );
+
+        // get subjet four vector combinations
+        switch(i){
+        case 0:
+            subjet12LV   = subjet12LV   + iSubjetLV;
+            subjet13LV   = subjet13LV   + iSubjetLV;
+            subjet1234LV = subjet1234LV + iSubjetLV;
+            break;
+        case 1:
+            subjet12LV   = subjet12LV   + iSubjetLV;
+            subjet23LV   = subjet23LV   + iSubjetLV;
+            subjet1234LV = subjet1234LV + iSubjetLV;
+            break;
+        case 2:
+            subjet13LV   = subjet13LV   + iSubjetLV;
+            subjet23LV   = subjet23LV   + iSubjetLV;
+            subjet1234LV = subjet1234LV + iSubjetLV;
+            break;
+        case 3:
+            subjet1234LV = subjet1234LV + iSubjetLV;
+            break;
+        }
+    }
+
+    // Store subjet mass combinations
+    treeVars["subjet12_mass_"+frame]   = subjet12LV.M();
+    treeVars["subjet13_mass_"+frame]   = subjet13LV.M();
+    treeVars["subjet23_mass_"+frame]   = subjet23LV.M();
+    treeVars["subjet1234_mass_"+frame] = subjet1234LV.M();
 
 }
 
@@ -299,10 +336,5 @@ void pboost( TVector3 pbeam, TVector3 plab, TLorentzVector &pboo ){
     pboo.SetX((plab.Dot(pbx)));
     pboo.SetY((plab.Dot(pby)));
     pboo.SetZ(pl);
-
-    // Check for errors
-    if(pboo.M() <= 0.0){
-        std::cout << "ERROR: PF Candidates have negative or zero mass!!!!!" << std::endl;
-    }
 
 }
