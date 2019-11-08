@@ -50,6 +50,7 @@ cd BEST/preprocess/
 cmsenv
 scram b -j8
 cmsRun test/run_TEST.py
+python BES_variable_testingSuite.py 
 ```
 
 Then open up the output root file and make sure that the results are as expected. There are no
