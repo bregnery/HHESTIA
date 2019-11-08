@@ -72,9 +72,24 @@ indTsub = treeVars.index('TopFrame_subjet_energy')
 indWsub = treeVars.index('WFrame_subjet_energy')
 indZsub = treeVars.index('ZFrame_subjet_energy')
 
+# get foxwolfram indicies
+indFoxWolf = [index for index, value in enumerate(treeVars) if "FoxWolf" in value]
+
+# get mass indicies
+indMass = [index for index, value in enumerate(treeVars) if "mass" in value]
+
 # loop over the jets
 for ijet in range(0, len(jetArray)):
+
+    #-------------------------------------------------------------------------------------
+    # Check For Negative Mass Variables --------------------------------------------------
+    #-------------------------------------------------------------------------------------
     
+    for iMass in indMass :
+        if "SV" not in treeVars[iMass] and jetArray[ijet][iMass] < -0.1 :  # choose negative 0.1 because there seems to be precision errors with smaller values
+            print "ERROR: ", treeVars[iMass], " is negative: ", jetArray[ijet][iMass]
+            continue
+ 
     #-------------------------------------------------------------------------------------
     # Candidate Tests  -------------------------------------------------------------------
     #-------------------------------------------------------------------------------------
@@ -111,6 +126,11 @@ for ijet in range(0, len(jetArray)):
     #-------------------------------------------------------------------------------------
 
     # Test that the Fox Wolfram moments have the correct range
+    for iMom in indFoxWolf :
+        if abs(jetArray[ijet][iMom]) > 1 :
+            print "ERROR: ", treeVars[iMom], " is outside the expected range of [-1, 1], it's value is ", jetArray[ijet][iMom]
+            continue
+    
 
 print "The testing session has concluded"
 
