@@ -11,6 +11,7 @@
 // include files
 #include "DataFormats/PatCandidates/interface/Jet.h"
 #include "DataFormats/PatCandidates/interface/PackedGenParticle.h"
+#include "DataFormats/PatCandidates/interface/PackedCandidate.h"
 #include "PhysicsTools/CandUtils/interface/EventShapeVariables.h"
 #include "PhysicsTools/CandUtils/interface/Thrust.h"
 #include "TMath.h"
@@ -36,7 +37,7 @@ int FWMoments(std::vector<TLorentzVector> particles, double (&outputs)[5] );
 
 // get jet's constituents
 void getJetDaughters(std::vector<reco::Candidate * > &daughtersOfJet, std::vector<pat::Jet>::const_iterator jet,
-                     std::map<std::string, std::vector<float> > &jetVecVars );
+                     std::map<std::string, std::vector<float> > &jetVecVars, int jetColl );
 
 // store the jet variables
 void storeJetVariables(std::map<std::string, float> &treeVars, std::vector<pat::Jet>::const_iterator jet, int jetColl);

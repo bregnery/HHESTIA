@@ -363,7 +363,7 @@ BESTProducer::BESTProducer(const edm::ParameterSet& iConfig):
     listOfVecVars.push_back("ZFrame_PF_candidate_energy");
 
     // PUPPI weights
-    listOfVecVars.push_back("PuppiWeights");
+    listOfVecVars.push_back("PUPPI_Weights");
 
     // rest frame subjet variables
     listOfVecVars.push_back("HiggsFrame_subjet_px");
@@ -548,7 +548,7 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
             // Get all of the Jet's daughters
             vector<reco::Candidate * > daughtersOfJet;
-            getJetDaughters(daughtersOfJet, ijet, jetVecVars);
+            getJetDaughters(daughtersOfJet, ijet, jetVecVars, jetColl_);
 
             // Higgs Rest Frame Variables
             storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetVecVars, "Higgs", 125.);
@@ -586,7 +586,7 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
                     // Get all of the Jet's daughters
                     vector<reco::Candidate * > daughtersOfJet;
-                    getJetDaughters(daughtersOfJet, ijet, jetVecVars);
+                    getJetDaughters(daughtersOfJet, ijet, jetVecVars, jetColl_);
 
                     // Higgs Rest Frame Variables
                     storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetVecVars, "Higgs", 125.);
@@ -626,7 +626,7 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
                     // Get all of the Jet's daughters
                     vector<reco::Candidate * > daughtersOfJet;
-                    getJetDaughters(daughtersOfJet, ijet, jetVecVars);
+                    getJetDaughters(daughtersOfJet, ijet, jetVecVars, jetColl_);
 
                     // Higgs Rest Frame Variables
                     storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetVecVars, "Higgs", 125.);
@@ -666,7 +666,7 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
                     // Get all of the Jet's daughters
                     vector<reco::Candidate * > daughtersOfJet;
-                    getJetDaughters(daughtersOfJet, ijet, jetVecVars);
+                    getJetDaughters(daughtersOfJet, ijet, jetVecVars, jetColl_);
 
                     // Higgs Rest Frame Variables
                     storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetVecVars, "Higgs", 125.);
@@ -706,7 +706,7 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
                     // Get all of the Jet's daughters
                     vector<reco::Candidate * > daughtersOfJet;
-                    getJetDaughters(daughtersOfJet, ijet, jetVecVars);
+                    getJetDaughters(daughtersOfJet, ijet, jetVecVars, jetColl_);
 
                     // Higgs Rest Frame Variables
                     storeRestFrameVariables(treeVars, daughtersOfJet, ijet, jetVecVars, "Higgs", 125.);
