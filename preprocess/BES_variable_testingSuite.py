@@ -75,6 +75,9 @@ indZsub = treeVars.index('ZFrame_subjet_energy')
 # get foxwolfram indicies
 indFoxWolf = [index for index, value in enumerate(treeVars) if "FoxWolf" in value]
 
+# get N Jettiness Variables
+indTau = [index for index, value in enumerate(treeVars) if "Tau" in value]
+
 # get mass indicies
 indMass = [index for index, value in enumerate(treeVars) if "mass" in value]
 
@@ -88,7 +91,6 @@ for ijet in range(0, len(jetArray)):
     for iMass in indMass :
         if "SV" not in treeVars[iMass] and jetArray[ijet][iMass] < -0.1 :  # choose negative 0.1 because there seems to be precision errors with smaller values
             print "ERROR: ", treeVars[iMass], " is negative: ", jetArray[ijet][iMass]
-            continue
  
     #-------------------------------------------------------------------------------------
     # Candidate Tests  -------------------------------------------------------------------
@@ -98,7 +100,14 @@ for ijet in range(0, len(jetArray)):
         if jetArray[ijet][indHPF][icand] <= 0 or jetArray[ijet][indTPF][icand] <= 0 or jetArray[ijet][indWPF][icand] <= 0 or jetArray[ijet][indZPF][icand] <= 0 :
             
             print "ERROR: NEGATIVE ENERGY in the PF Candidates"
-            continue
+
+    #-------------------------------------------------------------------------------------
+    # Test N-Jettiness -------------------------------------------------------------------
+    #-------------------------------------------------------------------------------------
+    
+    for iTau in indTau :
+        if jetArray[ijet][iTau] < 0.0 or jetArray[ijet][iTau] > 1.0 :
+            print "ERROR: NJettiness is outside [0.0, 1.0]: ", treeVars[iTau], " = ", jetArray[ijet][iTau]
 
     #-------------------------------------------------------------------------------------
     # Subjet Tests -----------------------------------------------------------------------
@@ -107,19 +116,15 @@ for ijet in range(0, len(jetArray)):
     for isub in range(0, len(jetArray[ijet][indHsub])):
         if jetArray[ijet][indHsub][isub] <= 0 :
             print "ERROR: Negative energy in the Higgs frame subjets"
-            continue
     for isub in range(0, len(jetArray[ijet][indTsub])):
         if jetArray[ijet][indTsub][isub] <= 0 :
             print "ERROR: Negative energy in the Top frame subjets"
-            continue
     for isub in range(0, len(jetArray[ijet][indWsub])):
         if jetArray[ijet][indWsub][isub] <= 0 :
             print "ERROR: Negative energy in the W frame subjets"
-            continue
     for isub in range(0, len(jetArray[ijet][indZsub])):
         if jetArray[ijet][indZsub][isub] <= 0 :
             print "ERROR: Negative energy in the Z frame subjets"
-            continue
 
     #-------------------------------------------------------------------------------------
     # Fox Wolfram Moments ----------------------------------------------------------------
@@ -129,7 +134,6 @@ for ijet in range(0, len(jetArray)):
     for iMom in indFoxWolf :
         if abs(jetArray[ijet][iMom]) > 1 :
             print "ERROR: ", treeVars[iMom], " is outside the expected range of [-1, 1], it's value is ", jetArray[ijet][iMom]
-            continue
     
 
 print "The testing session has concluded"
