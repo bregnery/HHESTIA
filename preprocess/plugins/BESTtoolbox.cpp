@@ -125,20 +125,29 @@ void getJetDaughters(std::vector<reco::Candidate * > &daughtersOfJet, std::vecto
 // the jet tree --------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------
 
-void storeJetVariables(std::map<std::string, float> &treeVars, std::vector<pat::Jet>::const_iterator jet){
+void storeJetVariables(std::map<std::string, float> &treeVars, std::vector<pat::Jet>::const_iterator jet,
+                       int jetColl){
                        // pasing a variable with & is pass-by-reference which keeps changes in this func
-   // Jet four vector and Soft Drop info
-   treeVars["jetAK8_phi"] = jet->phi();
-   treeVars["jetAK8_eta"] = jet->eta();
-   treeVars["jetAK8_pt"] = jet->pt();
-   treeVars["jetAK8_mass"] = jet->mass();
-   treeVars["jetAK8_SoftDropMass"] = jet->userFloat("ak8PFJetsCHSSoftDropMass");
+    // Jet four vector and Soft Drop info
+    treeVars["jetAK8_phi"] = jet->phi();
+    treeVars["jetAK8_eta"] = jet->eta();
+    treeVars["jetAK8_pt"] = jet->pt();
+    treeVars["jetAK8_mass"] = jet->mass();
+    treeVars["jetAK8_SoftDropMass"] = jet->userFloat("ak8PFJetsCHSSoftDropMass");
 
-   // Store Subjettiness info
-   treeVars["jetAK8_Tau4"] = jet->userFloat("NjettinessAK8CHS:tau4");  //important for H->WW jets
-   treeVars["jetAK8_Tau3"] = jet->userFloat("NjettinessAK8:tau3");
-   treeVars["jetAK8_Tau2"] = jet->userFloat("NjettinessAK8:tau2");
-   treeVars["jetAK8_Tau1"] = jet->userFloat("NjettinessAK8:tau1");
+    // Store Subjettiness info
+    if(jetColl == 0){ // CHS jets
+        treeVars["jetAK8_Tau4"] = jet->userFloat("NjettinessAK8CHS:tau4");  //important for H->WW jets
+        treeVars["jetAK8_Tau3"] = jet->userFloat("NjettinessAK8:tau3");
+        treeVars["jetAK8_Tau2"] = jet->userFloat("NjettinessAK8:tau2");
+        treeVars["jetAK8_Tau1"] = jet->userFloat("NjettinessAK8:tau1");
+    }
+    if(jetColl == 1){ // PUPPI jets
+        treeVars["jetAK8_Tau4"] = jet->userFloat("NjettinessAK8Puppi:tau4");  //important for H->WW jets
+        treeVars["jetAK8_Tau3"] = jet->userFloat("NjettinessAK8Puppi:tau3");
+        treeVars["jetAK8_Tau2"] = jet->userFloat("NjettinessAK8Puppi:tau2");
+        treeVars["jetAK8_Tau1"] = jet->userFloat("NjettinessAK8Puppi:tau1");
+    }
 }
 
 //========================================================================================

@@ -39,7 +39,7 @@ void getJetDaughters(std::vector<reco::Candidate * > &daughtersOfJet, std::vecto
                      std::map<std::string, std::vector<float> > &jetVecVars );
 
 // store the jet variables
-void storeJetVariables(std::map<std::string, float> &treeVars, std::vector<pat::Jet>::const_iterator jet);
+void storeJetVariables(std::map<std::string, float> &treeVars, std::vector<pat::Jet>::const_iterator jet, int jetColl);
 
 // store the secondary vertex variables
 void storeSecVertexVariables(std::map<std::string, float> &treeVars, TLorentzVector jet,

@@ -362,6 +362,9 @@ BESTProducer::BESTProducer(const edm::ParameterSet& iConfig):
     listOfVecVars.push_back("ZFrame_PF_candidate_pz");
     listOfVecVars.push_back("ZFrame_PF_candidate_energy");
 
+    // PUPPI weights
+    listOfVecVars.push_back("PuppiWeights");
+
     // rest frame subjet variables
     listOfVecVars.push_back("HiggsFrame_subjet_px");
     listOfVecVars.push_back("HiggsFrame_subjet_py");
@@ -537,7 +540,7 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
             // Store Jet Variables
             treeVars["nJets"] = ak8Jets.size();
-            storeJetVariables(treeVars, ijet);
+            storeJetVariables(treeVars, ijet, jetColl_);
 
             // Secondary Vertex Variables
             TLorentzVector jet(ijet->px(), ijet->py(), ijet->pz(), ijet->energy() );
@@ -576,7 +579,7 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
                     // Store Jet Variables
                     treeVars["nJets"] = ak8Jets.size();
-                    storeJetVariables(treeVars, ijet);
+                    storeJetVariables(treeVars, ijet, jetColl_);
 
                     // Secondary Vertex Variables
                     storeSecVertexVariables(treeVars, jet, secVertices);
@@ -616,7 +619,7 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
                     // Store Jet Variables
                     treeVars["nJets"] = ak8Jets.size();
-                    storeJetVariables(treeVars, ijet);
+                    storeJetVariables(treeVars, ijet, jetColl_);
 
                     // Secondary Vertex Variables
                     storeSecVertexVariables(treeVars, jet, secVertices);
@@ -656,7 +659,7 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
                     // Store Jet Variables
                     treeVars["nJets"] = ak8Jets.size();
-                    storeJetVariables(treeVars, ijet);
+                    storeJetVariables(treeVars, ijet, jetColl_);
 
                     // Secondary Vertex Variables
                     storeSecVertexVariables(treeVars, jet, secVertices);
@@ -696,7 +699,7 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
                     // Store Jet Variables
                     treeVars["nJets"] = ak8Jets.size();
-                    storeJetVariables(treeVars, ijet);
+                    storeJetVariables(treeVars, ijet, jetColl_);
 
                     // Secondary Vertex Variables
                     storeSecVertexVariables(treeVars, jet, secVertices);
