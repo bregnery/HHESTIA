@@ -83,7 +83,7 @@ def getBoostCandBranchNames(tree ):
 
 def makePFcandArray(array):
 
-   tmpArray = []  #use lists not numpy arrays (wayyyyy faster)
+   tmpArray = []  #use lists not numpy arrays (way faster)
    jetCount = 1
    n = 0
    # loop over jets
@@ -111,7 +111,7 @@ def makePFcandArray(array):
 
 def makeBoostCandArray(array):
 
-   tmpArray = []  #use lists not numpy arrays (wayyyyy faster)
+   tmpArray = []  #use lists not numpy arrays (way faster)
    jetCount = 1
    n = 0
    # loop over jets
@@ -139,9 +139,9 @@ def makeBoostCandArray(array):
 # array is a numpy array made from a TTree ----------------------------------------
 #----------------------------------------------------------------------------------
 
-def makeBoostCandFourVector(array):
+def makeBoostCandFourVector(array, frame):
 
-   tmpArray = []  #use lists not numpy arrays (wayyyyy faster)
+   tmpArray = []  #use lists not numpy arrays (way faster)
    jetCount = 1
    entryNum = 0
    n = 0
