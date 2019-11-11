@@ -68,8 +68,8 @@ process.countAK8Jets = cms.EDFilter("PATCandViewCountFilter",
 # Run the producer
 process.run = cms.EDProducer('BESTProducer',
 	inputJetColl = cms.string('selectedAK8Jets'),
-        jetType = cms.string('H')
-        #isSignal = cms.string('H')
+        jetType = cms.string('H'),
+        jetColl = cms.string('CHS')
 )
 
 process.TFileService = cms.Service("TFileService", fileName = cms.string("preprocess_BEST_TEST.root") )

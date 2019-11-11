@@ -71,10 +71,19 @@ namespace best {
     // enumerate possible jet types
     enum JetType { H, t, W, Z, Q};
 
+    // enumerate possible jet collections
+    enum JetColl{ CHS, PUPPI};
+
     // create a struct to help with mapping string label to enum value
     struct JetTypeStringToEnum {
         const char label;
         JetType value;
+    };
+
+    // create a struct to help with mapping string label to enum value
+    struct JetCollStringToEnum {
+        const char* label;
+        JetColl value;
     };
 
     // Create a mapping from the input jetType to enum
@@ -99,6 +108,30 @@ namespace best {
         // Throw an error if user inputs an unrecognized type
         if (!found){
             throw cms::Exception("JetTypeError") << label << " is not a recognized JetType";
+        }
+
+        return value;
+    }
+
+    // Create a mapping from the input jetColl to enum
+    JetColl jetCollFromString(const std::string& label) {
+        static const JetCollStringToEnum jetCollStringToEnumMap[] = {
+            {"CHS", CHS},
+            {"PUPPI", PUPPI}
+        };
+
+        JetColl value = (JetColl)-1;
+        bool found = false;
+        for (int i = 0; jetCollStringToEnumMap[i].label && (!found); ++i){
+            if (!strcmp(label.c_str(), jetCollStringToEnumMap[i].label) ) {
+                found = true;
+                value = jetCollStringToEnumMap[i].value;
+            }
+        }
+
+        // Throw an error if user inputs an unrecognized type
+        if (!found){
+            throw cms::Exception("JetCollError") << label << " is not a recognized JetColl";
         }
 
         return value;
@@ -133,6 +166,7 @@ class BESTProducer : public edm::stream::EDProducer<> {
       // Input variables
       std::string inputJetColl_;
       best::JetType jetType_;
+      best::JetColl jetColl_;
 
       // Tree variables
       TTree *jetTree;
@@ -170,7 +204,8 @@ class BESTProducer : public edm::stream::EDProducer<> {
 
 BESTProducer::BESTProducer(const edm::ParameterSet& iConfig):
     inputJetColl_ (iConfig.getParameter<std::string>("inputJetColl")),
-    jetType_ (best::jetTypeFromString(iConfig.getParameter<std::string>("jetType")))
+    jetType_ (best::jetTypeFromString(iConfig.getParameter<std::string>("jetType"))),
+    jetColl_ (best::jetCollFromString(iConfig.getParameter<std::string>("jetColl")))
 {
 
     //------------------------------------------------------------------------------
