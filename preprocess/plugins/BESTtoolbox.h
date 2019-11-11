@@ -43,8 +43,8 @@ void getJetDaughters(std::vector<reco::Candidate * > &daughtersOfJet, std::vecto
 void storeJetVariables(std::map<std::string, float> &treeVars, std::vector<pat::Jet>::const_iterator jet, int jetColl);
 
 // store the secondary vertex variables
-void storeSecVertexVariables(std::map<std::string, float> &treeVars, TLorentzVector jet,
-                             std::vector<reco::VertexCompositePtrCandidate> secVertices);
+void storeSecVertexVariables(std::map<std::string, float> &treeVars, std::map< std::string, std::vector<float> > &jetVecVars,
+                             TLorentzVector jet, std::vector<reco::VertexCompositePtrCandidate> secVertices);
 
 // store the rest frame variables
 void storeRestFrameVariables(std::map<std::string, float> &treeVars, std::vector<reco::Candidate *> daughtersOfJet,

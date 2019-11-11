@@ -173,7 +173,8 @@ void storeJetVariables(std::map<std::string, float> &treeVars, std::vector<pat::
 // used to fill the tree -----------------------------------------------------------------
 //----------------------------------------------------------------------------------------
 
-void storeSecVertexVariables(std::map<std::string, float> &treeVars, TLorentzVector jet,
+void storeSecVertexVariables(std::map<std::string, float> &treeVars,
+                             std::map<std::string, std::vector<float> > &jetVecVars, TLorentzVector jet,
                              std::vector<reco::VertexCompositePtrCandidate> secVertices){
 
    int numMatched = 0; // counts number of secondary vertices
@@ -184,16 +185,13 @@ void storeSecVertexVariables(std::map<std::string, float> &treeVars, TLorentzVec
       if(jet.DeltaR(vert) < 0.8 ){
          numMatched++;
          // save secondary vertex info for the first three sec vertices
-         if(numMatched <= 3){
-            std::string i = std::to_string(numMatched);
-            treeVars["SV_"+i+"_pt"] = ivert->pt();
-            treeVars["SV_"+i+"_eta"] = ivert->eta();
-            treeVars["SV_"+i+"_phi"] = ivert->phi();
-            treeVars["SV_"+i+"_mass"] = ivert->mass();
-            treeVars["SV_"+i+"_nTracks"] = ivert->numberOfDaughters();
-            treeVars["SV_"+i+"_chi2"] = ivert->vertexChi2();
-            treeVars["SV_"+i+"_Ndof"] = ivert->vertexNdof();
-         }
+         jetVecVars["SV_pt"].push_back(ivert->pt() );
+         jetVecVars["SV_eta"].push_back(ivert->eta() );
+         jetVecVars["SV_phi"].push_back(ivert->phi() );
+         jetVecVars["SV_mass"].push_back(ivert->mass() );
+         jetVecVars["SV_nTracks"].push_back(ivert->numberOfDaughters() );
+         jetVecVars["SV_chi2"].push_back(ivert->vertexChi2() );
+         jetVecVars["SV_Ndof"].push_back(ivert->vertexNdof() );
       }
    }
    treeVars["nSecondaryVertices"] = numMatched;

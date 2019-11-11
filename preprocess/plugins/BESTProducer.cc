@@ -233,29 +233,13 @@ BESTProducer::BESTProducer(const edm::ParameterSet& iConfig):
 
     // Vertex Variables
     listOfVars.push_back("nSecondaryVertices");
-    listOfVars.push_back("SV_1_pt");
-    listOfVars.push_back("SV_1_eta");
-    listOfVars.push_back("SV_1_phi");
-    listOfVars.push_back("SV_1_mass");
-    listOfVars.push_back("SV_1_nTracks");
-    listOfVars.push_back("SV_1_chi2");
-    listOfVars.push_back("SV_1_Ndof");
-
-    listOfVars.push_back("SV_2_pt");
-    listOfVars.push_back("SV_2_eta");
-    listOfVars.push_back("SV_2_phi");
-    listOfVars.push_back("SV_2_mass");
-    listOfVars.push_back("SV_2_nTracks");
-    listOfVars.push_back("SV_2_chi2");
-    listOfVars.push_back("SV_2_Ndof");
-
-    listOfVars.push_back("SV_3_pt");
-    listOfVars.push_back("SV_3_eta");
-    listOfVars.push_back("SV_3_phi");
-    listOfVars.push_back("SV_3_mass");
-    listOfVars.push_back("SV_3_nTracks");
-    listOfVars.push_back("SV_3_chi2");
-    listOfVars.push_back("SV_3_Ndof");
+    listOfVecVars.push_back("SV_pt");
+    listOfVecVars.push_back("SV_eta");
+    listOfVecVars.push_back("SV_phi");
+    listOfVecVars.push_back("SV_mass");
+    listOfVecVars.push_back("SV_nTracks");
+    listOfVecVars.push_back("SV_chi2");
+    listOfVecVars.push_back("SV_Ndof");
 
     // Deep Jet b Discriminants
     //listOfVars.push_back("bDisc");
@@ -544,7 +528,7 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
             // Secondary Vertex Variables
             TLorentzVector jet(ijet->px(), ijet->py(), ijet->pz(), ijet->energy() );
-            storeSecVertexVariables(treeVars, jet, secVertices);
+            storeSecVertexVariables(treeVars, jetVecVars, jet, secVertices);
 
             // Get all of the Jet's daughters
             vector<reco::Candidate * > daughtersOfJet;
@@ -582,7 +566,7 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
                     storeJetVariables(treeVars, ijet, jetColl_);
 
                     // Secondary Vertex Variables
-                    storeSecVertexVariables(treeVars, jet, secVertices);
+                    storeSecVertexVariables(treeVars, jetVecVars, jet, secVertices);
 
                     // Get all of the Jet's daughters
                     vector<reco::Candidate * > daughtersOfJet;
@@ -622,7 +606,7 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
                     storeJetVariables(treeVars, ijet, jetColl_);
 
                     // Secondary Vertex Variables
-                    storeSecVertexVariables(treeVars, jet, secVertices);
+                    storeSecVertexVariables(treeVars, jetVecVars, jet, secVertices);
 
                     // Get all of the Jet's daughters
                     vector<reco::Candidate * > daughtersOfJet;
@@ -662,7 +646,7 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
                     storeJetVariables(treeVars, ijet, jetColl_);
 
                     // Secondary Vertex Variables
-                    storeSecVertexVariables(treeVars, jet, secVertices);
+                    storeSecVertexVariables(treeVars, jetVecVars, jet, secVertices);
 
                     // Get all of the Jet's daughters
                     vector<reco::Candidate * > daughtersOfJet;
@@ -702,7 +686,7 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
                     storeJetVariables(treeVars, ijet, jetColl_);
 
                     // Secondary Vertex Variables
-                    storeSecVertexVariables(treeVars, jet, secVertices);
+                    storeSecVertexVariables(treeVars, jetVecVars, jet, secVertices);
 
                     // Get all of the Jet's daughters
                     vector<reco::Candidate * > daughtersOfJet;
