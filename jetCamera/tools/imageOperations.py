@@ -178,7 +178,10 @@ def boostedRotations(candArray):
         #Make sure that subleading candidate has been fully rotated
         if icand.E() == subleadE and abs(icand.Pz() ) < 0.01 : icand.SetPz(0)
  
-        #if icand.M() < -0.1: print "ERROR: Negative Candidate Mass: ", icand.M()
+        if icand.M() < -0.1: 
+            print "ERROR: Negative Candidate Mass: ", icand.M()
+            print "Awful things happen to wizards who meddle with time, Harry"
+            exit()
  
         # store image info
         #phiPrime.append(icand.Phi() )

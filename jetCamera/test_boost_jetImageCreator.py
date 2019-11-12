@@ -83,6 +83,7 @@ for iEntry in range(0, len(imgArrayTest) ) :
 
 if isOrdered == False: 
     print "ERROR: Picking the most energetic candidate was done wrong. "
+    print "He's Dead Jim!"
     print "TEST FAILED!!!"
     exit()
 
@@ -140,5 +141,5 @@ if plotJetImages == True:
 
    #img.plotMolleweideBoostedJetImage(jetImagesDF['Test_images'], 'boost_Test', savePNG, savePDF)
 
-print "Mischief Managed!"
+print "Mischief Managed!!!"
 

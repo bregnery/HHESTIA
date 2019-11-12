@@ -36,7 +36,8 @@ Now the program can be used.
 
 Before training the neural network, the CMS datasets must be converted into a usable form.
 To do this, see the instructions in the ``preprocess`` directory.
-After preprocessing, the files can be used to train a neural network. For this process,
+After preprocessing, the images need to be produced with the ``jetCamera``. Finally,
+the files can be used to train a neural network. For training,
 see the instructions in the ``training`` directory.
 
 ## Instructions for Contributing to this Repository
