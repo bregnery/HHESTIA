@@ -138,6 +138,7 @@ if plotJetImages == True:
 
    img.plotThreeBoostedJetImages(jetImagesDF['Test_images'], 'boost_Test', savePNG, savePDF)
 
-   #img.plotMolleweideBoostedJetImage(jetImagesDF['Test'], 'boost_Test', savePNG, savePDF)
-print "TESTS PASSED!! You're a Wizard Harry!"
+   #img.plotMolleweideBoostedJetImage(jetImagesDF['Test_images'], 'boost_Test', savePNG, savePDF)
+
+print "Mischief Managed!"
 
