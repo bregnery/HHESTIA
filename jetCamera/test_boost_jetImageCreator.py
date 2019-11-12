@@ -68,6 +68,24 @@ imgArrayTest = img.makeBoostCandFourVector(arrayTest, treeVars, "Higgs")
 
 print "Made candidate 4 vector arrays from the datasets"
 
+# Test that first candidate is ordered
+isOrdered = True
+ijet = -1
+leadCand = 0
+for iEntry in range(0, len(imgArrayTest) ) :
+    if ijet != imgArrayTest[iEntry][0] :
+        ijet = imgArrayTest[iEntry][0]
+        leadCand = iEntry
+    if imgArrayTest[iEntry][1].E() > imgArrayTest[leadCand][1].E() :
+        print "ERROR: First Candidate is not the most energetic"
+        print "Jet: ", ijet, " Cand: ", iEntry, " has energy ", imgArrayTest[iEntry][1].E()
+        isOrdered = False
+
+if isOrdered == False: 
+    print "ERROR: Picking the most energetic candidate was done wrong. "
+    print "TEST FAILED!!!"
+    exit()
+
 #==================================================================================
 # Store BEST Variables ////////////////////////////////////////////////////////////
 #==================================================================================
@@ -121,5 +139,5 @@ if plotJetImages == True:
    img.plotThreeBoostedJetImages(jetImagesDF['Test_images'], 'boost_Test', savePNG, savePDF)
 
    #img.plotMolleweideBoostedJetImage(jetImagesDF['Test'], 'boost_Test', savePNG, savePDF)
-print "Program was a great success!!!"
+print "TESTS PASSED!! You're a Wizard Harry!"
 
