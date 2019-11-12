@@ -44,7 +44,7 @@ see the instructions in the ``training`` directory.
 
 First, fork this repository and push code to the forked version.
 Please only submit pull requests to the `developer` branch. Before submitting a pull request, 
-please test your code. To test any changes to the edproducer, please do the following:
+please test your code. To test any changes to the preprocess step or jetCamera, please do the following:
 
 ```bash
 cd BEST/preprocess/
@@ -52,6 +52,8 @@ cmsenv
 scram b -j8
 cmsRun test/run_TEST.py
 python BES_variable_testingSuite.py 
+cd ../jetCamera
+python test_boost_jetImageCreator.py
 ```
 
 Then open up the output root file and make sure that the results are as expected. There are no
