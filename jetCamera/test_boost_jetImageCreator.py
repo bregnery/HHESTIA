@@ -50,11 +50,11 @@ upTree = uproot.open("/uscms_data/d3/bregnery/HHstudies/HHESTIA/CMSSW_9_4_8/src/
 h5f = h5py.File("images/TestBoostedJetImages.h5","w")
 
 # make a data frame to store the images
-jetImagesDF = {}
+jetDF = {}
 
 # make boosted jet images
 print "Creating boosted Jet Images"
-img.boostedJetPhotoshoot(upTree, "Higgs", 31, h5f, jetImagesDF)
+img.boostedJetPhotoshoot(upTree, "Higgs", 31, h5f, jetDF)
 print "Finished the jet photoshoot"
 
 #==================================================================================
@@ -80,11 +80,11 @@ print "Finished the jet photoshoot"
 # plot with python
 if plotJetImages == True:
    print "Plotting Average Boosted jet images"
-   img.plotAverageBoostedJetImage(jetImagesDF['Test_images'], 'boost_Test', savePNG, savePDF)
+   img.plotAverageBoostedJetImage(jetDF['test_images'], 'boost_Test', savePNG, savePDF)
 
-   img.plotThreeBoostedJetImages(jetImagesDF['Test_images'], 'boost_Test', savePNG, savePDF)
+   img.plotThreeBoostedJetImages(jetDF['test_images'], 'boost_Test', savePNG, savePDF)
 
-   img.plotMolleweideBoostedJetImage(jetImagesDF['Test_images'], 'boost_Test', 31, savePNG, savePDF)
+   img.plotMolleweideBoostedJetImage(jetDF['test_images'], 'boost_Test', 31, savePNG, savePDF)
 
 print "Mischief Managed!!!"
 

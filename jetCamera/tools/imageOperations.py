@@ -29,12 +29,12 @@ import keras.backend as K
 #------------------------------------------------------------------------------------
 # 
 
-def boostedJetPhotoshoot(upTree, frame, nbins, h5f, jetImagesDF):
+def boostedJetPhotoshoot(upTree, frame, nbins, h5f, jetDF):
 
     nx = nbins # number of image bins in phi
     ny = nbins # number of image bins in theta
     print "array length", len(upTree.array(["jetAK8_pt"]) )
-    jet_images = np.zeros((len(upTree.array(["jetAK8_pt"]) ), nx, ny, 1) ) # made for tensorFlow
+    jetDF['test_images'] = np.zeros((len(upTree.array(["jetAK8_pt"]) ), nx, ny, 1) ) # made for tensorFlow
 
     # Loop over jets using the proper rest frame
     jetCount = 0
@@ -63,13 +63,11 @@ def boostedJetPhotoshoot(upTree, frame, nbins, h5f, jetImagesDF):
         jetPic = boostedJetCamera(candArray, nbins) 
         for ix in range(0,nx):
             for iy in range(0,ny):
-                jet_images[jetCount,ix,iy,0] = jetPic[ix,iy]
+                jetDF['test_images'][jetCount,ix,iy,0] = jetPic[ix,iy]
         jetCount += 1  
 
-    jetImagesDF['Test_images'] = jet_images
-    #print jetImagesDF['Test_images']
-
-    h5f.create_dataset('Test_images', data=jetImagesDF['Test_images'], compression='lzf')
+    # save the jet images to an h5 file
+    h5f.create_dataset('test_images', data=jetDF['test_images'], compression='lzf')
 
 #==================================================================================
 # Boosted Jet Camera --------------------------------------------------------------
@@ -131,13 +129,16 @@ def boostedRotations(candArray):
             print "ERROR: Energy sorting was done incorrectly!"
             print " 'I stand by what I said ... you would have done well in Slytherin'"
             exit()     
- 
+
+        # rotate so that the leading jet is in the xy plane 
         icand.RotateZ(-rotPhi)
+
         #make sure leading candidate has been fully rotated
         if icand.E() == leadE : 
             if abs(icand.Py() ) < 0.01 : 
                 icand.SetPy(0) 
-      
+     
+        # rotate so that the leading jet is on the x axis 
         icand.RotateY(np.pi/2 - rotTheta)
       
         # Save leading Candidate LV
@@ -190,7 +191,6 @@ def boostedRotations(candArray):
         if icand.Phi() < 0 :
             leftSum += icand.E()
  
-    # store image info
     for icand in candArray :
  
         if bottomSum > topSum :
@@ -203,6 +203,7 @@ def boostedRotations(candArray):
         if leftSum < rightSum :
             phiPrime.append(icand.Phi() )
  
+    # store image info
     return np.array(phiPrime), np.array(thetaPrime)
 
 #==================================================================================
