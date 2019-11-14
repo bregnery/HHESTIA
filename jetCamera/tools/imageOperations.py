@@ -184,12 +184,12 @@ def boostedRotations(candArray):
  
         if bottomSum > topSum :
             thetaPrime.append( -icand.CosTheta() )
-        if topSum > bottomSum :
+        if topSum >= bottomSum :
             thetaPrime.append( icand.CosTheta() )
        
         if leftSum > rightSum :
             phiPrime.append( -icand.Phi() )
-        if leftSum < rightSum :
+        if leftSum <= rightSum :
             phiPrime.append(icand.Phi() )
  
     # store image info
