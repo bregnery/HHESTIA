@@ -8,6 +8,7 @@
 import ROOT as root
 import numpy as np
 import pandas as pd
+import uproot
 import matplotlib as mpl
 mpl.use('Agg') #prevents opening displays, must use before pyplot
 import matplotlib.pyplot as plt
@@ -23,102 +24,86 @@ from os import environ
 environ["KERAS_BACKEND"] = "tensorflow" #must set backend before importing keras
 import keras.backend as K
 
-#==================================================================================
-# Get PF Candidate Branches -------------------------------------------------------
-#----------------------------------------------------------------------------------
-# tree is TTree -------------------------------------------------------------------
-#----------------------------------------------------------------------------------
+#====================================================================================
+# Make boosted jet images in given rest frame ---------------------------------------
+#------------------------------------------------------------------------------------
+# 
 
-def getPFcandBranchNames(tree ):
+def boostedJetPhotoshoot(upTree, frame, nbins, h5f, jetImagesDF):
 
-   # empty array to store names
-   treeVars = []
+    nx = nbins # number of image bins in phi
+    ny = nbins # number of image bins in theta
+    print "array length", len(upTree.array(["jetAK8_pt"]) )
+    jet_images = np.zeros((len(upTree.array(["jetAK8_pt"]) ), nx, ny, 1) ) # made for tensorFlow
 
-   # loop over branches
-   for branch in tree.GetListOfBranches():
-      name = branch.GetName()
-      # Only get PF branches
-      if 'PF' in name:
-         treeVars.append(name)
-      if 'jetAK8_pt' in name:
-         treeVars.append(name)
+    # Loop over jets using the proper rest frame
+    jetCount = 0
+    for ijet in upTree.iterate([frame+"Frame_PF_candidate*", "jetAK8_pt", "jetAK8_phi", 
+                                "jetAK8_eta", "jetAK8_mass"], entrysteps=1) :
+    
 
-   return treeVars
-
-#==================================================================================
-# Get Rest Frame Candidate Branches -----------------------------------------------
-#----------------------------------------------------------------------------------
-# tree is TTree, frame is a string of the desired rest frame ----------------------
-#----------------------------------------------------------------------------------
-
-def getBoostCandBranchNames(tree, frame):
-
-   # empty array to store names
-   treeVars = []
-
-   # loop over branches
-   for branch in tree.GetListOfBranches():
-      name = branch.GetName()
-      # Only get PF branches
-      if frame + 'Frame_PF' in name:
-         treeVars.append(name)
-      if 'jetAK8_pt' in name:
-         treeVars.append(name)
-      if 'jetAK8_phi' in name:
-         treeVars.append(name)
-      if 'jetAK8_eta' in name:
-         treeVars.append(name)
-      if 'jetAK8_mass' in name:
-         treeVars.append(name)
-
-   return treeVars
-
-#==================================================================================
-# Make array with Boosted PF candidate 4 vectors ----------------------------------
-#----------------------------------------------------------------------------------
-# This function converts the array made from the jetTree to the correct form to ---
-#   use with the boosted jet image functions --------------------------------------
-# array is a numpy array made from a TTree, treeVars is a list of strings of the --
-#   branch names, frame is a string for the rest frame being used -----------------
-#----------------------------------------------------------------------------------
-
-def makeBoostCandFourVector(array, treeVars, frame):
-
-    # Get PF candidate indices
-    indPx = treeVars.index(frame + 'Frame_PF_candidate_px') 
-    indPy = treeVars.index(frame + 'Frame_PF_candidate_py') 
-    indPz = treeVars.index(frame + 'Frame_PF_candidate_pz') 
-    indE  = treeVars.index(frame + 'Frame_PF_candidate_energy') 
-
-    tmpArray = []  #use lists not np arrays (faster appending)
-    jetCount = 1
-    entryNum = 0
-    n = 0
-    # loop over jets
-    while n < len(array) :
-        if n % 10000 == 0: print "Making 4 vector array for jet number: ", jetCount
-        # loop over pf candidates
-        for i in range( len(array[n][indE][:]) ) :
-            px = array[n][indPx][i]
-            py = array[n][indPy][i]
-            pz = array[n][indPz][i]
-            e  = array[n][indE][i]
+        candArray = []
+        for i in range( len(ijet[frame+'Frame_PF_candidate_px'][0]) ) :
+            px = ijet[frame+'Frame_PF_candidate_px'][0][i]
+            py = ijet[frame+'Frame_PF_candidate_py'][0][i]
+            pz = ijet[frame+'Frame_PF_candidate_pz'][0][i]
+            e  = ijet[frame+'Frame_PF_candidate_energy'][0][i]
             candLV = root.TLorentzVector(px, py, pz, e)
             
             # List the most energetic candidate first
             if i == 0:
-                tmpArray.append([jetCount, candLV])
-            elif i > 0 and candLV.E() > tmpArray[entryNum - i][1].E() :
-                tmpArray.append([jetCount, tmpArray[entryNum - i][1] ])
-                tmpArray[entryNum - i] = [jetCount, candLV]
+                candArray.append(candLV)
+            elif i > 0 and candLV.E() > candArray[0].E() :
+                candArray.append(candArray[0])
+                candArray[0] = candLV
             else:
-                tmpArray.append([jetCount, candLV]) 
-            entryNum += 1
-        jetCount +=1
-        n += 1
- 
-    newArray = copy.copy(tmpArray)
-    return newArray
+                candArray.append(candLV) 
+       
+        # take a picture
+        jetPic = boostedJetCamera(candArray, nbins) 
+        for ix in range(0,nx):
+            for iy in range(0,ny):
+                jet_images[jetCount,ix,iy,0] = jetPic[ix,iy]
+        jetCount += 1  
+
+    jetImagesDF['Test_images'] = jet_images
+    #print jetImagesDF['Test_images']
+
+    h5f.create_dataset('Test_images', data=jetImagesDF['Test_images'], compression='lzf')
+
+#==================================================================================
+# Boosted Jet Camera --------------------------------------------------------------
+#----------------------------------------------------------------------------------
+# make jet image histograms using the candidate data frame and the original -------
+#    jet array --------------------------------------------------------------------
+# refFrame is the reference frame for the images to be created in -----------------
+#----------------------------------------------------------------------------------
+
+def boostedJetCamera(candArray, nbins):
+
+    nx = nbins # number of image bins in phi
+    ny = nbins # number of image bins in theta
+    # set limits on relative phi and theta for the histogram
+    xbins = np.linspace(-np.pi,np.pi,nx+1)
+    ybins = np.linspace(-1,1,ny+1)
+
+    # use candidate energy as weight
+    weightList = []
+    for i in range( len(candArray) ):
+        weightList.append(candArray[i].E() )
+        
+    # perform boosted frame rotations
+    phiPrime,thetaPrime = boostedRotations(candArray)
+
+    # make the weight list into a np array
+    totE = sum(weightList)
+    normWeight = [(weight / totE)*10 for weight in weightList] #normalize energy to that of the leading, multiply to be in pixel range (0 to 255)
+    weights = np.array(normWeight )
+
+    # make a 2D np hist for the image
+    jet_image_hist, xedges, yedges = np.histogram2d(phiPrime, thetaPrime, weights=weights, bins=(xbins,ybins))
+
+    return jet_image_hist
 
 #==================================================================================
 # Boosted Candidate Rotations -----------------------------------------------------
@@ -142,11 +127,16 @@ def boostedRotations(candArray):
     for icand in candArray :
  
         # Waring for incorrect energy sorting
-        if icand.E() > leadE : print "WARNING: Energy sorting was done incorrectly!"
-      
+        if icand.E() > leadE : 
+            print "ERROR: Energy sorting was done incorrectly!"
+            print " 'I stand by what I said ... you would have done well in Slytherin'"
+            exit()     
+ 
         icand.RotateZ(-rotPhi)
-        #set small py values to 0
-        if abs(icand.Py() ) < 0.01 : icand.SetPy(0) 
+        #make sure leading candidate has been fully rotated
+        if icand.E() == leadE : 
+            if abs(icand.Py() ) < 0.01 : 
+                icand.SetPy(0) 
       
         icand.RotateY(np.pi/2 - rotTheta)
       
@@ -170,7 +160,9 @@ def boostedRotations(candArray):
  
         # warning for subleading identification
         if icand.E() > subleadE and icand.E() < leadE : 
-            if abs( (icand.Phi() - leadLV.Phi() ) ) > 1.0 : print "WARNING: Subleading candidate was improperly identified!"  
+            if abs( (icand.Phi() - leadLV.Phi() ) ) > 1.0 : 
+                print "Error: Subleading candidate was improperly identified!"  
+                exit()
   
         # rotatate about x with psi to get subleading candidate to x-y plane      
         icand.RotateX(subPsi - np.pi/2)
@@ -180,12 +172,8 @@ def boostedRotations(candArray):
  
         if icand.M() < -0.1: 
             print "ERROR: Negative Candidate Mass: ", icand.M()
-            print "Awful things happen to wizards who meddle with time, Harry"
+            print " 'Awful things happen to wizards who meddle with time, Harry'"
             exit()
- 
-        # store image info
-        #phiPrime.append(icand.Phi() )
-        #thetaPrime.append( icand.CosTheta() )
  
     # Reflect if bottomSum > topSum and/or leftSum > rightSum
     leftSum, rightSum = 0, 0
@@ -216,80 +204,6 @@ def boostedRotations(candArray):
             phiPrime.append(icand.Phi() )
  
     return np.array(phiPrime), np.array(thetaPrime)
-
-#==================================================================================
-# Make boosted frame Jet Images ---------------------------------------------------
-#----------------------------------------------------------------------------------
-# make jet image histograms using the candidate data frame and the original -------
-#    jet array --------------------------------------------------------------------
-# refFrame is the reference frame for the images to be created in -----------------
-#----------------------------------------------------------------------------------
-
-def prepareBoostedImages(candLV, jetArray, nbins, boostAxis ):
-
-    nx = nbins #30 # number of image bins in phi
-    ny = nbins #30 # number of image bins in theta
-    # set limits on relative phi and theta for the histogram
-    xbins = np.linspace(-np.pi,np.pi,nx+1)
-    ybins = np.linspace(-1,1,ny+1)
-
-    if K.image_dim_ordering()=='tf':
-        # 4D tensor (tensorflow backend)
-        # 1st dim is jet index
-        # 2nd dim is eta bin
-        # 3rd dim is phi bin
-        # 4th dim is pt value (or rgb layer, etc.)
-        jet_images = np.zeros((len(jetArray), nx, ny, 1))
-    else:        
-        jet_images = np.zeros((len(jetArray), 1, nx, ny))
-
-    jetCount = 0    
-    candNum = 0
-    for i in range(0,len(jetArray)):
-        jetNum = i + 1
-        if i % 1000 == 0: print "Imaging jet number: ", jetNum
-
-        # make 4 vector of the jet
-        jetPt, jetEta, jetPhi, jetMass = jetArray[i][2], jetArray[i][1], jetArray[i][0], jetArray[i][3]
-        jetLV = root.TLorentzVector()
-        jetLV.SetPtEtaPhiM(jetPt, jetEta, jetPhi, jetMass)
-
-        # get the ith jet candidate 4 vectors
-        icandLV = []
-        weightList = []
-        while jetCount <= jetNum :
-            jetCount = candLV[candNum][0]
-            if jetCount == jetNum:
-               icandLV.append(candLV[candNum][1])
-               # use candidate energy as weight
-               weightList.append(candLV[candNum][1].E() )
-               candNum += 1
-            # stop the loop for the last jet
-            if candNum == len(candLV):
-               break
-        
-        # perform boosted frame rotations
-        if boostAxis == False : #use leading candidate as Z axis in rotations
-           phiPrime,thetaPrime = boostedRotations(icandLV)
-        if boostAxis == True : # use boost axis as Z axis in rotations
-           phiPrime,thetaPrime = boostedRotationsRelBoostAxis(icandLV, jetLV)
-
-        # make the weight list into a np array
-        totE = sum(weightList)
-        normWeight = [(weight / totE)*10 for weight in weightList] #normalize energy to that of the leading, multiply to be in pixel range (0 to 255)
-        weights = np.array(normWeight )
-        #weights = np.array(weightList ) #normWeight )
-
-        # make a 2D np hist for the image
-        hist, xedges, yedges = np.histogram2d(phiPrime, thetaPrime, weights=weights, bins=(xbins,ybins))
-        for ix in range(0,nx):
-           for iy in range(0,ny):
-              if K.image_dim_ordering()=='tf':
-                 jet_images[i,ix,iy,0] = hist[ix,iy]
-              else:
-                 jet_images[i,0,ix,iy] = hist[ix,iy]
-
-    return jet_images
 
 #==================================================================================
 # Plot Averaged Boosted Jet Images ------------------------------------------------
@@ -359,7 +273,7 @@ def plotThreeBoostedJetImages(jetImageDF, title, plotPNG, plotPDF):
 # title has limited options, see if statements ------------------------------------
 #----------------------------------------------------------------------------------
 
-def plotMolleweideBoostedJetImage(jetImageDF, title, plotPNG, plotPDF):
+def plotMolleweideBoostedJetImage(jetImageDF, title, nbins, plotPNG, plotPDF):
 
    # sum and average jet images
    summed = np.sum(jetImageDF, axis=0)
@@ -369,8 +283,8 @@ def plotMolleweideBoostedJetImage(jetImageDF, title, plotPNG, plotPDF):
    fig = plt.figure()
    ax = fig.add_subplot(111, projection = 'mollweide')
 
-   lon = np.linspace(-np.pi, np.pi, 42) 
-   lat = np.linspace(-np.pi/2, np.pi/2, 42) 
+   lon = np.linspace(-1, 1, nbins) 
+   lat = np.linspace(-np.pi/2, np.pi/2, nbins) 
    Lon, Lat = np.meshgrid(lon, lat)
 
    im = ax.pcolormesh(Lon, Lat, avg[:,:,0].T, norm=mpl.colors.LogNorm() )
@@ -387,9 +301,9 @@ def plotMolleweideBoostedJetImage(jetImageDF, title, plotPNG, plotPDF):
 #   plt.xticks(np.arange(-4, 4, step=1.0) )
 #   plt.yticks(np.arange(0, 4, step=1.0) )
    if plotPNG == True :
-      plt.savefig('plots/'+title+'_jetImage.png')
+      plt.savefig('plots/'+title+'_Molleweide_jetImage.png')
    if plotPDF == True :
-      plt.savefig('plots/'+title+'_jetImage.pdf')
+      plt.savefig('plots/'+title+'_Molleweide_jetImage.pdf')
    plt.close()
 
 #==================================================================================

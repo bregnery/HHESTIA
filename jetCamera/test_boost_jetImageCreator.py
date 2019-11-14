@@ -6,6 +6,7 @@
 
 # modules
 import ROOT as root
+import uproot
 import numpy
 import pandas as pd
 import h5py
@@ -42,91 +43,35 @@ savePNG = True
 # Load Monte Carlo ////////////////////////////////////////////////////////////////
 #==================================================================================
 
-# access the TFiles
-fileTest = root.TFile("../preprocess/preprocess_BEST_TEST.root", "READ")
+# access the TFiles and TTrees
+upTree = uproot.open("/uscms_data/d3/bregnery/HHstudies/HHESTIA/CMSSW_9_4_8/src/HHESTIA/preprocess/preprocess_BEST_TEST.root")["run/jetTree"]
 
-# access the trees
-treeTest = fileTest.Get("run/jetTree")
+# make file to store the images and BES variables
+h5f = h5py.File("images/TestBoostedJetImages.h5","w")
 
-print "Accessed the trees"
+# make a data frame to store the images
+jetImagesDF = {}
 
-# get input variable names from branches
-vars = img.getBoostCandBranchNames(treeTest, "Higgs")
-treeVars = vars
-print "Variables for jet image creation: ", vars
-
-# create selection criteria
-sel = "jetAK8_pt > 500 && jetAK8_mass > 50"
-
-# make arrays from the trees
-arrayTest = tree2array(treeTest, treeVars, sel)
-arrayTest = tools.appendTreeArray(arrayTest)
-
-print "Number of Jets that will be imaged: ", len(arrayTest)
-
-imgArrayTest = img.makeBoostCandFourVector(arrayTest, treeVars, "Higgs")
-
-print "Made candidate 4 vector arrays from the datasets"
-
-# Test that first candidate is ordered
-isOrdered = True
-ijet = -1
-leadCand = 0
-for iEntry in range(0, len(imgArrayTest) ) :
-    if ijet != imgArrayTest[iEntry][0] :
-        ijet = imgArrayTest[iEntry][0]
-        leadCand = iEntry
-    if imgArrayTest[iEntry][1].E() > imgArrayTest[leadCand][1].E() :
-        print "ERROR: First Candidate is not the most energetic"
-        print "Jet: ", ijet, " Cand: ", iEntry, " has energy ", imgArrayTest[iEntry][1].E()
-        isOrdered = False
-
-if isOrdered == False: 
-    print "ERROR: Picking the most energetic candidate was done wrong. "
-    print "He's Dead Jim!"
-    print "TEST FAILED!!!"
-    exit()
+# make boosted jet images
+print "Creating boosted Jet Images"
+img.boostedJetPhotoshoot(upTree, "Higgs", 31, h5f, jetImagesDF)
+print "Finished the jet photoshoot"
 
 #==================================================================================
 # Store BEST Variables ////////////////////////////////////////////////////////////
 #==================================================================================
 
 # get BEST variable names from branches
-bestVars = tools.getBESbranchNames(treeTest)
-print "Boosted Event Shape Variables: ", bestVars
+#bestVars = tools.getBESbranchNames(treeTest)
+#print "Boosted Event Shape Variables: ", bestVars
 
 # make arrays from the trees
-bestArrayTest = tree2array(treeTest, bestVars, sel)
-bestArrayTest = tools.appendTreeArray(bestArrayTest)
+#bestArrayTest = tree2array(treeTest, bestVars, sel)
+#jetImagesDF['Test_BES_vars'] = tools.appendTreeArray(bestArrayTest)
+#print "Made array with the Boosted Event Shape Variables"
 
-print "Made array with the Boosted Event Shape Variables"
-
-#==================================================================================
-# Make Jet Images /////////////////////////////////////////////////////////////////
-#==================================================================================
-
-jetImagesDF = {}
-print "Creating boosted Jet Images"
-jetImagesDF['Test_images'] = img.prepareBoostedImages(imgArrayTest, arrayTest, 31, boostAxis)
-
-print "Made jet image data frames"
-
-#==================================================================================
-# Store BEST Variables in DataFrame ///////////////////////////////////////////////
-#==================================================================================
-
-jetImagesDF['Test_BES_vars'] = bestArrayTest
-print "Stored BES variables"
-
-#==================================================================================
-# Store Data in h5 file ///////////////////////////////////////////////////////////
-#==================================================================================
-
-h5f = h5py.File("images/TestBoostedJetImages.h5","w")
-h5f.create_dataset('Test_images', data=jetImagesDF['Test_images'], compression='lzf')
-h5f.create_dataset('Test_BES_vars', data=jetImagesDF['Test_BES_vars'], compression='lzf')
-
-print "Saved Test Boosted Jet Images"
+#h5f.create_dataset('Test_BES_vars', data=jetImagesDF['Test_BES_vars'], compression='lzf')
+#print "Stored BES variables"
 
 #==================================================================================
 # Plot Jet Images /////////////////////////////////////////////////////////////////
@@ -139,7 +84,7 @@ if plotJetImages == True:
 
    img.plotThreeBoostedJetImages(jetImagesDF['Test_images'], 'boost_Test', savePNG, savePDF)
 
-   #img.plotMolleweideBoostedJetImage(jetImagesDF['Test_images'], 'boost_Test', savePNG, savePDF)
+   img.plotMolleweideBoostedJetImage(jetImagesDF['Test_images'], 'boost_Test', 31, savePNG, savePDF)
 
 print "Mischief Managed!!!"
 

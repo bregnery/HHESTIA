@@ -24,6 +24,103 @@ environ["KERAS_BACKEND"] = "tensorflow" #must set backend before importing keras
 import keras.backend as K
 
 #==================================================================================
+# Get PF Candidate Branches -------------------------------------------------------
+#----------------------------------------------------------------------------------
+# tree is TTree -------------------------------------------------------------------
+#----------------------------------------------------------------------------------
+
+def getPFcandBranchNames(tree ):
+
+   # empty array to store names
+   treeVars = []
+
+   # loop over branches
+   for branch in tree.GetListOfBranches():
+      name = branch.GetName()
+      # Only get PF branches
+      if 'PF' in name:
+         treeVars.append(name)
+      if 'jetAK8_pt' in name:
+         treeVars.append(name)
+
+   return treeVars
+
+#==================================================================================
+# Get Rest Frame Candidate Branches -----------------------------------------------
+#----------------------------------------------------------------------------------
+# tree is TTree, frame is a string of the desired rest frame ----------------------
+#----------------------------------------------------------------------------------
+
+def getBoostCandBranchNames(tree, frame):
+
+   # empty array to store names
+   treeVars = []
+
+   # loop over branches
+   for branch in tree.GetListOfBranches():
+      name = branch.GetName()
+      # Only get PF branches
+      if frame + 'Frame_PF' in name:
+         treeVars.append(name)
+      if 'jetAK8_pt' in name:
+         treeVars.append(name)
+      if 'jetAK8_phi' in name:
+         treeVars.append(name)
+      if 'jetAK8_eta' in name:
+         treeVars.append(name)
+      if 'jetAK8_mass' in name:
+         treeVars.append(name)
+
+   return treeVars
+
+#==================================================================================
+# Make array with Boosted PF candidate 4 vectors ----------------------------------
+#----------------------------------------------------------------------------------
+# This function converts the array made from the jetTree to the correct form to ---
+#   use with the boosted jet image functions --------------------------------------
+# array is a numpy array made from a TTree, treeVars is a list of strings of the --
+#   branch names, frame is a string for the rest frame being used -----------------
+#----------------------------------------------------------------------------------
+
+def makeBoostCandFourVector(array, treeVars, frame):
+
+    # Get PF candidate indices
+    indPx = treeVars.index(frame + 'Frame_PF_candidate_px') 
+    indPy = treeVars.index(frame + 'Frame_PF_candidate_py') 
+    indPz = treeVars.index(frame + 'Frame_PF_candidate_pz') 
+    indE  = treeVars.index(frame + 'Frame_PF_candidate_energy') 
+
+    tmpArray = []  #use lists not np arrays (faster appending)
+    jetCount = 1
+    entryNum = 0
+    n = 0
+    # loop over jets
+    while n < len(array) :
+        if n % 10000 == 0: print "Making 4 vector array for jet number: ", jetCount
+        # loop over pf candidates
+        for i in range( len(array[n][indE][:]) ) :
+            px = array[n][indPx][i]
+            py = array[n][indPy][i]
+            pz = array[n][indPz][i]
+            e  = array[n][indE][i]
+            candLV = root.TLorentzVector(px, py, pz, e)
+            
+            # List the most energetic candidate first
+            if i == 0:
+                tmpArray.append([jetCount, candLV])
+            elif i > 0 and candLV.E() > tmpArray[entryNum - i][1].E() :
+                tmpArray.append([jetCount, tmpArray[entryNum - i][1] ])
+                tmpArray[entryNum - i] = [jetCount, candLV]
+            else:
+                tmpArray.append([jetCount, candLV]) 
+            entryNum += 1
+        jetCount +=1
+        n += 1
+ 
+    newArray = copy.copy(tmpArray)
+    return newArray
+
+#==================================================================================
 # Make array with PF candidate information ----------------------------------------
 #----------------------------------------------------------------------------------
 # This function converts the array made from the jetTree to the correct form to ---
@@ -80,6 +177,81 @@ def makeBoostCandArray(array):
 
    newArray = copy.copy(tmpArray)
    return newArray
+
+#==================================================================================
+# Make boosted frame Jet Images ---------------------------------------------------
+#----------------------------------------------------------------------------------
+# make jet image histograms using the candidate data frame and the original -------
+#    jet array --------------------------------------------------------------------
+# refFrame is the reference frame for the images to be created in -----------------
+#----------------------------------------------------------------------------------
+
+def prepareBoostedImages(candLV, jetArray, nbins, boostAxis ):
+
+    nx = nbins #30 # number of image bins in phi
+    ny = nbins #30 # number of image bins in theta
+    # set limits on relative phi and theta for the histogram
+    xbins = np.linspace(-np.pi,np.pi,nx+1)
+    ybins = np.linspace(-1,1,ny+1)
+
+    if K.image_dim_ordering()=='tf':
+        # 4D tensor (tensorflow backend)
+        # 1st dim is jet index
+        # 2nd dim is eta bin
+        # 3rd dim is phi bin
+        # 4th dim is pt value (or rgb layer, etc.)
+        jet_images = np.zeros((len(jetArray), nx, ny, 1))
+    else:        
+        jet_images = np.zeros((len(jetArray), 1, nx, ny))
+
+    jetCount = 0    
+    candNum = 0
+    for i in range(0,len(jetArray)):
+        jetNum = i + 1
+        if i % 1000 == 0: print "Imaging jet number: ", jetNum
+
+        # make 4 vector of the jet
+        jetPt, jetEta, jetPhi, jetMass = jetArray[i][2], jetArray[i][1], jetArray[i][0], jetArray[i][3]
+        jetLV = root.TLorentzVector()
+        jetLV.SetPtEtaPhiM(jetPt, jetEta, jetPhi, jetMass)
+
+        # get the ith jet candidate 4 vectors
+        icandLV = []
+        weightList = []
+        while jetCount <= jetNum :
+            jetCount = candLV[candNum][0]
+            if jetCount == jetNum:
+               icandLV.append(candLV[candNum][1])
+               # use candidate energy as weight
+               weightList.append(candLV[candNum][1].E() )
+               candNum += 1
+            # stop the loop for the last jet
+            if candNum == len(candLV):
+               break
+        
+        # perform boosted frame rotations
+        if boostAxis == False : #use leading candidate as Z axis in rotations
+           phiPrime,thetaPrime = boostedRotations(icandLV)
+        if boostAxis == True : # use boost axis as Z axis in rotations
+           phiPrime,thetaPrime = boostedRotationsRelBoostAxis(icandLV, jetLV)
+
+        # make the weight list into a np array
+        totE = sum(weightList)
+        normWeight = [(weight / totE)*10 for weight in weightList] #normalize energy to that of the leading, multiply to be in pixel range (0 to 255)
+        weights = np.array(normWeight )
+        #weights = np.array(weightList ) #normWeight )
+
+        # make a 2D np hist for the image
+        hist, xedges, yedges = np.histogram2d(phiPrime, thetaPrime, weights=weights, bins=(xbins,ybins))
+        for ix in range(0,nx):
+           for iy in range(0,ny):
+              if K.image_dim_ordering()=='tf':
+                 jet_images[i,ix,iy,0] = hist[ix,iy]
+              else:
+                 jet_images[i,0,ix,iy] = hist[ix,iy]
+
+    return jet_images
+
 
 #==================================================================================
 # Boosted Candidate Rotations -----------------------------------------------------
