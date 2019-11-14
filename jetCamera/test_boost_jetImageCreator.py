@@ -13,18 +13,18 @@ import h5py
 import matplotlib
 matplotlib.use('Agg') #prevents opening displays, must use before pyplot
 import matplotlib.pyplot as plt
-import tensorflow as tf
-import pickle
-import copy
-import random
-import timeit
+#import tensorflow as tf
+#import pickle
+#import copy
+#import random
+#import timeit
 
 # get stuff from modules
-from root_numpy import tree2array
+#from root_numpy import tree2array
 
 # set up keras
-from os import environ
-environ["KERAS_BACKEND"] = "tensorflow" #must set backend before importing keras
+#from os import environ
+#environ["KERAS_BACKEND"] = "tensorflow" #must set backend before importing keras
 
 # user modules
 import tools.BESfunctions as tools
@@ -53,7 +53,8 @@ h5f = h5py.File("images/TestBoostedJetImages.h5","w")
 jetDF = {}
 
 # make boosted jet images
-print "Creating boosted Jet Images"
+print "Put your best candidates forward... it's time for the Jet Photoshoot!"
+print "Starting with the Higgs Frame"
 img.boostedJetPhotoshoot(upTree, "Higgs", 31, h5f, jetDF)
 print "Finished the jet photoshoot"
 

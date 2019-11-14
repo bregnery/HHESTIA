@@ -12,17 +12,6 @@ import uproot
 import matplotlib as mpl
 mpl.use('Agg') #prevents opening displays, must use before pyplot
 import matplotlib.pyplot as plt
-import copy
-import random
-import itertools
-import types
-import tempfile
-import timeit
-
-# grab some keras stuff
-from os import environ
-environ["KERAS_BACKEND"] = "tensorflow" #must set backend before importing keras
-import keras.backend as K
 
 #====================================================================================
 # Make boosted jet images in given rest frame ---------------------------------------
