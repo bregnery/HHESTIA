@@ -20,9 +20,11 @@ import matplotlib.pyplot as plt
 
 def boostedJetPhotoshoot(upTree, frame, nbins, h5f, jetDF):
 
+    print "==============================================================================="
+    print "Put your best candidates forward... it's time for the Jet Photoshoot!\n"
+
     nx = nbins # number of image bins in phi
     ny = nbins # number of image bins in theta
-    print "array length", len(upTree.array(["jetAK8_pt"]) )
     jetDF['test_images'] = np.zeros((len(upTree.array(["jetAK8_pt"]) ), nx, ny, 1) ) # made for tensorFlow
 
     # Loop over jets using the proper rest frame
@@ -30,6 +32,7 @@ def boostedJetPhotoshoot(upTree, frame, nbins, h5f, jetDF):
     for ijet in upTree.iterate([frame+"Frame_PF_candidate*", "jetAK8_pt", "jetAK8_phi", 
                                 "jetAK8_eta", "jetAK8_mass"], entrysteps=1) :
     
+        if jetCount % 10000 == 0: print "Taking a picture of beautiful Jet number: ", jetCount + 1
 
         candArray = []
         for i in range( len(ijet[frame+'Frame_PF_candidate_px'][0]) ) :
@@ -57,6 +60,8 @@ def boostedJetPhotoshoot(upTree, frame, nbins, h5f, jetDF):
 
     # save the jet images to an h5 file
     h5f.create_dataset('test_images', data=jetDF['test_images'], compression='lzf')
+    
+    print "Finished the Jet Photoshot! You're candidates are GORGEOUS"
 
 #==================================================================================
 # Boosted Jet Camera --------------------------------------------------------------

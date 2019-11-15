@@ -13,9 +13,9 @@ import h5py
 import matplotlib
 matplotlib.use('Agg') #prevents opening displays, must use before pyplot
 import matplotlib.pyplot as plt
+import cProfile
 
 # user modules
-import tools.BESfunctions as tools
 import tools.imageOperations as img
 
 # enter batch mode in root (so python can access displays)
@@ -26,6 +26,10 @@ plotJetImages = True
 boostAxis = False
 savePDF = False
 savePNG = True 
+
+# Start Profiling
+pr = cProfile.Profile()
+pr.enable()
 
 #==================================================================================
 # Load Monte Carlo ////////////////////////////////////////////////////////////////
@@ -41,10 +45,8 @@ h5f = h5py.File("images/TestBoostedJetImages.h5","w")
 jetDF = {}
 
 # make boosted jet images
-print "Put your best candidates forward... it's time for the Jet Photoshoot!"
 print "Starting with the Higgs Frame"
 img.boostedJetPhotoshoot(upTree, "Higgs", 31, h5f, jetDF)
-print "Finished the jet photoshoot"
 
 #==================================================================================
 # Store BEST Variables ////////////////////////////////////////////////////////////
@@ -56,6 +58,10 @@ jetDF['test_BES_vars'] = upTree.pandas.df(["jetAK8_phi", "jetAK8_eta", "nSeconda
 
 h5f.create_dataset('test_BES_vars', data=jetDF['test_BES_vars'], compression='lzf')
 print "Stored Boosted Event Shape variables"
+
+# disable profiling
+pr.disable()
+pr.print_stats(sort='time')
 
 #==================================================================================
 # Plot Jet Images /////////////////////////////////////////////////////////////////
