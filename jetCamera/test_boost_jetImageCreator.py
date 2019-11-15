@@ -13,18 +13,6 @@ import h5py
 import matplotlib
 matplotlib.use('Agg') #prevents opening displays, must use before pyplot
 import matplotlib.pyplot as plt
-#import tensorflow as tf
-#import pickle
-#import copy
-#import random
-#import timeit
-
-# get stuff from modules
-#from root_numpy import tree2array
-
-# set up keras
-#from os import environ
-#environ["KERAS_BACKEND"] = "tensorflow" #must set backend before importing keras
 
 # user modules
 import tools.BESfunctions as tools
@@ -62,17 +50,12 @@ print "Finished the jet photoshoot"
 # Store BEST Variables ////////////////////////////////////////////////////////////
 #==================================================================================
 
-# get BEST variable names from branches
-#bestVars = tools.getBESbranchNames(treeTest)
-#print "Boosted Event Shape Variables: ", bestVars
+jetDF['test_BES_vars'] = upTree.pandas.df(["jetAK8_phi", "jetAK8_eta", "nSecondaryVertices", "jetAK8_Tau*",
+                                       "FoxWolfram*",  "isotropy*", "aplanarity*", "thrust*", "subjet*mass*",
+                                       "asymmetry*"])
 
-# make arrays from the trees
-#bestArrayTest = tree2array(treeTest, bestVars, sel)
-#jetImagesDF['Test_BES_vars'] = tools.appendTreeArray(bestArrayTest)
-#print "Made array with the Boosted Event Shape Variables"
-
-#h5f.create_dataset('Test_BES_vars', data=jetImagesDF['Test_BES_vars'], compression='lzf')
-#print "Stored BES variables"
+h5f.create_dataset('test_BES_vars', data=jetDF['test_BES_vars'], compression='lzf')
+print "Stored Boosted Event Shape variables"
 
 #==================================================================================
 # Plot Jet Images /////////////////////////////////////////////////////////////////
